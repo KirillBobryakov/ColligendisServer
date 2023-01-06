@@ -7,5 +7,6 @@ import reactor.core.publisher.Mono;
 
 public interface UserRepository extends ReactiveNeo4jRepository<User, Long> {
 
-    Mono<User> findByLoginName(String username);
+    Mono<User> findByEmail(String email);
+    Mono<User> findByUsername(String username);
 }

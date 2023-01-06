@@ -4,13 +4,13 @@ import bkv.colligendis.database.entity.AbstractEntity;
 import org.springframework.data.neo4j.core.schema.Node;
 import org.springframework.data.neo4j.core.schema.Relationship;
 
-@Node("COIN_VARIANT")
-public class CoinVariant extends AbstractEntity {
+@Node("VARIANT")
+public class Variant extends AbstractEntity {
 
     public static final String UNDER_MINT = "UNDER_MINT";
 
-    @Relationship(type = PieceInformation.HAS_VARIANT, direction = Relationship.Direction.INCOMING)
-    private PieceInformation pieceInformation;
+    @Relationship(type = Item.HAS_VARIANT, direction = Relationship.Direction.INCOMING)
+    private Item item;
 
     private int year;
     private String date;
@@ -18,16 +18,20 @@ public class CoinVariant extends AbstractEntity {
     private String tirage;
     private String comment;
 
+
+    //Link to image with differences in variant
+    private String linkToDifference;
+
     @Relationship(type = UNDER_MINT, direction = Relationship.Direction.OUTGOING)
     private Mint mint;
 
 
-    public PieceInformation getCoinInformation() {
-        return pieceInformation;
+    public Item getCoinInformation() {
+        return item;
     }
 
-    public void setCoinInformation(PieceInformation pieceInformation) {
-        this.pieceInformation = pieceInformation;
+    public void setCoinInformation(Item item) {
+        this.item = item;
     }
 
     public int getYear() {
@@ -76,5 +80,13 @@ public class CoinVariant extends AbstractEntity {
 
     public void setMint(Mint mint) {
         this.mint = mint;
+    }
+
+    public String getLinkToDifference() {
+        return linkToDifference;
+    }
+
+    public void setLinkToDifference(String linkToDifference) {
+        this.linkToDifference = linkToDifference;
     }
 }

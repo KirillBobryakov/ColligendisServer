@@ -7,9 +7,9 @@ import org.springframework.stereotype.Service;
 public class ServiceUtils {
 
     public final TerritoryService territoryService;
-    public final CoinPartService coinPartService;
+    public final ItemSideService itemSideService;
     public final CommIssueSeriesService commIssueSeriesService;
-    public final CoinInformationService coinInformationService;
+    public final ItemService coinInformationService;
     public final IssuerService issuerService;
     public final PeriodService periodService;
     public final ValueService valueService;
@@ -18,16 +18,16 @@ public class ServiceUtils {
 
 
     public ServiceUtils(TerritoryService territoryService,
-                        CoinPartService coinPartService,
+                        ItemSideService itemSideService,
                         CommIssueSeriesService commIssueSeriesService,
-                        CoinInformationService coinInformationService,
+                        ItemService coinInformationService,
                         IssuerService issuerService,
                         PeriodService periodService,
                         ValueService valueService,
                         CurrencyService currencyService,
                         MintService mintService) {
         this.territoryService = territoryService;
-        this.coinPartService = coinPartService;
+        this.itemSideService = itemSideService;
         this.commIssueSeriesService = commIssueSeriesService;
         this.coinInformationService = coinInformationService;
         this.issuerService = issuerService;

@@ -3,8 +3,8 @@ package bkv.colligendis.database.entity.piece;
 import bkv.colligendis.database.entity.AbstractEntity;
 import org.springframework.data.neo4j.core.schema.Node;
 
-@Node("PIECE_SIDE")
-public class PieceSide extends AbstractEntity {
+@Node("ITEM_SIDE")
+public class ItemSide extends AbstractEntity {
 
     public static final String OBVERSE = "Obverse";
     public static final String REVERSE = "Reverse";
@@ -23,7 +23,7 @@ public class PieceSide extends AbstractEntity {
     private String engraver;
     private String designer;
 
-    public PieceSide(String sideType) {
+    public ItemSide(String sideType) {
         this.sideType = sideType;
     }
 
@@ -100,4 +100,19 @@ public class PieceSide extends AbstractEntity {
     public void setDesigner(String designer) {
         this.designer = designer;
     }
+
+
+    public void merge(ItemSide itemSide){
+        this.photoLink = itemSide.photoLink;
+        this.description = itemSide.description;
+
+        this.script = itemSide.script;
+        this.lettering = itemSide.lettering;
+        this.unabridgedLegend = itemSide.unabridgedLegend;
+        this.translation = itemSide.translation;
+
+        this.engraver = itemSide.engraver;
+        this.designer = itemSide.designer;
+    }
+
 }

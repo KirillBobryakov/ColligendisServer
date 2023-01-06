@@ -2,12 +2,14 @@ package bkv.colligendis.database.entity.piece;
 
 import bkv.colligendis.database.entity.AbstractEntity;
 import bkv.colligendis.database.entity.features.*;
+import org.springframework.data.neo4j.core.schema.Node;
 import org.springframework.data.neo4j.core.schema.Relationship;
 
 import java.util.HashSet;
 import java.util.Set;
 
-public abstract class PieceInformation extends AbstractEntity {
+@Node("ITEM")
+public class Item extends AbstractEntity {
 
     public static final String HAS_COMM_ISSUE_SERIES = "HAS_COMM_ISSUE_SERIES";
     public static final String HAS_OBVERSE = "HAS_OBVERSE";
@@ -17,6 +19,8 @@ public abstract class PieceInformation extends AbstractEntity {
     public static final String HAS_VARIANT = "HAS_VARIANT";
     public static final String HAS_COMMENT = "HAS_COMMENT";
 
+
+    private ITEM_TYPE itemType;
 
     private String name;
 
@@ -66,11 +70,11 @@ public abstract class PieceInformation extends AbstractEntity {
     private CommIssueSeries commIssueSeries;
 
     @Relationship(type = HAS_OBVERSE, direction = Relationship.Direction.OUTGOING)
-    private PieceSide obverse;
+    private ItemSide obverse;
     @Relationship(type = HAS_REVERSE, direction = Relationship.Direction.OUTGOING)
-    private PieceSide reverse;
+    private ItemSide reverse;
     @Relationship(type = HAS_EDGE, direction = Relationship.Direction.OUTGOING)
-    private PieceSide edge;
+    private ItemSide edge;
 
     @Relationship(type = HAS_MINTS, direction = Relationship.Direction.OUTGOING)
     private Set<Mint> mints = new HashSet<>();
@@ -82,8 +86,16 @@ public abstract class PieceInformation extends AbstractEntity {
 
 
     @Relationship(type = HAS_VARIANT, direction = Relationship.Direction.OUTGOING)
-    private Set<CoinVariant> coinVariants = new HashSet<>();
+    private Set<Variant> variants = new HashSet<>();
 
+
+    public ITEM_TYPE getItemType() {
+        return itemType;
+    }
+
+    public void setItemType(ITEM_TYPE itemType) {
+        this.itemType = itemType;
+    }
 
     public String getName() {
         return name;
@@ -277,27 +289,27 @@ public abstract class PieceInformation extends AbstractEntity {
         this.commIssueSeries = commIssueSeries;
     }
 
-    public PieceSide getObverse() {
+    public ItemSide getObverse() {
         return obverse;
     }
 
-    public void setObverse(PieceSide obverse) {
+    public void setObverse(ItemSide obverse) {
         this.obverse = obverse;
     }
 
-    public PieceSide getReverse() {
+    public ItemSide getReverse() {
         return reverse;
     }
 
-    public void setReverse(PieceSide reverse) {
+    public void setReverse(ItemSide reverse) {
         this.reverse = reverse;
     }
 
-    public PieceSide getEdge() {
+    public ItemSide getEdge() {
         return edge;
     }
 
-    public void setEdge(PieceSide edge) {
+    public void setEdge(ItemSide edge) {
         this.edge = edge;
     }
 
@@ -326,11 +338,11 @@ public abstract class PieceInformation extends AbstractEntity {
         this.htmlComments = htmlComments;
     }
 
-    public Set<CoinVariant> getCoinVariants() {
-        return coinVariants;
+    public Set<Variant> getVariants() {
+        return variants;
     }
 
-    public void setCoinVariants(Set<CoinVariant> coinVariants) {
-        this.coinVariants = coinVariants;
+    public void setVariants(Set<Variant> variants) {
+        this.variants = variants;
     }
 }
