@@ -3,18 +3,19 @@ package bkv.colligendis.database.entity;
 import org.springframework.data.neo4j.core.schema.GeneratedValue;
 import org.springframework.data.neo4j.core.schema.Id;
 
+import java.util.UUID;
+
 public abstract class AbstractEntity {
 
     @Id
     @GeneratedValue
     private Long id;
 
-    public Long getId() {
-        return id;
-    }
+    @GeneratedValue()
+    private UUID eid = UUID.randomUUID();
 
-    public void setId(Long id) {
-        this.id = id;
+    public UUID getEid() {
+        return eid;
     }
 
     @Override
@@ -36,5 +37,13 @@ public abstract class AbstractEntity {
             return id.equals(other.id);
         }
         return super.equals(other);
+    }
+
+    public long getId() {
+        return id;
+    }
+
+    public void setId(long id) {
+        this.id = id;
     }
 }

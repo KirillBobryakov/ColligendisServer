@@ -70,5 +70,11 @@ public class User extends AbstractEntity implements UserDetails {
         return true;
     }
 
+    public String getProfilePictureUrl() {
+        return profilePictureUrl;
+    }
 
+    public void setProfilePictureUrl(String profilePictureUrl) {
+        this.profilePictureUrl = profilePictureUrl;
+    }
 }

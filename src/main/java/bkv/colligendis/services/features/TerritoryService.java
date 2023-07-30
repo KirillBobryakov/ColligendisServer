@@ -14,4 +14,9 @@ public class TerritoryService extends AbstractService<Territory, TerritoryReposi
     public Territory findByName(String name){
         return repository.findByName(name).block();
     }
+
+    @Override
+    public Territory setPropertyValue(Long id, String name, String value) {
+        return null;
+    }
 }

@@ -13,4 +13,9 @@ public class PeriodService extends AbstractService<Period, PeriodRepository> {
     public Period findByName(String name){
         return repository.findByName(name).block();
     }
+
+    @Override
+    public Period setPropertyValue(Long id, String name, String value) {
+        return null;
+    }
 }

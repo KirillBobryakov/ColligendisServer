@@ -61,7 +61,6 @@ public class AuthController {
         user.setUsername(signUpUser.getUsername());
         user.setEmail(signUpUser.getEmail());
         user.setPassword(this.passwordEncoder.encode(signUpUser.getPassword()));
-
         user = userService.save(user);
 
         return new ResponseEntity<>(user, HttpStatus.OK);

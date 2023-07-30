@@ -1,6 +1,6 @@
 package bkv.colligendis.services.features;
 
-import bkv.colligendis.database.entity.piece.CommIssueSeries;
+import bkv.colligendis.database.entity.item.CommIssueSeries;
 import bkv.colligendis.services.AbstractService;
 import org.springframework.stereotype.Service;
 
@@ -13,5 +13,10 @@ public class CommIssueSeriesService extends AbstractService<CommIssueSeries, Com
 
     public CommIssueSeries findByName(String name){
         return repository.findByName(name).block();
+    }
+
+    @Override
+    public CommIssueSeries setPropertyValue(Long id, String name, String value) {
+        return null;
     }
 }

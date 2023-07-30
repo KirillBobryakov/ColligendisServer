@@ -19,4 +19,8 @@ public class UserService extends AbstractService<User, UserRepository> {
         return repository.findByUsername(username).block();
     }
 
+    @Override
+    public User setPropertyValue(Long id, String name, String value) {
+        return null;
+    }
 }

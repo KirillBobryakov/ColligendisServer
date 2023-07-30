@@ -29,6 +29,7 @@ public class SecurityConfig extends WebSecurityConfigurerAdapter {
                 .authorizeRequests()
                 .antMatchers("/auth/signup").permitAll()
                 .antMatchers("/auth/signin").permitAll()
+//                .antMatchers("/n4jdb/init").permitAll()
                 .antMatchers(HttpMethod.GET, "/vehicles/**").permitAll()
                 .antMatchers(HttpMethod.DELETE, "/vehicles/**").hasRole("ADMIN")
                 .antMatchers(HttpMethod.GET, "/v1/vehicles/**").permitAll()

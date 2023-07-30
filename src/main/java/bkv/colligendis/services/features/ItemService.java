@@ -1,12 +1,12 @@
 package bkv.colligendis.services.features;
 
 import bkv.colligendis.database.entity.features.ITEM_TYPE;
-import bkv.colligendis.database.entity.piece.Item;
-import bkv.colligendis.database.entity.piece.Variant;
-import bkv.colligendis.database.entity.piece.ItemSide;
+import bkv.colligendis.database.entity.item.Item;
+import bkv.colligendis.database.entity.item.ItemSide;
+import bkv.colligendis.database.entity.numista.Variant;
+import bkv.colligendis.database.service.numista.VariantRepository;
 import bkv.colligendis.services.AbstractService;
 import bkv.colligendis.utils.NumistaUtil;
-import org.jsoup.nodes.Document;
 import org.springframework.stereotype.Service;
 
 @Service
@@ -27,11 +27,20 @@ public class ItemService extends AbstractService<Item, ItemRepository> {
         this.itemSideRepository = itemSideRepository;
     }
 
+    public boolean exists(String numistaNumber){
+        return Boolean.TRUE.equals(repository.existsByNumistaNumber(numistaNumber).block());
+    }
+
     public Item findByNumistaNumber(String numistaNumber) {
         return repository.findByNumistaNumber(numistaNumber).block();
     }
 
-    public boolean deleteExistCoinVariants(Item item) {
+
+    public Item loadFromNumista(String numistaNumber) {
+        return NumistaUtil.getInstance().loadItem(numistaNumber);
+    }
+
+    public boolean deleteExistingVariants(Item item) {
         if (item.getVariants().size() > 0) {
             for (Variant variant : item.getVariants()) {
                 variantRepository.delete(variant).block();
@@ -42,7 +51,7 @@ public class ItemService extends AbstractService<Item, ItemRepository> {
         return false;
     }
 
-    public boolean setItemType(Long itemId, String newItemType){
+    public boolean setItemType(long itemId, String newItemType){
         Item item = repository.findById(itemId).block();
         if(item == null) return false;
 
@@ -51,23 +60,19 @@ public class ItemService extends AbstractService<Item, ItemRepository> {
 
         return true;
     }
-    public ItemSide getItemSide(Long itemSideId) {
+    public ItemSide getItemSide(long itemSideId) {
         return itemSideRepository.findById(itemSideId).block();
     }
 
-    public ItemSide reloadItemSide(Long itemSideId) {
+    public ItemSide reloadItemSide(long itemSideId) {
 
         Item item = repository.findByPieceSideId(itemSideId).block();
         if (item == null) return null;
 
-        Document numistaPage = NumistaUtil.getNumistaPage(item.getNumistaNumber());
-        if (numistaPage == null) return null;
-
         ItemSide itemSide = itemSideRepository.findById(itemSideId).block();
         if (itemSide == null) return null;
 
-        ItemSide freshItemSide = NumistaUtil.loadPieceSide(numistaPage, itemSide.getSideType());
-        if (freshItemSide == null) return null;
+        ItemSide freshItemSide = NumistaUtil.getInstance().loadItemSide(item.getNumistaNumber(), itemSide.getSideType());
 
         itemSide.merge(freshItemSide);
 
@@ -76,4 +81,20 @@ public class ItemService extends AbstractService<Item, ItemRepository> {
         return itemSide;
     }
 
+    public Item reloadItemProperties(long itemId) {
+
+        Item item = repository.findById(itemId).block();
+        if (item == null) return null;
+
+        item = NumistaUtil.getInstance().loadItemProperties(item.getNumistaNumber(), item);
+
+        repository.save(item).block();
+
+        return item;
+    }
+
+    @Override
+    public Item setPropertyValue(Long id, String name, String value) {
+        return repository.setPropertyValue(id, name, value).block();
+    }
 }

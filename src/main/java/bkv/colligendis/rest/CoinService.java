@@ -18,7 +18,7 @@ public class CoinService {
     }
 
     @GetMapping(value = "/coin/cointype/{coinId}/{newCoinType}")
-    public ResponseEntity<Boolean> readCoinInformation(@PathVariable(name = "coinId") Long coinId, @PathVariable(name = "newCoinType") String newCoinType){
+    public ResponseEntity<Boolean> readCoinInformation(@PathVariable(name = "coinId") long coinId, @PathVariable(name = "newCoinType") String newCoinType){
         boolean result = coinInformationService.setItemType(coinId, newCoinType);
         return result
                 ? ResponseEntity.ok(true)

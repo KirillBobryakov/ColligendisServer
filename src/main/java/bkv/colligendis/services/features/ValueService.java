@@ -13,4 +13,9 @@ public class ValueService extends AbstractService<Value, ValueRepository> {
     public Value findByName(String name){
         return repository.findByName(name).block();
     }
+
+    @Override
+    public Value setPropertyValue(Long id, String name, String value) {
+        return null;
+    }
 }
