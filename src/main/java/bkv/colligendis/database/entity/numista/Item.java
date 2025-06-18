@@ -3,12 +3,14 @@ package bkv.colligendis.database.entity.numista;
 
 import bkv.colligendis.database.entity.AbstractEntity;
 import lombok.Data;
-import lombok.Getter;
+import lombok.EqualsAndHashCode;
+
 import org.springframework.data.neo4j.core.schema.Node;
 import org.springframework.data.neo4j.core.schema.Relationship;
 
 @Node("ITEM")
 @Data
+@EqualsAndHashCode(callSuper=true)
 public class Item extends AbstractEntity {
 
     public static final String RELATED_TO_TYPE = "RELATED_TO_TYPE";

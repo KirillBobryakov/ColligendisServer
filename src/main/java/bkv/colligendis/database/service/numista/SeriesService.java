@@ -1,7 +1,5 @@
 package bkv.colligendis.database.service.numista;
 
-import bkv.colligendis.database.entity.numista.Category;
-import bkv.colligendis.database.entity.numista.CommemoratedEvent;
 import bkv.colligendis.database.entity.numista.Series;
 import bkv.colligendis.services.AbstractService;
 import bkv.colligendis.utils.DebugUtil;

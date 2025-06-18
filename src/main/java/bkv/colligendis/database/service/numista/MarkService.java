@@ -1,9 +1,7 @@
 package bkv.colligendis.database.service.numista;
 
-import bkv.colligendis.database.entity.numista.Issuer;
 import bkv.colligendis.database.entity.numista.Mark;
 import bkv.colligendis.services.AbstractService;
-import bkv.colligendis.utils.DebugUtil;
 import org.springframework.stereotype.Service;
 
 @Service

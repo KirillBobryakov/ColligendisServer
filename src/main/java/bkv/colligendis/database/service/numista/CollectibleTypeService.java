@@ -1,7 +1,6 @@
 package bkv.colligendis.database.service.numista;
 
 import bkv.colligendis.database.entity.numista.CollectibleType;
-import bkv.colligendis.database.entity.numista.CollectibleTypeGroup;
 import bkv.colligendis.services.AbstractService;
 import bkv.colligendis.utils.DebugUtil;
 import org.springframework.stereotype.Service;

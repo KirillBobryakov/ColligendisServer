@@ -4,7 +4,6 @@ import bkv.colligendis.database.entity.numista.Issuer;
 import bkv.colligendis.database.entity.numista.Ruler;
 import bkv.colligendis.services.AbstractService;
 import bkv.colligendis.utils.DebugUtil;
-import org.springframework.data.neo4j.repository.query.Query;
 import org.springframework.stereotype.Service;
 
 import java.util.List;

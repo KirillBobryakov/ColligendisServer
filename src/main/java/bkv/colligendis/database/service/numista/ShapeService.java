@@ -1,7 +1,5 @@
 package bkv.colligendis.database.service.numista;
 
-import bkv.colligendis.database.entity.numista.Metal;
-import bkv.colligendis.database.entity.numista.Ruler;
 import bkv.colligendis.database.entity.numista.Shape;
 import bkv.colligendis.services.AbstractService;
 import bkv.colligendis.utils.DebugUtil;

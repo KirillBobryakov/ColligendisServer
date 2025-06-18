@@ -4,11 +4,6 @@ import bkv.colligendis.database.entity.AbstractEntity;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
 import org.springframework.data.neo4j.core.schema.Node;
-import org.springframework.data.neo4j.core.schema.Relationship;
-
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.List;
 
 
 /**

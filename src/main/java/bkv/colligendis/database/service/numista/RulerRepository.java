@@ -2,12 +2,9 @@ package bkv.colligendis.database.service.numista;
 
 import bkv.colligendis.database.entity.numista.Ruler;
 import bkv.colligendis.database.service.AbstractNeo4jRepository;
-import org.springframework.data.neo4j.repository.ReactiveNeo4jRepository;
 import org.springframework.data.neo4j.repository.query.Query;
-import reactor.core.publisher.Mono;
 
 import java.util.List;
-import java.util.UUID;
 
 public interface RulerRepository extends AbstractNeo4jRepository<Ruler> {
 

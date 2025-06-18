@@ -1,9 +1,6 @@
 package bkv.colligendis.database.service.numista;
 
-import bkv.colligendis.database.entity.numista.Category;
-import bkv.colligendis.database.entity.numista.CollectibleType;
 import bkv.colligendis.database.entity.numista.CommemoratedEvent;
-import bkv.colligendis.database.entity.numista.Currency;
 import bkv.colligendis.services.AbstractService;
 import bkv.colligendis.utils.DebugUtil;
 import org.springframework.stereotype.Service;

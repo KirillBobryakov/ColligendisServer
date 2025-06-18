@@ -1,17 +1,11 @@
 package bkv.colligendis.database.service.numista;
 
 import bkv.colligendis.database.entity.numista.Country;
-import bkv.colligendis.database.entity.numista.Issuer;
 import bkv.colligendis.services.AbstractService;
 import bkv.colligendis.utils.DebugUtil;
 import org.springframework.stereotype.Service;
-import reactor.core.publisher.Flux;
-
-import java.util.ArrayList;
 import java.util.List;
 import java.util.UUID;
-import java.util.regex.Pattern;
-import java.util.stream.Collectors;
 
 @Service
 public class CountryService extends AbstractService<Country, CountryRepository> {

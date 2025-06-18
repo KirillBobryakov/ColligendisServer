@@ -4,7 +4,6 @@ package bkv.colligendis.database.service.numista;
 import bkv.colligendis.database.entity.numista.NType;
 import bkv.colligendis.services.AbstractService;
 import bkv.colligendis.utils.DebugUtil;
-import org.neo4j.driver.internal.SessionFactory;
 import org.springframework.stereotype.Service;
 
 import java.util.List;

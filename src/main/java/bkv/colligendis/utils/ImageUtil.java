@@ -3,15 +3,12 @@ package bkv.colligendis.utils;
 import bkv.colligendis.database.entity.numista.CollectibleType;
 import bkv.colligendis.database.entity.numista.NType;
 import bkv.colligendis.database.entity.numista.NTypePart;
-import bkv.colligendis.utils.numista.EditPageParser;
 import bkv.colligendis.utils.numista.PART_TYPE;
 
 import org.apache.commons.io.FileUtils;
-import org.apache.commons.lang3.stream.Streams;
 
 import java.io.File;
 import java.io.IOException;
-import java.io.InputStream;
 import java.net.URL;
 import java.nio.file.Files;
 import java.nio.file.Paths;
