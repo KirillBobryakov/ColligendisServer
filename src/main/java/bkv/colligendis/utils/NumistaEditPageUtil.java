@@ -365,7 +365,7 @@ public class NumistaEditPageUtil {
         /*
          *  Obverse (head) | obverse
          */
-        if (nType.getObverse() == null) nType.setObverse(new NTypePart(PART_TYPE.OBVERSE));
+        if (nType != null && nType.getObverse() == null) nType.setObverse(new NTypePart(PART_TYPE.OBVERSE));
 
         //Engraver(s)
         loadObverseEngravers(page, nType);

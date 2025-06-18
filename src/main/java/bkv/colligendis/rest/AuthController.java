@@ -2,13 +2,9 @@ package bkv.colligendis.rest;
 
 
 import bkv.colligendis.database.entity.User;
-import bkv.colligendis.database.entity.numista.Country;
 import bkv.colligendis.security.JwtTokenProvider;
 import bkv.colligendis.services.UserService;
-import bkv.colligendis.utils.N4JUtil;
-import lombok.Data;
 import lombok.RequiredArgsConstructor;
-import org.apache.commons.codec.digest.DigestUtils;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.authentication.AuthenticationManager;
@@ -18,10 +14,7 @@ import org.springframework.security.core.AuthenticationException;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.web.bind.annotation.*;
 
-import java.text.DateFormat;
-import java.time.LocalDateTime;
 import java.util.HashMap;
-import java.util.List;
 import java.util.Map;
 
 @RestController
@@ -35,7 +28,7 @@ public class AuthController {
     private final PasswordEncoder passwordEncoder;
 
     @PostMapping("/signin")
-    public ResponseEntity signin(@RequestBody AuthenticationRequest data) {
+    public ResponseEntity<Map<Object, Object>> signin(@RequestBody AuthenticationRequest data) {
         try {
             String username = "admin";
 //            String username = data.getUsername();
@@ -53,7 +46,7 @@ public class AuthController {
 
 
     @GetMapping(value = "/users/{name}")
-    public ResponseEntity getUserInfo(@PathVariable(name = "name") String name) {
+    public ResponseEntity<Map<Object, Object>> getUserInfo(@PathVariable(name = "name") String name) {
         Map<Object, Object> model = new HashMap<>();
         model.put("name", "somename");
         model.put("email", "someemail");
@@ -64,7 +57,7 @@ public class AuthController {
     }
 
     @PostMapping("/signup")
-    public ResponseEntity signUp(@RequestBody SignUpUser signUpUser){
+    public ResponseEntity<Map<Object, Object>> signUp(@RequestBody SignUpUser signUpUser){
 
         if (signUpUser.getEmail() == null || signUpUser.getEmail().isEmpty()
                 || signUpUser.getUsername() == null || signUpUser.getUsername().isEmpty()
