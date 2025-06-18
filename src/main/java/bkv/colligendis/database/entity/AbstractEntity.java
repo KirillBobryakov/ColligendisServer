@@ -5,14 +5,15 @@ import org.springframework.data.neo4j.core.schema.Id;
 
 import java.util.UUID;
 
-public abstract class AbstractEntity {
+public abstract class AbstractEntity2 {
+
+//    @Id
+//    @GeneratedValue
+//    private Long id;
 
     @Id
-    @GeneratedValue
-    private Long id;
-
     @GeneratedValue()
-    private UUID eid = UUID.randomUUID();
+    private final UUID eid = UUID.randomUUID();
 
     public UUID getEid() {
         return eid;
@@ -20,30 +21,28 @@ public abstract class AbstractEntity {
 
     @Override
     public int hashCode() {
-        if (id != null) {
-            return id.hashCode();
-        }
-        return super.hashCode();
+        return eid.hashCode();
     }
 
     @Override
     public boolean equals(Object obj) {
-        if (!(obj instanceof AbstractEntity)) {
+        if (!(obj instanceof AbstractEntity2 other)) {
             return false; // null or other class
         }
-        AbstractEntity other = (AbstractEntity) obj;
 
-        if (id != null) {
-            return id.equals(other.id);
+        if (eid != null) {
+            return eid.equals(other.eid);
         }
         return super.equals(other);
     }
 
     public long getId() {
-        return id;
+        return 0;
     }
 
     public void setId(long id) {
-        this.id = id;
+//        this.id = id;
     }
+
+
 }
