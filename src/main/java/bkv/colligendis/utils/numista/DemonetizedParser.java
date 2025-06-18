@@ -1,10 +1,8 @@
 package bkv.colligendis.utils.numista;
 
 import bkv.colligendis.utils.DebugUtil;
-import bkv.colligendis.utils.N4JUtil;
 import org.jsoup.nodes.Element;
 
-import java.util.Objects;
 
 public class DemonetizedParser extends NumistaPartParser {
 

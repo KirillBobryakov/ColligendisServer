@@ -3,7 +3,6 @@ package bkv.colligendis.utils;
 import bkv.colligendis.database.entity.numista.NType;
 import bkv.colligendis.database.service.numista.NTypeService;
 import bkv.colligendis.utils.numista.*;
-import lombok.Builder;
 import org.jsoup.nodes.Document;
 import org.jsoup.nodes.Element;
 

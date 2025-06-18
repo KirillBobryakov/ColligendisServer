@@ -1,7 +1,6 @@
 package bkv.colligendis.utils.numista;
 
 import bkv.colligendis.database.entity.numista.CollectibleType;
-import bkv.colligendis.database.entity.numista.CollectibleTypeGroup;
 import bkv.colligendis.utils.DebugUtil;
 import bkv.colligendis.utils.N4JUtil;
 import org.apache.commons.lang3.StringUtils;

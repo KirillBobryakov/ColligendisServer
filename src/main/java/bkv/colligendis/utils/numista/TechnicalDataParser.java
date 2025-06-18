@@ -4,7 +4,6 @@ import bkv.colligendis.database.entity.numista.Composition;
 import bkv.colligendis.database.entity.numista.CompositionType;
 import bkv.colligendis.database.entity.numista.NType;
 import bkv.colligendis.database.service.numista.CompositionMetalType;
-import bkv.colligendis.utils.DebugUtil;
 import bkv.colligendis.utils.N4JUtil;
 import org.jsoup.nodes.Document;
 import org.jsoup.nodes.Element;
@@ -13,7 +12,6 @@ import org.jsoup.select.Elements;
 import java.util.Arrays;
 import java.util.HashMap;
 import java.util.List;
-import java.util.function.Supplier;
 
 public class TechnicalDataParser extends NumistaPartParser {
 

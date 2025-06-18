@@ -1,13 +1,9 @@
 package bkv.colligendis.utils.numista;
 
-import bkv.colligendis.database.entity.features.Year;
 import bkv.colligendis.database.entity.numista.Currency;
 import bkv.colligendis.database.entity.numista.Denomination;
-import bkv.colligendis.database.entity.numista.Issuer;
 import bkv.colligendis.utils.DebugUtil;
 import bkv.colligendis.utils.N4JUtil;
-import bkv.colligendis.utils.NumistaEditPageUtil;
-import org.apache.commons.lang3.StringUtils;
 import org.jsoup.nodes.Document;
 import org.jsoup.nodes.Element;
 import org.jsoup.select.Elements;

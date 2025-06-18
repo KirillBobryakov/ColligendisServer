@@ -2,18 +2,15 @@ package bkv.colligendis.utils.numista;
 
 import bkv.colligendis.database.entity.numista.Catalogue;
 import bkv.colligendis.database.entity.numista.CatalogueReference;
-import bkv.colligendis.database.entity.numista.Issuer;
 import bkv.colligendis.utils.DebugUtil;
 import bkv.colligendis.utils.N4JUtil;
 import com.google.gson.Gson;
 import lombok.AllArgsConstructor;
 import lombok.Data;
-import lombok.RequiredArgsConstructor;
 import org.jsoup.nodes.Document;
 import org.jsoup.nodes.Element;
 import org.jsoup.select.Elements;
 
-import java.text.Normalizer;
 import java.util.ArrayList;
 
 public class ReferenceNumberParser extends NumistaPartParser {

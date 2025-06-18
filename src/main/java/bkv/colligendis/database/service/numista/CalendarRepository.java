@@ -4,9 +4,6 @@ import bkv.colligendis.database.entity.features.Year;
 import bkv.colligendis.database.entity.numista.Calendar;
 import bkv.colligendis.database.service.AbstractNeo4jRepository;
 import org.springframework.data.neo4j.repository.query.Query;
-import reactor.core.publisher.Mono;
-
-import java.util.UUID;
 
 public interface CalendarRepository extends AbstractNeo4jRepository<Calendar> {
 

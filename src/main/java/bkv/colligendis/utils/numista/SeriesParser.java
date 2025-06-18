@@ -4,7 +4,6 @@ import bkv.colligendis.utils.DebugUtil;
 import bkv.colligendis.utils.N4JUtil;
 
 import java.util.HashMap;
-import java.util.Map;
 import java.util.Objects;
 
 public class SeriesParser extends NumistaPartParser {

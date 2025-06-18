@@ -12,7 +12,6 @@ import org.apache.commons.lang3.tuple.Pair;
 import org.jsoup.Jsoup;
 import org.jsoup.nodes.Document;
 import org.jsoup.nodes.Element;
-import org.springframework.web.client.RestTemplate;
 import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.InputStreamReader;
@@ -31,9 +30,6 @@ public abstract class NumistaPartParser {
     public static final String USER_AGENT = "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/18.3 Safari/605.1.15";
     public static final String COOKIE = "pieces_par_page=50; _pk_id.10.0242=b29dbc2dcbfb4f7a.1744284220.; _pk_ses.10.0242=1; cf_clearance=EoU_vb941pfqqaT0zF39VD.nzDr4CewWdxBgCmJ0hVI-1749764393-1.2.1.1-H9KpPkdH5qFohG6HcY935vW0sbr2MFC2K9fW.qs7PoXzkOvmukGGsnzAc9C.nUiKVRxreN6aEayqQAKNNZ1W0CPbd86pG4WwYsK2EmwerTb6_aObiSnHXXVMe1wC9UOe0ODOoOeuwBcSuefr_X_aTzSiTn_NmaFCaawVgIRXA9inqVJg.VAud4lcic70z0aRFoFkK0D6L4pGvJaiUQM3c4Mqh7ds7JcTI_nN7ruSZYXEsej99FsLV_toWTVzDqS7nTghJU7ScXzJRh_MsLqn445X7PSu.5R6E2NpLGdVa_9i6BTKGbj1RRgAtKJKQynxdtZh4WktloOsZVBVg4FiOsvQLw_eUiwxoJa9wFjrBmDnia4pCIDMo6Uve7_b88CV; _pk_ref.10.0242=%5B%22%22%2C%22%22%2C1749761798%2C%22https%3A%2F%2Fwww.google.com%2F%22%5D; PHPSESSID=kluh9pgf7fei9csk3703nrat51; search_order=v; carte=type; issuer_sort=d; saisie_rapide=n; search_subtypes=148; tb=y; tc=y; tn=y; tp=y; tt=y; tbb=y; tbc=y; tbl=y; tbt=y; access_token=z78%7DpWXczbO3dY9IkhkT%25W.%3DIGj%3F65%3C%7C4jgHv%2Af%5B; pseudo=kbobryakov";
     private static final Boolean showPageAfterLoad = false;
-    private static final int MAX_RETRIES = 3;
-    private static final long RETRY_DELAY_MS = 1000; // 1 second
-    private static final RestTemplate restTemplate = new RestTemplate();
 
 
     public static final String TYPE_PAGE_PREFIX = "https://en.numista.com/catalogue/contributions/modifier.php?id=";

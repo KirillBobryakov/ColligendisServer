@@ -3,11 +3,14 @@ package bkv.colligendis.database.entity.numista;
 
 import bkv.colligendis.database.entity.AbstractEntity;
 import lombok.Data;
+import lombok.EqualsAndHashCode;
+
 import org.springframework.data.neo4j.core.schema.Node;
 import org.springframework.data.neo4j.core.schema.Relationship;
 
 @Node("GRADING_DESIGNATION")
 @Data
+@EqualsAndHashCode(callSuper=true)
 public class GradingDesignation extends AbstractEntity {
 
 

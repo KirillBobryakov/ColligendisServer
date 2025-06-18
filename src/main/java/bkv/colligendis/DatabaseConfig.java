@@ -6,13 +6,8 @@ import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.data.neo4j.core.DatabaseSelection;
 import org.springframework.data.neo4j.core.DatabaseSelectionProvider;
-import org.springframework.data.neo4j.core.ReactiveDatabaseSelectionProvider;
 import org.springframework.data.neo4j.core.transaction.Neo4jTransactionManager;
-import org.springframework.data.neo4j.core.transaction.ReactiveNeo4jTransactionManager;
 import org.springframework.data.neo4j.repository.config.Neo4jRepositoryConfigurationExtension;
-import org.springframework.data.neo4j.repository.config.ReactiveNeo4jRepositoryConfigurationExtension;
-import org.springframework.transaction.PlatformTransactionManager;
-import org.springframework.transaction.ReactiveTransactionManager;
 import org.springframework.transaction.TransactionManager;
 import org.springframework.transaction.annotation.EnableTransactionManagement;
 

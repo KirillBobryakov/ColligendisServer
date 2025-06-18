@@ -2,8 +2,8 @@ package bkv.colligendis.utils.numista;
 
 import bkv.colligendis.database.entity.numista.NType;
 import bkv.colligendis.database.entity.numista.NTypePart;
-import bkv.colligendis.utils.DebugUtil;
 import bkv.colligendis.utils.N4JUtil;
+
 import org.jsoup.nodes.Document;
 import org.jsoup.nodes.Element;
 
