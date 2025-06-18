@@ -1,11 +1,10 @@
 package bkv.colligendis.database.entity.features;
 
-import java.util.HashMap;
-
-public class ImageStoring {
+public class LocalImage {
 
 
     // Image for
-    public String imageLocalURI = "";
+    public String localURI = "";
+    
 
 }

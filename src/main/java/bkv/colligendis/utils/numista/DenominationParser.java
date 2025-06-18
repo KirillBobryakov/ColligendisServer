@@ -2,9 +2,8 @@ package bkv.colligendis.utils.numista;
 
 import bkv.colligendis.database.entity.features.Year;
 import bkv.colligendis.database.entity.numista.Currency;
+import bkv.colligendis.database.entity.numista.Denomination;
 import bkv.colligendis.database.entity.numista.Issuer;
-import bkv.colligendis.database.service.UniqueEntityException;
-import bkv.colligendis.database.service.numista.IssuerService;
 import bkv.colligendis.utils.DebugUtil;
 import bkv.colligendis.utils.N4JUtil;
 import bkv.colligendis.utils.NumistaEditPageUtil;
@@ -15,174 +14,155 @@ import org.jsoup.select.Elements;
 
 import java.util.List;
 import java.util.Map;
-import java.util.regex.Matcher;
-import java.util.regex.Pattern;
 
-public class CurrencyParser extends NumistaPartParser {
+public class DenominationParser extends NumistaPartParser {
 
-    public static final String CURRENCIES_BY_ISSUER_PREFIX = "https://en.numista.com/catalogue/get_currencies.php?country=";
+    public static final String DENOMINATIONS_BY_CURRENCY_PREFIX = "https://en.numista.com/catalogue/get_denominations.php?";
 
-    public CurrencyParser() {
+    public DenominationParser() {
         super((page, nType) -> {
 
-            Map<String, String> devise = getAttributeWithTextSingleOption(page, "#devise", "value");
+            Map<String, String> denominationAttr = getAttributeWithTextSingleOption(page, "#denomination", "value");
 
-            if (devise == null) {
-                DebugUtil.showError(CurrencyParser.class, "Can't find Currency (devise) while parsing page with nid: " + nType.getNid());
-                return false;
+            if (denominationAttr == null) {
+                DebugUtil.showWarning(DenominationParser.class, "Can't find Denomination while parsing page with nid: " + nType.getNid());
+                return ParseEvent.NOT_CHANGED;
             }
 
-            String currencyNid = devise.get("value");
-
-            if (nType.getCurrency() != null && nType.getCurrency().getIsActual() != null && nType.getCurrency().getIsActual() && nType.getCurrency().getNid().equals(currencyNid)) {
-                return true;
+            String denominationNid = denominationAttr.get("value");
+            if (nType.getDenomination() != null && nType.getDenomination().getIsActual() != null && nType.getDenomination().getIsActual() && nType.getDenomination().getNid().equals(denominationNid)) {
+                return ParseEvent.NOT_CHANGED;
             }
 
-            Currency currency = N4JUtil.getInstance().numistaService.currencyService.findCurrencyByNid(currencyNid);
-            if(currency != null && currency.getIsActual() != null && currency.getIsActual()){
-                nType.setCurrency(currency);
-                return true;
+            Denomination denomination = N4JUtil.getInstance().numistaService.denominationService.findDenominationByNid(denominationNid);
+            if (denomination != null && denomination.getIsActual() != null && denomination.getIsActual()) {
+                nType.setDenomination(denomination);
+                return ParseEvent.CHANGED;
             }
 
-            if (!parseCurrenciesByIssuerCodeFromPHPRequest(nType.getIssuer())) {
-                DebugUtil.showError(CurrencyParser.class, "Can't parse PHP Currencies while parsing page with nid: " + nType.getNid() + " with Issuer's Code: " + nType.getIssuer().getCode() + " and category " + nType.getCategory().getName() + "URI: " + CURRENCIES_BY_ISSUER_PREFIX + nType.getIssuer().getCode() + "&ct=" + nType.getCategory().getName());
-                return false;
+
+
+            if (!parseDenominationsByCurrencyCodeFromPHPRequest(nType.getCurrency(), denominationNid)) {
+                DebugUtil.showError(DenominationParser.class, "Can't parse PHP Denominations while parsing page with nid: " + nType.getNid() + " URI: " + DENOMINATIONS_BY_CURRENCY_PREFIX + nType.getCurrency());
+                return ParseEvent.ERROR;
             }
 
-            currency = N4JUtil.getInstance().numistaService.currencyService.findCurrencyByNid(currencyNid);
 
-            if (currency == null) {
-                DebugUtil.showError(CurrencyParser.class, "Can't find Currency in Graph after PHP parsing while parsing page with nid: " + nType.getNid());
-                return false;
+            denomination = N4JUtil.getInstance().numistaService.denominationService.findDenominationByNid(denominationNid);
+
+
+            if (denomination == null) {
+                DebugUtil.showError(DenominationParser.class, "Find a Denomination's Nid but can't find Denomination in database or create new one while parsing page with nid: " + nType.getNid());
+                return ParseEvent.ERROR;
             }
 
-            nType.setCurrency(currency);
+            nType.setDenomination(denomination);
 
-            return true;
+            return ParseEvent.CHANGED;
         });
+
+        this.partName = "Denomination";
     }
 
-    private static boolean parseCurrenciesByIssuerCodeFromPHPRequest(Issuer issuer) {
 
-        final String issuerCode = issuer.getCode();
 
-//        Document currenciesPHPDocument = loadPageByURL(CURRENCIES_BY_ISSUER_PREFIX + issuerCode + "&ct=" + category);
-        Document currenciesPHPDocument = loadPageByURL(CURRENCIES_BY_ISSUER_PREFIX + issuerCode);
+    private static boolean parseDenominationsByCurrencyCodeFromPHPRequest(Currency currency, String prefill) {
 
-        if (currenciesPHPDocument == null) {
-            DebugUtil.showError(CurrencyParser.class, "Can't load PHP Currencies while parsing page.");
-            return false;
-        }
+        final String currencyCode = currency != null ? currency.getNid() : "";
 
-        Elements optgroups = currenciesPHPDocument.select("optgroup");
+        Document denominationsPHPDocument = loadPageByURL(DENOMINATIONS_BY_CURRENCY_PREFIX + "currency=" + currencyCode + "&prefill=" + prefill, false);
 
-        if (!optgroups.isEmpty()) {  //need to understand what to do with OPTGROUP in Currencies
-            DebugUtil.showError(CurrencyParser.class, "Find OPTGROUP while parsing Currencies.");
+        if (denominationsPHPDocument == null) {
+            DebugUtil.showError(DenominationParser.class, "Can't load PHP request");
             return false;
         }
 
 
-        Elements options = currenciesPHPDocument.select("option");
+        Elements optgroups = denominationsPHPDocument.select("optgroup");
 
-        if (options.isEmpty()) {
-            DebugUtil.showError(CurrencyParser.class, "There is no any Currency's <option> tags");
+        if (!optgroups.isEmpty()) {  //need to understand what to do with OPTGROUP in IssuingEntities
+            DebugUtil.showError(DenominationParser.class, "Find OPTGROUP while parsing Denominations.");
             return false;
         }
 
-        List<Currency> currencyList = N4JUtil.getInstance().numistaService.currencyService.findCurrencyByIssuer(issuer);
-        currencyList.forEach(currency -> currency.setIssuer(null));
+        if(currency != null){
+            List<Denomination> denominations = N4JUtil.getInstance().numistaService.denominationService.findDenominationsByCurrency(currency);
+            denominations.forEach(denomination -> denomination.setCurrency(null));
+        }
 
-
+        Elements options = denominationsPHPDocument.select("option");
         for (Element element : options) {
-            String curNid = element.attributes().get("value");
-            String curFullName = element.text();
-
-            Currency cur = N4JUtil.getInstance().numistaService.currencyService.findCurrencyByNid(curNid);
-
-            cur = cur != null ? cur : new Currency();
-            cur.setNid(curNid);
-
-            curFullName = curFullName.substring(curFullName.indexOf('–') + 1).trim();
-            cur.setFullName(curFullName);
-
-            Pattern pattern = Pattern.compile("[(]\\S+[)]");
-            Matcher matcher = pattern.matcher(curFullName);
-
-            while (matcher.find()) {
-                String periodStr = matcher.group(0);
-                Year yearFrom = null;
-                Year yearTill = null;
-
-                String insideParentheses = periodStr.replace("(", "").replace(")", "");
+            String denNid = element.attributes().get("value");
+            String denFullName = element.text();
 
 
-                String[] years;
-                // notgeld - Mark (notgeld, 1914-1924)
-                // Occupation currency - Mark (Occupation currency, 1918), Rouble (Occupation currency, 1916)
-                if (insideParentheses.contains(",")) {
-                    String[] partsBetweenComma = insideParentheses.split(",");
-                    cur.setKind(partsBetweenComma[0]);
+            Denomination den = N4JUtil.getInstance().numistaService.denominationService.findDenominationByNid(denNid);
 
-                    years = partsBetweenComma[1].trim().split("-");
-                } else {
-                    years = insideParentheses.split("-");
-                }
-
-
-                // Years can be (1887-1918), (1936), (1990-date)
-                // After splitting by "-", we can get array of 2 strings or 1 string
-
-                if (years.length == 0 || years.length > 2) {
-                    DebugUtil.showError(CurrencyParser.class, "Can't parse PHP request (years for = " + curFullName + " with length != 1 or 2).");
-                    return false;
-                } else if (years.length == 1) { // we have a period during one year, example "(1936)"
-                    if (StringUtils.isNumeric(years[0])) {
-                        yearFrom = N4JUtil.getInstance().numistaService.calendarService.findGregorianYearByValueOrCreate(Integer.parseInt(years[0]));
-                        yearTill = yearFrom;
-                    } else {    // Try to catch another variants for ruler's period with one year which is not numeric
-                        DebugUtil.showError(CurrencyParser.class, "Can't parse PHP request (period for = " + curFullName + " with one year which is not Numeric).");
-                        return false;
-                    }
-                } else {    // Ruler's Period has two years (1887-1918) or (1990-date)
-                    if (StringUtils.isNumeric(years[0])) {    // Now I only know that the start year is only number
-                        yearFrom = N4JUtil.getInstance().numistaService.calendarService.findGregorianYearByValueOrCreate(Integer.parseInt(years[0]));
-                    } else { // Try to catch another variants for ruler's period with two year which start year is not numeric
-                        DebugUtil.showError(CurrencyParser.class, "Can't parse PHP request (start year = " + curFullName + " is not Numeric).");
-                        return false;
-                    }
-
-                    assert yearFrom != null;
-
-                    if (years[1].equals("date")) {    //  End year can be Numeric or "date". The "date" means that the ruling is not finished.
-
-                    } else if (StringUtils.isNumeric(years[1])) {
-                        yearTill = N4JUtil.getInstance().numistaService.calendarService.findGregorianYearByValueOrCreate(Integer.parseInt(years[1]));
-                    } else { // Try to catch another variants for ruler's period with two year which end year is not numeric and not "date"
-                        DebugUtil.showError(CurrencyParser.class, "Can't parse PHP request (end year = " + curFullName + " is not Numeric and not 'date').");
-                        return false;
-                    }
-                }
-
-
-                if (!cur.getCirculatedFromYears().contains(yearFrom)) {
-                    cur.getCirculatedFromYears().add(yearFrom);
-                }
-
-                if (yearTill != null && !cur.getCirculatedTillYears().contains(yearTill)) {
-                    cur.getCirculatedTillYears().add(yearTill);
-                }
+            if (den != null && den.getIsActual() != null && den.getIsActual()) {
+                den.setCurrency(currency);
+                continue;
             }
 
 
-            //If Period exists for current Ruler, then get only name without Period and first char '8199' symbol
-            String curName = curFullName.contains("(") ? curFullName.substring(0, curFullName.indexOf("(") - 1).trim() : curFullName.trim();
-            cur.setName(curName);
-            cur.setIssuer(issuer);
-            cur.setIsActual(true);
+            den = den != null ? den : new Denomination();
 
-            N4JUtil.getInstance().numistaService.currencyService.save(cur);
+            den.setNid(denNid);
+            den.setFullName(denFullName);
+            String denName = denFullName.contains("(") ? denFullName.substring(0, denFullName.lastIndexOf('(') - 1) : denFullName;
+            den.setName(denName);
+
+            if(denFullName.contains("(")){
+                String denNumericValueStr = denFullName.substring(denFullName.lastIndexOf('(') + 1, denFullName.lastIndexOf(')')).replace(" ", "").replace(" ", "");
+
+
+
+
+                denNumericValueStr = denNumericValueStr.replace("¾", "0.75");
+                denNumericValueStr = denNumericValueStr.replace("⅔", "0.666");
+                denNumericValueStr = denNumericValueStr.replace("⅝", "0.625");
+                denNumericValueStr = denNumericValueStr.replace("⅗", "0.6");
+                denNumericValueStr = denNumericValueStr.replace("½", "0.5");
+                denNumericValueStr = denNumericValueStr.replace("⅖", "0.4");
+                denNumericValueStr = denNumericValueStr.replace("⅜", "0.375");
+                denNumericValueStr = denNumericValueStr.replace("⅓", "0.333");
+                denNumericValueStr = denNumericValueStr.replace("¼", "0.25");
+                denNumericValueStr = denNumericValueStr.replace("⅕", "0.2");
+                denNumericValueStr = denNumericValueStr.replace("⅙", "0.166");
+                denNumericValueStr = denNumericValueStr.replace("⅐", "0.143");
+                denNumericValueStr = denNumericValueStr.replace("⅛", "0.125");
+                denNumericValueStr = denNumericValueStr.replace("⅒", "0.1");
+
+
+
+                Float denNumericValue = null;
+
+                if (denNumericValueStr.contains("⁄")) {
+                    float top = Float.parseFloat(denNumericValueStr.substring(0, denNumericValueStr.indexOf("⁄")));
+                    float bottom = Float.parseFloat(denNumericValueStr.substring(denNumericValueStr.indexOf("⁄") + 1));
+                    denNumericValue = top / bottom;
+                } else {
+                    try {
+                        denNumericValue = Float.valueOf(denNumericValueStr);
+                    } catch (NumberFormatException e) {
+                        DebugUtil.showError(DenominationParser.class, "Can't parse Denomination numericValue from '" + denFullName + "'");
+                        if(denNumericValueStr.matches("[a-zA-Z]+")){
+                            den.setNumericValue(null);
+                        }
+                        return false;
+                    }
+                }
+
+
+                den.setNumericValue(denNumericValue);
+            }
+
+            den.setIsActual(true);
+            den.setCurrency(currency);
+
+            N4JUtil.getInstance().numistaService.denominationService.save(den);
         }
 
         return true;
     }
+
 }

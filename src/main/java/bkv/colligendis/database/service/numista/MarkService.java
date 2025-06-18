@@ -13,15 +13,11 @@ public class MarkService extends AbstractService<Mark, MarkRepository> {
     }
 
     public Mark findByNid(String nid){
-        Mark mark = repository.findByNid(nid).block();
+        Mark mark = repository.findByNid(nid);
         if (mark == null) {
-            return repository.save(new Mark(nid)).block();
+            return repository.save(new Mark(nid));
         }
         return mark;
     }
 
-    @Override
-    public Mark setPropertyValue(Long id, String name, String value) {
-        return null;
-    }
 }

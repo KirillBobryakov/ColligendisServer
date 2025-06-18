@@ -1,26 +1,23 @@
 package bkv.colligendis.database.service.numista;
 
-import bkv.colligendis.database.entity.numista.Ruler;
+import bkv.colligendis.database.entity.numista.RulerGroup;
 import bkv.colligendis.database.service.AbstractNeo4jRepository;
-import org.springframework.data.neo4j.repository.ReactiveNeo4jRepository;
 import org.springframework.data.neo4j.repository.query.Query;
-import reactor.core.publisher.Mono;
 
-public interface RulerRepository extends AbstractNeo4jRepository<Ruler> {
-
-    /**
-     *  Find ruler's {@code eid} by {@code  name}.
-     * @param name Ruler's name
-     * @return If Ruler with {@code name} exists, then return ruler's eid like String, or return NULL
-     */
-    @Query("MATCH (n:RULER) WHERE n.name = $name RETURN n.eid")
-    String findByName(String name);
+public interface RulerGroupRepository extends AbstractNeo4jRepository<RulerGroup> {
 
     /**
-     *  Find Ruler's {@code nid} by {@code  nid}.
-     * @param nid Ruler's nid
-     * @return If Ruler with {@code nid} exists, then return Ruler's eid like String
+     *  Find RulerGroup's {@code UUID} by {@code  name}.
+     * @param name RulerGroup's name
+     * @return If RulerGroup with {@code name} exists, then return RulerGroup's UUID like String, or return NULL
      */
-    @Query("MATCH (n:RULER) WHERE n.nid = $nid RETURN n.eid")
-    String findByNid(String nid);
+    @Query("MATCH (n:RULER_GROUP) WHERE n.name = $name RETURN n.uuid")
+    String findUuidByName(String name);
+
+    /**
+     *  Find RulerGroup by {@code  nid}.
+     * @param nid RulerGroup's nid
+     * @return If RulerGroup with {@code nid} exists, then return RulerGroup
+     */
+    RulerGroup findRulerGroupByNid(String nid);
 }

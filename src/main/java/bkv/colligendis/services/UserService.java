@@ -1,7 +1,6 @@
 package bkv.colligendis.services;
 
 import bkv.colligendis.database.entity.User;
-import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.stereotype.Service;
 
 @Service
@@ -13,14 +12,10 @@ public class UserService extends AbstractService<User, UserRepository> {
     }
 
     public User findByEmail(String email){
-        return repository.findByEmail(email).block();
+        return repository.findByEmail(email);
     }
     public User findByUsername(String username){
-        return repository.findByUsername(username).block();
+        return repository.findByUsername(username);
     }
 
-    @Override
-    public User setPropertyValue(Long id, String name, String value) {
-        return null;
-    }
 }

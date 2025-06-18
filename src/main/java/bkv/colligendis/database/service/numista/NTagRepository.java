@@ -8,5 +8,5 @@ import reactor.core.publisher.Mono;
 
 public interface NTagRepository extends AbstractNeo4jRepository<NTag> {
 
-    Mono<NTag> findByNid(String nid);
+    NTag findByNid(String nid);
 }

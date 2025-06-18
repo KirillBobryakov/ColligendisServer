@@ -8,5 +8,6 @@ import reactor.core.publisher.Mono;
 
 public interface CommemoratedEventRepository extends AbstractNeo4jRepository<CommemoratedEvent> {
 
-    Mono<CommemoratedEvent> findByName(String name);
+    CommemoratedEvent findByName(String name);
+
 }

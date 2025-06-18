@@ -10,5 +10,5 @@ import reactor.core.publisher.Mono;
 
 public interface CategoryRepository extends AbstractNeo4jRepository<Category> {
 
-    Mono<Category> findByName(String name);
+    Category findByName(String name);
 }

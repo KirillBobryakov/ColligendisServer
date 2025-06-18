@@ -6,5 +6,5 @@ import reactor.core.publisher.Mono;
 
 public interface PrinterRepository extends AbstractNeo4jRepository<Printer> {
 
-    Mono<Printer> findByNid(String nid);
+    Printer findByNid(String nid);
 }

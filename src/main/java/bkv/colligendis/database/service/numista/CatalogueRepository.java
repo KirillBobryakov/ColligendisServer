@@ -8,5 +8,5 @@ import reactor.core.publisher.Mono;
 
 public interface CatalogueRepository extends AbstractNeo4jRepository<Catalogue> {
 
-    Mono<Catalogue> findByNid(String nid);
+    Catalogue findByNid(String nid);
 }

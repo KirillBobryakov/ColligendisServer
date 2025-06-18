@@ -8,5 +8,5 @@ import reactor.core.publisher.Mono;
 
 public interface MetalRepository extends AbstractNeo4jRepository<Metal> {
 
-    Mono<Metal> findByNid(String nid);
+    Metal findByNid(String nid);
 }

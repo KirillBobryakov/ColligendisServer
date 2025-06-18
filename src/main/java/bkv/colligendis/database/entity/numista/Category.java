@@ -1,9 +1,14 @@
 package bkv.colligendis.database.entity.numista;
 
 import bkv.colligendis.database.entity.AbstractEntity;
+import lombok.Data;
+import lombok.EqualsAndHashCode;
+import lombok.NonNull;
 import org.springframework.data.neo4j.core.schema.Node;
 
 @Node("CATEGORY")
+@Data
+@EqualsAndHashCode(callSuper=false)
 public class Category extends AbstractEntity {
 
     public static final String COIN = "coin";
@@ -15,13 +20,8 @@ public class Category extends AbstractEntity {
         this.name = name;
     }
 
+    @NonNull
     private String name;
 
-    public String getName() {
-        return name;
-    }
 
-    public void setName(String name) {
-        this.name = name;
-    }
 }

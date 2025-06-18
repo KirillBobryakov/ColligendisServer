@@ -1,9 +1,7 @@
 package bkv.colligendis.database.service.numista;
 
-import bkv.colligendis.database.entity.numista.Mintmark;
 import bkv.colligendis.database.entity.numista.SpecifiedMint;
 import bkv.colligendis.services.AbstractService;
-import bkv.colligendis.utils.DebugUtil;
 import org.springframework.stereotype.Service;
 
 @Service
@@ -13,22 +11,14 @@ public class SpecifiedMintService extends AbstractService<SpecifiedMint, Specifi
     }
 
     public SpecifiedMint findByIdentifierMintMintmark(String identifier, String mintNid, String mintmarkNid){
-        String specifiedMintEid = null;
+        SpecifiedMint specifiedMint = null;
         if(mintmarkNid == null){
-            specifiedMintEid = repository.findByIdentifierMint(identifier, mintNid).block();
+            specifiedMint = repository.findByIdentifierMintWithoutMintmark(identifier, mintNid);
         } else {
-            specifiedMintEid = repository.findByIdentifierMintMintmark(identifier, mintNid, mintmarkNid).block();
-        }
-        if(specifiedMintEid != null) {
-            SpecifiedMint specifiedMint = repository.findByEid(specifiedMintEid).block();
-            return specifiedMint;
+            specifiedMint = repository.findByIdentifierMintMintmark(identifier, mintNid, mintmarkNid);
         }
 
-        return null;
+        return specifiedMint;
     }
 
-    @Override
-    public SpecifiedMint setPropertyValue(Long id, String name, String value) {
-        return null;
-    }
 }

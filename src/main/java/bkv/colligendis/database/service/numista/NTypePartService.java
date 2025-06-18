@@ -11,11 +11,5 @@ public class NTypePartService extends AbstractService<NTypePart, NTypePartReposi
         super(repository);
     }
 
-    @Override
-    public NTypePart setPropertyValue(Long id, String name, String value) {
-        return null;
-    }
-
-
 
 }

@@ -1,32 +1,43 @@
 package bkv.colligendis.database.service.numista;
 
-import bkv.colligendis.database.entity.numista.Type;
-import bkv.colligendis.database.entity.numista.TypeGroup;
+import bkv.colligendis.database.entity.numista.CollectibleTypeGroup;
 import bkv.colligendis.services.AbstractService;
 import bkv.colligendis.utils.DebugUtil;
 import org.springframework.stereotype.Service;
 
 @Service
-public class TypeGroupService extends AbstractService<TypeGroup, TypeGroupRepository> {
+public class TypeGroupService extends AbstractService<CollectibleTypeGroup, CollectibleTypeGroupRepository> {
 
-    public TypeGroupService(TypeGroupRepository repository) {
+    public TypeGroupService(CollectibleTypeGroupRepository repository) {
         super(repository);
     }
 
-    @Override
-    public TypeGroup setPropertyValue(Long id, String name, String value) {
-        return null;
+
+    public CollectibleTypeGroup findByName(String name){
+        return repository.findByName(name);
     }
 
+    public CollectibleTypeGroup update(String name){
+        CollectibleTypeGroup typeGroup = repository.findByName(name);
 
-    public TypeGroup findByName(String name){
-        TypeGroup typeGroup = repository.findByName(name).block();
         if (typeGroup == null) {
-            DebugUtil.showInfo(this, "New TypeGroup with name=" + name + " was created.");
-            return repository.save(new TypeGroup(name)).block();
+            typeGroup = repository.save(new CollectibleTypeGroup(name));
+            DebugUtil.showInfo(this, "New CollectibleTypeGroup with name=" + name + " was created.");
+            return typeGroup;
+        } else {
+            if(!typeGroup.getName().equals(name)){
+                DebugUtil.showInfo(this, "CollectibleTypeGroup has stale name=" + name);
+                typeGroup.setName(name);
+                typeGroup = repository.save(typeGroup);
+                DebugUtil.showInfo(this, "CollectibleTypeGroup with a new name=" + name);
+                return typeGroup;
+            }
         }
+
         return typeGroup;
     }
+
+
 
 
 

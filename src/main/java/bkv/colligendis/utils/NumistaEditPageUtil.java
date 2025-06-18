@@ -1,7 +1,10 @@
 package bkv.colligendis.utils;
 
 import bkv.colligendis.database.entity.numista.*;
+import bkv.colligendis.database.entity.numista.Currency;
 import bkv.colligendis.database.service.numista.CompositionMetalType;
+import bkv.colligendis.database.service.numista.NTypeService;
+import bkv.colligendis.utils.numista.PART_TYPE;
 import org.jsoup.Jsoup;
 import org.jsoup.nodes.Document;
 import org.jsoup.nodes.Element;
@@ -24,7 +27,8 @@ public class NumistaEditPageUtil {
         return parse(nid);
     }
 
-    private void parseAllCoins(Document document) {
+    public void parseAllCoins(Document document) {
+        int totalPieces = 0;
 
         if (document == null) return;
 
@@ -38,86 +42,103 @@ public class NumistaEditPageUtil {
                 List<String> splitLocations = Arrays.asList(location.split(" › "));
 
 
-                Country country = null;
-                ArrayList<Subject> subjects = new ArrayList<>();
-                Issuer issuer = null;
+                UUID countryUuid = null;
+                List<UUID> subjectUuidList = new ArrayList<>();
+                UUID issuerUuid = null;
 
 
                 for (int i = 0; i < splitLocations.size(); i++) {
-                    if (i == 0) {
+                    if (i == 0) { // first element = Country
                         String countryName = splitLocations.get(i);
-                        if (countryName == null || countryName.isEmpty())
+                        if (countryName == null || countryName.isEmpty()) {
                             System.out.println("ERROR country =" + element);
+                            return;
+                        }
 
                         System.out.println(countryName);
 
-                        country = N4JUtil.getInstance().numistaService.countryService.findOrCreate(countryName);
+                        countryUuid = N4JUtil.getInstance().numistaService.countryService.findCountryUuidByNameOrCreate(countryName);
 
-                        if (splitLocations.size() == 1) {
-                            issuer = N4JUtil.getInstance().numistaService.issuerService.findOrCreate(countryName);
+                        if (splitLocations.size() == 1) { // if only one element? then Issuer = Country
+                            issuerUuid = N4JUtil.getInstance().numistaService.issuerService.findIssuerUuidByNameOrCreate(countryName);
 
-                            if (!country.getIssuers().contains(issuer)) {
-                                country.getIssuers().add(issuer);
-                                N4JUtil.getInstance().numistaService.countryService.save(country);
+                            if (!N4JUtil.getInstance().numistaService.countryService.hasContainsIssuerRelationshipToIssuer(countryUuid, issuerUuid)) {
+                                N4JUtil.getInstance().numistaService.countryService.setContainsIssuer(countryUuid, issuerUuid);
                             }
                         }
 
-                    } else if (i == splitLocations.size() - 1) {
+                    } else if (i == splitLocations.size() - 1) { // last element = Issuer
                         String issuerName = splitLocations.get(i);
+                        System.out.println("     " + "     " + "     " + issuerName);
 
-                        issuer = N4JUtil.getInstance().numistaService.issuerService.findOrCreate(issuerName);
+                        issuerUuid = N4JUtil.getInstance().numistaService.issuerService.findIssuerUuidByNameOrCreate(issuerName);
 
-                        if (subjects.isEmpty()) {
-                            if (!country.getIssuers().contains(issuer)) {
-                                country.getIssuers().add(issuer);
-                                N4JUtil.getInstance().numistaService.countryService.save(country);
+                        if (subjectUuidList.isEmpty()) { // have not any Subjects
+                            if (!N4JUtil.getInstance().numistaService.countryService.hasContainsIssuerRelationshipToIssuer(countryUuid, issuerUuid)) {
+                                N4JUtil.getInstance().numistaService.countryService.setContainsIssuer(countryUuid, issuerUuid);
                             }
-                        } else {
-                            if (!subjects.get(subjects.size() - 1).getIssuers().contains(issuer)) {
-                                subjects.get(subjects.size() - 1).getIssuers().add(issuer);
-                                N4JUtil.getInstance().numistaService.subjectService.save(subjects.get(subjects.size() - 1));
+                        } else { // have any Subjects
+
+                            if(!N4JUtil.getInstance().numistaService.subjectService.hasContainsChildSubjectToSubject(subjectUuidList.get(subjectUuidList.size() - 1), issuerUuid)){
+                                N4JUtil.getInstance().numistaService.subjectService.setContainsChildSubject(subjectUuidList.get(subjectUuidList.size() - 1), issuerUuid);
                             }
+
                         }
 
                     } else if (i == 1) {
                         String firstSubjectName = splitLocations.get(i);
+                        System.out.println("     " + firstSubjectName);
 
-                        Subject subject = N4JUtil.getInstance().numistaService.subjectService.findOrCreate(firstSubjectName);
-                        subjects.add(subject);
+                        UUID subUuid = N4JUtil.getInstance().numistaService.subjectService.findSubjectUuidByNameOrCreate(firstSubjectName);
+                        subjectUuidList.add(subUuid);
 
-                        if (!country.getSubjects().contains(subject)) {
-                            country.getSubjects().add(subject);
-                            N4JUtil.getInstance().numistaService.countryService.save(country);
+                        if (!N4JUtil.getInstance().numistaService.subjectService.hasContainsChildSubjectToSubject(countryUuid, subUuid)) {
+                            N4JUtil.getInstance().numistaService.subjectService.setContainsChildSubject(countryUuid, subUuid);
                         }
                     } else {
                         String subjectName = splitLocations.get(i);
+                        System.out.println("     " + "     " + subjectName);
 
-                        Subject subject = N4JUtil.getInstance().numistaService.subjectService.findOrCreate(subjectName);
+                        UUID subUuid = N4JUtil.getInstance().numistaService.subjectService.findSubjectUuidByNameOrCreate(subjectName);
 
-                        subjects.add(subject);
-
-                        if (!subjects.get(subjects.size() - 2).getChildSubjects().contains(subject)) {
-                            subjects.get(subjects.size() - 2).getChildSubjects().add(subject);
-                            N4JUtil.getInstance().numistaService.subjectService.save(subjects.get(subjects.size() - 2));
+                        if (!N4JUtil.getInstance().numistaService.subjectService.hasContainsChildSubjectToSubject(subjectUuidList.get(i - 1), subUuid)) {
+                            N4JUtil.getInstance().numistaService.subjectService.setContainsChildSubject(subjectUuidList.get(i - 1), subUuid);
                         }
+
+                        subjectUuidList.add(subUuid);
                     }
                 }
 
-                Elements piecesElements = element.select("a");
+                Elements typesElements = element.select("a");
 
-                Issuer finalIssuer = issuer;
-                piecesElements.stream().parallel().forEach(piece -> {
-                    String pieceNid = piece.attributes().get("href").replace("pieces", "").replace(".html", "");
-                    if (!N4JUtil.getInstance().numistaService.nTypeService.existsByNid(pieceNid)) {
-                        NType nType = new NType(pieceNid);
-                        nType.setTitle(piece.text());
-                        nType.setIssuer(finalIssuer);
-                        N4JUtil.getInstance().numistaService.nTypeService.save(nType);
-                    }
+                UUID finalIssuerUuid = issuerUuid;
 
+                assert finalIssuerUuid != null;
+
+                totalPieces += typesElements.size();
+                typesElements.stream().parallel().forEach(type -> {
+                    String typeNid = type.attributes().get("href").replace("pieces", "").replace(".html", "");
+                    N4JUtil.getInstance().numistaService.nTypeService.findNTypeUuidByTitleOrCreate(typeNid, type.text(), finalIssuerUuid);
                 });
+
+                System.out.println("     " + "     " + "     " + "     " + "pieces: " + typesElements.size() + "(" + totalPieces + ")");
+
             }
         }
+    }
+
+    public void parseAndCheckNotActualCoins() {
+        Document document = getNumistaAllCoins();
+        List<String> notActualNTypeNidList = N4JUtil.getInstance().numistaService.nTypeService.findNotActualNTypeNidList();
+
+        for (String nid : notActualNTypeNidList) {
+            Element element = document.selectFirst("a[href*=" + nid + "]");
+            if (element != null) {
+                System.out.println(nid + " find!");
+            }
+
+        }
+
     }
 
 
@@ -181,14 +202,18 @@ public class NumistaEditPageUtil {
     }
 
 
-    private static boolean isValueAndTextCorrect(HashMap<String, String> hashMap) {
-        return hashMap.get("value") != null && !hashMap.get("value").isEmpty()
-                && hashMap.get("text") != null && !hashMap.get("text").isEmpty();
+    /**
+     * Find in Map {@code hashMap} values with keys ("value", "text") and check on {@code null} and {@code empty}
+     *
+     * @param hashMap Map with elements with "value" and "text" keys
+     * @return {@code true} if values by "value" and "text" keys in Map is not null and is not empty, else - {@code false}.
+     */
+    private static boolean isValueAndTextNotNullAndNotEmpty(HashMap<String, String> hashMap) {
+        return hashMap.get("value") != null && !hashMap.get("value").isEmpty() && hashMap.get("text") != null && !hashMap.get("text").isEmpty();
     }
 
     private static boolean isMetalCorrect(HashMap<String, String> hashMap) {
-        return hashMap.get("metalCode") != null && !hashMap.get("metalCode").isEmpty()
-                && hashMap.get("metalName") != null && !hashMap.get("metalName").isEmpty();
+        return hashMap.get("metalCode") != null && !hashMap.get("metalCode").isEmpty() && hashMap.get("metalName") != null && !hashMap.get("metalName").isEmpty();
     }
 
     private static void setMetal1(Composition composition, HashMap<String, String> metalHashMap, CompositionMetalType compositionMetalType) {
@@ -238,43 +263,60 @@ public class NumistaEditPageUtil {
         DebugUtil.showInfo(NumistaEditPageUtil.class, "Parsing page nid=" + nid);
 
         Document page = getNumistaPage(nid);
+        System.out.println(page);
 
         if (page == null) return false;
 
-        // Loading NType or creating new one with nid
-        NType nType = N4JUtil.getInstance().numistaService.nTypeService.findByNid(nid);
-        if (nType == null) {
-            nType = new NType(nid);
-            DebugUtil.showWarning(NumistaEditPageUtil.class, "Parsing new Numista Type with nid=" + nid);
-        } else {
+        NTypeService nTypeService = N4JUtil.getInstance().numistaService.nTypeService;
+
+
+        boolean exists = nTypeService.existsByNid(nid);
+
+        if (exists) {
             DebugUtil.showWarning(NumistaEditPageUtil.class, "Parsing existing Numista Type with nid=" + nid);
+        } else {
+            DebugUtil.showError(NumistaEditPageUtil.class, "Parsing new Numista Type with nid=" + nid);
+
+            //todo временное решение до заполнения базы через списки всех монет, банкнот и экзонимии
+            String designation = getAttribute(page.selectFirst("#designation"), "value");
+            nTypeService.save(new NType(nid, designation));
+//            return false;
         }
 
-        if (!parseCategory(page, nType)) return false;
+        UUID nTypeUuid = nTypeService.findNTypeUuidByNid(nid);
+
+        if (!parseCategory(page, nTypeUuid)) {
+            DebugUtil.showError(NumistaEditPageUtil.class, "Parsing Numista Type with nid=" + nid + ". Category parsing error");
+            return false;
+        }
 
         // Title (designation) | title
-        if (!checkTitle(page, nType)) return false;
+        if (!checkTitle(page, nTypeUuid)) return false;
+
 
         // Issuing authority | issuer
-        if (!loadIssuer(page, nType)) return false;
+        UUID issuerUuid = parseIssuer(page, nTypeUuid, nid);
+        if (issuerUuid == null) return false;
 
         //Ruling authority | ruler
-        loadRulers(page, nType);
+        loadRulers(page, nTypeUuid, nid);
 
         //Issuing entity | issuing_entity
-        loadIssuingEntity(page, nType);
+        loadIssuingEntity(page, nTypeUuid, nid, issuerUuid);
 
-        //Issuing bank | bank //todo missing in html of Document
+        //Currency | currency
+        UUID currencyUuid = loadCurrency(page, nTypeUuid, nid, issuerUuid);
+        if (currencyUuid == null) return false;
+
 
         //Face value in word form | value text
-        loadFaceValue(page, nType);
+        loadDenomination(page, nTypeUuid, nid, currencyUuid);
 
+        NType nType = null;
         //in figure form | value numeric_value
         //pattern="([0-9 ]+([./⁄][0-9]+)?|½|⅓|⅔|¼|¾|⅕|⅖|⅗|⅘|⅙|⅚|⅐|⅛|⅜|⅝|⅞|⅑|⅒)
         loadNumericValue(page, nType);
 
-        //Currency | currency
-        loadCurrency(page, nType);
 
         loadType(page, nType);
 
@@ -323,7 +365,7 @@ public class NumistaEditPageUtil {
         /*
          *  Obverse (head) | obverse
          */
-        if (nType.getObverse() == null) nType.setObverse(new NTypePart());
+        if (nType.getObverse() == null) nType.setObverse(new NTypePart(PART_TYPE.OBVERSE));
 
         //Engraver(s)
         loadObverseEngravers(page, nType);
@@ -354,7 +396,7 @@ public class NumistaEditPageUtil {
         /*
          *  Reverse (back)
          */
-        if (nType.getReverse() == null) nType.setReverse(new NTypePart());
+        if (nType.getReverse() == null) nType.setReverse(new NTypePart(PART_TYPE.REVERSE));
 
 
         //Engraver(s)
@@ -389,7 +431,7 @@ public class NumistaEditPageUtil {
 
         if (nType.getCategory().getName().equals(Category.COIN) || nType.getCategory().getName().equals(Category.EXONUMIA)) {
 
-            if (nType.getEdge() == null) nType.setEdge(new NTypePart());
+            if (nType.getEdge() == null) nType.setEdge(new NTypePart(PART_TYPE.EDGE));
 
             //Description with keywords
             loadEdgeDescription(page, nType);
@@ -417,7 +459,7 @@ public class NumistaEditPageUtil {
          */
 
         if (nType.getCategory().getName().equals(Category.BANKNOTE)) {
-            if (nType.getWatermark() == null) nType.setWatermark(new NTypePart());
+            if (nType.getWatermark() == null) nType.setWatermark(new NTypePart(PART_TYPE.WATERMARK));
 
             //Description
             loadWatermarkDescription(page, nType);
@@ -482,7 +524,8 @@ public class NumistaEditPageUtil {
     }
 
 
-    private static boolean parseCategory(Document page, NType nType) {
+    private static boolean parseCategory(Document page, UUID nTypeUuid) {
+//        NType nType = new NType("ff");
 
         String category = "";
         String nid = "";
@@ -495,53 +538,58 @@ public class NumistaEditPageUtil {
                 DebugUtil.printProperty("category", category, true, true, true);
             }
 
-            if (category.equals("coin")) {
-                Element piecesElement = mainBreadcrumb.selectFirst("a[href^=/catalogue/pieces]");
-                if (piecesElement != null) {
-                    nid = piecesElement.attributes().get("href").replace("/catalogue/pieces", "").replace(".html", "");
-                    DebugUtil.printProperty("id", nid, true, true, true);
+            switch (category) {
+                case "coin" -> {
+                    Element piecesElement = mainBreadcrumb.selectFirst("a[href^=/catalogue/pieces]");
+                    if (piecesElement != null) {
+                        nid = piecesElement.attributes().get("href").replace("/catalogue/pieces", "").replace(".html", "");
+                        DebugUtil.printProperty("id", nid, true, true, true);
+                    }
                 }
-            } else if (category.equals("banknote")) {
-                Element piecesElement = mainBreadcrumb.selectFirst("a[href^=/catalogue/note]");
-                if (piecesElement != null) {
-                    nid = piecesElement.attributes().get("href").replace("/catalogue/note", "").replace(".html", "");
-                    DebugUtil.printProperty("id", nid, true, true, true);
+                case "banknote" -> {
+                    Element piecesElement = mainBreadcrumb.selectFirst("a[href^=/catalogue/note]");
+                    if (piecesElement != null) {
+                        nid = piecesElement.attributes().get("href").replace("/catalogue/note", "").replace(".html", "");
+                        DebugUtil.printProperty("id", nid, true, true, true);
+                    }
                 }
-            } else if (category.equals("exonumia")) {
-                Element piecesElement = mainBreadcrumb.selectFirst("a[href^=/catalogue/exonumia]");
-                if (piecesElement != null) {
-                    nid = piecesElement.attributes().get("href").replace("/catalogue/exonumia", "").replace(".html", "");
-                    DebugUtil.printProperty("id", nid, true, true, true);
+                case "exonumia" -> {
+                    Element piecesElement = mainBreadcrumb.selectFirst("a[href^=/catalogue/exonumia]");
+                    if (piecesElement != null) {
+                        nid = piecesElement.attributes().get("href").replace("/catalogue/exonumia", "").replace(".html", "");
+                        DebugUtil.printProperty("id", nid, true, true, true);
+                    }
                 }
             }
 
             Category c = N4JUtil.getInstance().numistaService.categoryService.findByName(category);
             if (c == null) {
                 DebugUtil.showError(NumistaEditPageUtil.class, "Unknown Category with name=" + category);
-                DebugUtil.showWarning(NumistaEditPageUtil.class, "Skip parsing NType with Numista number=" + nid);
+                DebugUtil.showError(NumistaEditPageUtil.class, "Skip parsing NType with Numista number=" + nid);
                 return false;
             }
-            nType.setCategory(c);
-            return true;
+
+            return N4JUtil.getInstance().numistaService.nTypeService.setUnderCategory(nTypeUuid, c.getUuid());
         }
 
-        DebugUtil.showError(NumistaEditPageUtil.class, "Can't find #main_breadcrumb on page nid: " + nType.getNid());
+        DebugUtil.showError(NumistaEditPageUtil.class, "Can't find #main_breadcrumb on page eid: " + nTypeUuid);
         return false;
     }
 
-    private static boolean checkTitle(Document page, NType nType) {
+    private static boolean checkTitle(Document page, UUID nTypeUuid) {
         String designation = getAttribute(page.selectFirst("#designation"), "value");
         DebugUtil.printProperty("title", designation, true, true, true);
 
-        if (nType.getTitle().equals(designation)) {
+
+        if (N4JUtil.getInstance().numistaService.nTypeService.compareTitle(nTypeUuid, designation)) {
             return true;
         } else {
-            DebugUtil.showError(NumistaEditPageUtil.class, "The Title of existing NType is not equals with Title on the page. " + nType.getTitle() + " != " + designation);
+            DebugUtil.showError(NumistaEditPageUtil.class, "The Title of existing NType is not equals with Title on the page. Ntype's title with eid=" + nTypeUuid + " != " + designation);
             return false;
         }
     }
 
-    private static boolean loadIssuer(Document page, NType nType) {
+    private static UUID parseIssuer(Document page, UUID nTypeUuid, String pageNid) {
         HashMap<String, String> emetteur = getAttributeWithTextSingleOption(page.selectFirst("#emetteur"), "value");
 
         if (emetteur != null) {
@@ -549,33 +597,41 @@ public class NumistaEditPageUtil {
             DebugUtil.printProperty("issuer name", emetteur.get("text"), true, true, true);
 
             String code = emetteur.get("value");
-            String name = emetteur.get("text").trim();
+            String name = emetteur.get("text") != null ? emetteur.get("text").trim() : null;
 
-            if (isValueAndTextCorrect(emetteur)) {
-                if (!nType.getIssuer().getName().equals(name)) {
-                    DebugUtil.showError(NumistaEditPageUtil.class, "The Issuer.name of existing NType is not equals with Issuer on the page. " + nType.getIssuer().getName() + " != " + name);
-                    return false;
-                } else if (nType.getIssuer().getCode() == null || !nType.getIssuer().getCode().equals(code)) {
-                    DebugUtil.showWarning(NumistaEditPageUtil.class, "For Issuer: " + name + " find new code. " + nType.getIssuer().getCode() + " != " + code);
-                    nType.getIssuer().setCode(code);
-                    N4JUtil.getInstance().numistaService.issuerService.save(nType.getIssuer());
+            if (isValueAndTextNotNullAndNotEmpty(emetteur)) {
+                UUID issuerUuid = N4JUtil.getInstance().numistaService.issuerService.findIssuerUuidByCodeThenName(code, name);
+
+                if (issuerUuid == null) {  //create new Issuer with code and name
+                    issuerUuid = N4JUtil.getInstance().numistaService.issuerService.save(new Issuer(code, name)).getUuid();
                 }
-                return true;
+
+                if (!N4JUtil.getInstance().numistaService.issuerService.isIssuerCodeEqualsTo(issuerUuid, code)) { // Some Issuers can be without code value (during parsing AllCoins Numista page)
+                    N4JUtil.getInstance().numistaService.issuerService.updateIssuerCode(issuerUuid, code);
+                    DebugUtil.showWarning(NumistaEditPageUtil.class, "For Issuer: " + name + " find new code. New Code is " + code);
+                }
+
+                N4JUtil.getInstance().numistaService.nTypeService.setIssuedBy(nTypeUuid, issuerUuid);
+                return issuerUuid;
+            } else {
+                if (code == null || code.isEmpty()) {
+                    DebugUtil.showError(NumistaEditPageUtil.class, "The Issuer's code is null or empty on the page nid: " + pageNid);
+                }
+                if (name == null || name.isEmpty()) {
+                    DebugUtil.showError(NumistaEditPageUtil.class, "The Issuer's name is null or empty on the page nid: " + pageNid);
+                }
+                return null;
             }
-
-            DebugUtil.showError(NumistaEditPageUtil.class, "The Issuer info was not find on the page nid: " + nType.getNid());
-
         }
 
-        DebugUtil.showError(NumistaEditPageUtil.class, "Can't find Issuer on the page nid: " + nType.getNid());
+        DebugUtil.showError(NumistaEditPageUtil.class, "Can't find Issuer on the page nid: " + pageNid);
 
-        return false;
+        return null;
     }
 
-    private static void loadRulers(Document page, NType nType) {
+    private static void loadRulers(Document page, UUID nTypeUuid, String pageNid) {
         int index = 0;
         HashMap<String, String> rulerHashMap;
-        nType.getRulers().clear();
 
         do {
             rulerHashMap = getAttributeWithTextSingleOption(page.selectFirst("#ruler" + index), "value");
@@ -585,30 +641,202 @@ public class NumistaEditPageUtil {
                 final String rulerNid = rulerHashMap.get("value");
                 final String rulerName = rulerHashMap.get("text");
 
-                if (isValueAndTextCorrect(rulerHashMap)) {
-                    nType.getRulers().add(N4JUtil.getInstance().numistaService.rulerService.update(null, rulerNid, rulerName));
-                }
+//                if (isValueAndTextNotNullAndNotEmpty(rulerHashMap)) {
+//                    UUID rulerUuid = N4JUtil.getInstance().numistaService.rulerService.findByNid(rulerNid);
+//
+//                    if (rulerUuid == null) {
+//                        rulerUuid = N4JUtil.getInstance().numistaService.rulerService.save(new Ruler(rulerNid, rulerName)).getUuid();
+//                    }
+//
+//                    N4JUtil.getInstance().numistaService.nTypeService.setDuringOfRuler(nTypeUuid, rulerUuid);
+//
+//                } else {
+//                    if (rulerNid == null || rulerNid.isEmpty()) {
+//                        DebugUtil.showError(NumistaEditPageUtil.class, "The Ruler's code is null or empty on the page nid: " + pageNid);
+//                    }
+//                    if (rulerName == null || rulerName.isEmpty()) {
+//                        DebugUtil.showError(NumistaEditPageUtil.class, "The Ruler's name is null or empty on the page nid: " + pageNid);
+//                    }
+//                }
             }
             index++;
         } while (rulerHashMap != null);
 
     }
 
-    private static void loadIssuingEntity(Document page, NType nType) {
-        String issuingEntity = getTagText(page.selectFirst("#issuing_entity"));
-        DebugUtil.printProperty("issuing_entity", issuingEntity, true, false, true);
-        if (issuingEntity != null && !issuingEntity.isEmpty()) {
-            nType.setIssuingEntity(N4JUtil.getInstance().numistaService.issuingEntityService.update(nType.getIssuingEntity(), issuingEntity));
+
+    /**
+     * Load code from
+     * "$.get("../get_issuing_entities.php", { country: selection, prefill: "2325"})"
+     * line in Numista page. Then load name from get-php request
+     *
+     * @param page
+     * @param nTypeUuid
+     * @param nid
+     */
+    private static boolean loadIssuingEntity(Document page, UUID nTypeUuid, String nid, UUID issuerUuid) {
+        Elements elements = page.select("script");
+
+
+        // try to find a prefill value for IssuingEntity on page
+        String issuingEntityCode = null;
+        for (Element element : elements) {
+            if (!element.childNodes().isEmpty()) {
+                String line = Arrays.stream(element.childNodes().get(0).toString().split("\n")).filter(s -> s.contains("$.get(\"../get_issuing_entities.php\"")).findFirst().orElse(null);
+                if (line != null) {
+                    issuingEntityCode = line.substring(line.indexOf("prefill:") + 10, line.indexOf("\"})"));
+                    break;
+                }
+                System.out.println(element.text());
+            }
         }
+
+        if (issuingEntityCode == null || issuingEntityCode.isEmpty()) { //value doesn't set on page
+            return false;
+        }
+
+        //Value set on page, looking for a node in the database by Code
+
+//        UUID issuingEntityUuid = N4JUtil.getInstance().numistaService.issuingEntityService.findEidByCode(issuingEntityCode);
+        UUID issuingEntityUuid = null;
+
+        if (issuingEntityUuid == null) { //didn't find a node in the database
+
+            // load IssuingEntities from https://en.numista.com/catalogue/get_issuing_entities.php?country= ny Issuer
+
+            String issuerCode = N4JUtil.getInstance().numistaService.issuerService.findIssuerCodeByEid(issuerUuid);
+
+            if (issuerCode == null) {
+                DebugUtil.showError(NumistaEditPageUtil.class, "Can't find Issuer's Code by Issuer's Eid while loading Issuing Entity for Ntype with nid : " + nid);
+                return false;
+            }
+
+            Document issuingEntitiesPHPDocument = getNumistaIssuingEntitiesByPHP(issuerCode);
+            if (issuingEntitiesPHPDocument != null) {
+                Elements optgroups = issuingEntitiesPHPDocument.select("optgroup");
+
+                if (!optgroups.isEmpty()) {  //need to understand what to do with OPTGROUP in IssuingEntities
+                    DebugUtil.showError(NumistaEditPageUtil.class, "Find OPTGROUP while parsing IssuingEntities from PHP request with issuer's code: " + issuerCode);
+                }
+
+
+                Elements options = issuingEntitiesPHPDocument.select("option");
+                for (Element element : options) {
+                    String ieCode = element.attributes().get("value");
+                    String ieName = element.text();
+
+//                    UUID ieUuid = N4JUtil.getInstance().numistaService.issuingEntityService.findEidByCode(ieCode);
+                    UUID ieUuid = null;
+                    if (ieUuid == null) {
+                        ieUuid = N4JUtil.getInstance().numistaService.issuingEntityService.save(new IssuingEntity(ieCode, ieName)).getUuid();
+                        if (!N4JUtil.getInstance().numistaService.issuerService.setContainsIssuingEntity(issuerUuid, ieUuid)) {  //Every IssuingEntities mast to connect to Issuer
+                            DebugUtil.showError(NumistaEditPageUtil.class, "Some error while creating relationship between ISSUER and ISSUING_ENTITY while parsing page with nid: " + nid);
+                            return false;
+                        }
+//                        if(issuingEntityCode.equals(ieCode))
+                    } else { //need to check a connection to the Issuer
+                        if (!N4JUtil.getInstance().numistaService.issuerService.hasContainsIssuingEntityRelationshipToIssuingEntity(issuerUuid, ieUuid)) {
+                            N4JUtil.getInstance().numistaService.issuerService.setContainsIssuingEntity(issuerUuid, ieUuid);
+                        }
+                    }
+                }
+            }
+
+//            issuingEntityUuid = N4JUtil.getInstance().numistaService.issuingEntityService.findEidByCode(issuingEntityCode);
+            issuingEntityUuid = null;
+        }
+
+        if (issuingEntityUuid == null) {
+            DebugUtil.showError(NumistaEditPageUtil.class, "Find a IssuingEntity's Code but can't find IssuingEntity in database or create new one while parsing page with nid: " + nid);
+            return false;
+        }
+
+//        DebugUtil.printProperty("issuing_entity", issuingEntity, true, false, true);
+        return N4JUtil.getInstance().numistaService.nTypeService.setIssuedBy(nTypeUuid, issuingEntityUuid);
 
     }
 
-    private static void loadFaceValue(Document page, NType nType) {
-        String valeurFaciale = getAttribute(page.selectFirst("#valeur_faciale"), "value");
-        DebugUtil.printProperty("value text", valeurFaciale, true, true, false);
-        if (valeurFaciale != null && !valeurFaciale.isEmpty()) {
-            nType.setValueText(valeurFaciale);
+    private static boolean loadDenomination(Document page, UUID nTypeUuid, String nid, UUID currencyUuid) {
+        HashMap<String, String> denomination = getAttributeWithTextSingleOption(page.selectFirst("#denomination"), "value");
+        DebugUtil.printProperty("value text", "denomination", false, false, false);
+        if (denomination != null) {
+            DebugUtil.printProperty("value denomination id", denomination.get("value"), true, true, false);
+            DebugUtil.printProperty("value denomination name", denomination.get("text"), true, true, false);
         }
+        if (denomination != null && isValueAndTextNotNullAndNotEmpty(denomination)) {
+            String denominationNid = denomination.get("value");
+            UUID denominationUuid = null;
+//            UUID denominationUuid = N4JUtil.getInstance().numistaService.denominationService.findDenominationUuidByNid(denominationNid);
+
+            if (denominationUuid == null) {
+
+                String currencyNid = N4JUtil.getInstance().numistaService.currencyService.findCurrencyNidByUuid(currencyUuid);
+
+                if (currencyNid == null) {
+                    DebugUtil.showError(NumistaEditPageUtil.class, "Can't find Currency's Nid by Currency's Eid while loading Denomination for Ntype with nid : " + nid);
+                    return false;
+                }
+
+                Document denominationsPHPDocument = getNumistaDenominationsByPHP(currencyNid);
+                if (denominationsPHPDocument != null) {
+                    Elements optgroups = denominationsPHPDocument.select("optgroup");
+
+                    if (!optgroups.isEmpty()) {  //need to understand what to do with OPTGROUP in IssuingEntities
+                        DebugUtil.showError(NumistaEditPageUtil.class, "Find OPTGROUP while parsing Denominations from PHP request with Currency's Nid: " + currencyNid);
+                    }
+
+
+                    Elements options = denominationsPHPDocument.select("option");
+                    for (Element element : options) {
+                        String denNid = element.attributes().get("value");
+                        String denFullName = element.text();
+
+//                        UUID denUuid = N4JUtil.getInstance().numistaService.denominationService.findDenominationUuidByNid(denNid);
+                        UUID denUuid = null;
+                        if (denUuid == null) {
+                            Denomination den = new Denomination();
+                            den.setNid(denNid);
+                            den.setFullName(denFullName);
+                            String denName = denFullName.substring(0, denFullName.indexOf('(') - 1);
+                            den.setName(denName);
+                            String denNumericValueStr = denFullName.substring(denFullName.indexOf('(') + 1, denFullName.indexOf(')'));
+
+                            Float denNumericValue = null;
+                            try {
+                                denNumericValue = Float.valueOf(denNumericValueStr);
+                            } catch (NumberFormatException e) {
+                                DebugUtil.showError(NumistaEditPageUtil.class, "Can't parse Denomination numericValue from " + denFullName + " while parsing Denominations from PHP request with Currency's Nid: " + currencyNid);
+                            }
+                            den.setNumericValue(denNumericValue);
+
+                            denUuid = N4JUtil.getInstance().numistaService.denominationService.save(den).getUuid();
+                            if (!N4JUtil.getInstance().numistaService.currencyService.setHasDenomination(currencyUuid, denUuid)) {  //Every Denomination mast to connect to Currency
+                                DebugUtil.showError(NumistaEditPageUtil.class, "Some error while creating relationship between CURRENCY and DENOMINATION while parsing page with nid: " + nid);
+                                return false;
+                            }
+                        } else { //need to check a connection to the Issuer
+                            if (!N4JUtil.getInstance().numistaService.currencyService.hasSingleRelationshipToNode(currencyUuid, denUuid)) {
+                                N4JUtil.getInstance().numistaService.currencyService.setHasDenomination(currencyUuid, denUuid);
+                            }
+                        }
+                    }
+                }
+
+//                denominationUuid = N4JUtil.getInstance().numistaService.denominationService.findDenominationUuidByNid(denominationNid);
+                denominationUuid = null;
+            }
+
+            if (denominationUuid == null) {
+                DebugUtil.showError(NumistaEditPageUtil.class, "Find a Denomination's Nid but can't find Denomination in database or create new one while parsing page with nid: " + nid);
+                return false;
+            }
+
+            return N4JUtil.getInstance().numistaService.nTypeService.setDenominatedIn(nTypeUuid, denominationUuid);
+
+        }
+
+
+        return false;
     }
 
     private static void loadNumericValue(Document page, NType nType) {
@@ -619,16 +847,89 @@ public class NumistaEditPageUtil {
         }
     }
 
-    private static void loadCurrency(Document page, NType nType) {
+    private static UUID loadCurrency(Document page, UUID nTypeUuid, String nid, UUID issuerUuid) {
         HashMap<String, String> devise = getAttributeWithTextSingleOption(page.selectFirst("#devise"), "value");
         if (devise != null) {
             DebugUtil.printProperty("value currency id", devise.get("value"), true, true, false);
             DebugUtil.printProperty("value currency full_name", devise.get("text"), true, true, false);
         }
 
-        if (devise != null && isValueAndTextCorrect(devise)) {
-            nType.setCurrency(N4JUtil.getInstance().numistaService.currencyService.update(nType.getCurrency(), devise.get("value"), devise.get("text")));
+        if (devise != null && isValueAndTextNotNullAndNotEmpty(devise)) {
+
+            String currencyNid = devise.get("value");
+//            UUID currencyUuid = N4JUtil.getInstance().numistaService.currencyService.findCurrencyUuidByNid(currencyNid);
+            UUID currencyUuid = null;
+
+            if (currencyUuid == null) {
+
+                String issuerCode = N4JUtil.getInstance().numistaService.issuerService.findIssuerCodeByEid(issuerUuid);
+
+                if (issuerCode == null) {
+                    DebugUtil.showError(NumistaEditPageUtil.class, "Can't find Issuer's Code by Issuer's Eid while loading Currency for Ntype with nid : " + nid);
+                    return null;
+                }
+
+                Document currenciesPHPDocument = getNumistaCurrenciesByPHP(issuerCode);
+                if (currenciesPHPDocument != null) {
+                    Elements optgroups = currenciesPHPDocument.select("optgroup");
+
+                    if (!optgroups.isEmpty()) {  //need to understand what to do with OPTGROUP in Currencies
+                        DebugUtil.showError(NumistaEditPageUtil.class, "Find OPTGROUP while parsing Currencies from PHP request with Issuer's Code: " + issuerCode);
+                    }
+
+
+                    Elements options = currenciesPHPDocument.select("option");
+                    for (Element element : options) {
+                        String curNid = element.attributes().get("value");
+                        String curFullName = element.text();
+
+//                        UUID curUuid = N4JUtil.getInstance().numistaService.currencyService.findCurrencyUuidByNid(curNid);
+                        UUID curUuid = null;
+                        if (curUuid == null) {
+                            Currency cur = new Currency();
+                            cur.setNid(curNid);
+                            cur.setFullName(curFullName);
+
+//                            String curName = curFullName.substring(curFullName.indexOf(''), denFullName.indexOf('(') - 1);
+//                            den.setName(denName);
+//                            String denNumericValueStr = denFullName.substring(denFullName.indexOf('(') + 1, denFullName.indexOf(')'));
+//
+//                            Float denNumericValue = null;
+//                            try {
+//                                denNumericValue = Float.valueOf(denNumericValueStr);
+//                            } catch (NumberFormatException e) {
+//                                DebugUtil.showError(NumistaEditPageUtil.class, "Can't parse Denomination numericValue from " + denFullName + " while parsing Denominations from PHP request with Currency's Nid: " + currencyNid);
+//                            }
+//                            den.setNumericValue(denNumericValue);
+//
+//                            denUuid = N4JUtil.getInstance().numistaService.denominationService.save(den).getEid();
+//                            if (!N4JUtil.getInstance().numistaService.currencyService.setHasDenomination(currencyUuid, denUuid)) {  //Every Denomination mast to connect to Currency
+//                                DebugUtil.showError(NumistaEditPageUtil.class, "Some error while creating relationship between CURRENCY and DENOMINATION while parsing page with nid: " + nid);
+//                                return false;
+//                            }
+                        } else { //need to check a connection to the Issuer
+//                            if (!N4JUtil.getInstance().numistaService.currencyService.hasSingleRelationshipToNode(currencyUuid, denUuid)) {
+//                                N4JUtil.getInstance().numistaService.currencyService.setHasDenomination(currencyUuid, denUuid);
+//                            }
+                        }
+                    }
+                }
+
+//                denominationUuid = N4JUtil.getInstance().numistaService.denominationService.findUuidByNid(denominationNid);
+            }
+
+//            if(denominationUuid == null){
+//                DebugUtil.showError(NumistaEditPageUtil.class, "Find a Denomination's Nid but can't find Denomination in database or create new one while parsing page with nid: " + nid);
+//                return false;
+//            }
+
+//            return N4JUtil.getInstance().numistaService.nTypeService.setDenominatedIn(nTypeUuid, denominationUuid);
+
+
+//            nType.setCurrency(N4JUtil.getInstance().numistaService.currencyService.update(nType.getCurrency(), devise.get("value"), devise.get("text")));
         }
+
+        return null;
     }
 
     private static void loadType(Document page, NType nType) {
@@ -638,8 +939,8 @@ public class NumistaEditPageUtil {
             DebugUtil.printProperty("type value", coinType.get("value"), true, true, false);
             DebugUtil.printProperty("type text", coinType.get("text"), true, true, false);
 
-            if (isValueAndTextCorrect(coinType)) {
-                nType.setType(N4JUtil.getInstance().numistaService.typeService.update(nType.getType(), coinType.get("value"), coinType.get("text"), null));
+            if (isValueAndTextNotNullAndNotEmpty(coinType)) {
+                nType.setCollectibleType(N4JUtil.getInstance().numistaService.collectibleTypeService.update(nType.getCollectibleType(), coinType.get("value"), coinType.get("text"), null));
             }
         } else if (nType.getCategory().getName().equals(Category.EXONUMIA)) {
             Element exonumiaCoinType = page.selectFirst("#coin_type");
@@ -653,9 +954,9 @@ public class NumistaEditPageUtil {
                         DebugUtil.printProperty("coin_type value", exonumiaType.get("value"), false, false, true);
                         DebugUtil.printProperty("coin_type text", exonumiaType.get("text"), false, false, true);
 
-                        if (isValueAndTextCorrect(exonumiaType) && !optgroup.attributes().get("label").isEmpty()) {
-                            TypeGroup typeGroup = N4JUtil.getInstance().numistaService.typeGroupService.findByName(optgroup.attributes().get("label"));
-                            nType.setType(N4JUtil.getInstance().numistaService.typeService.update(nType.getType(), exonumiaType.get("value"), exonumiaType.get("text"), typeGroup));
+                        if (isValueAndTextNotNullAndNotEmpty(exonumiaType) && !optgroup.attributes().get("label").isEmpty()) {
+                            CollectibleTypeGroup typeGroup = N4JUtil.getInstance().numistaService.typeGroupService.findByName(optgroup.attributes().get("label"));
+//                            nType.setCollectibleType(N4JUtil.getInstance().numistaService.collectibleTypeService.update(nType.getCollectibleType(), exonumiaType.get("value"), exonumiaType.get("text"), typeGroup));
                         }
                         break;
                     }
@@ -687,17 +988,17 @@ public class NumistaEditPageUtil {
                 String demonetized = demonetisationElement.attributes().get("value");
                 DebugUtil.printProperty("demonetization is_demonetized", demonetized, true, true, true);
                 if (!demonetized.isEmpty()) {
-                    switch (demonetized) {
-                        case "oui":
-                            nType.setDemonetized(true);
-                            break;
-                        case "non":
-                            nType.setDemonetized(false);
-                            break;
-                        case "inconnu":
-                            nType.setDemonetized(null);
-                            break;
-                    }
+//                    switch (demonetized) {
+//                        case "oui":
+//                            nType.setIsDemonetized(true);
+//                            break;
+//                        case "non":
+//                            nType.setIsDemonetized(false);
+//                            break;
+//                        case "inconnu":
+//                            nType.setIsDemonetized(null);
+//                            break;
+//                    }
                 }
 
                 if (demonetized.equals("oui")) {
@@ -740,7 +1041,7 @@ public class NumistaEditPageUtil {
             DebugUtil.printProperty("references[] number", inputValue, true, true, false);
 
             if (inputValue != null && !inputValue.isEmpty()) {
-                if (isValueAndTextCorrect(reference)) {
+                if (isValueAndTextNotNullAndNotEmpty(reference)) {
                     Catalogue catalogue = N4JUtil.getInstance().numistaService.catalogueService.findByNid(reference.get("value"), reference.get("text"));
                     if (catalogue != null) {
                         nType.getCatalogueReferences().add(N4JUtil.getInstance().numistaService.catalogueReferenceService.findByNumberAndCatalogueNid(inputValue, catalogue));
@@ -1081,7 +1382,7 @@ public class NumistaEditPageUtil {
                 DebugUtil.printProperty("composition value", compositionHashMap.get("value"), false, true, false);
                 DebugUtil.printProperty("composition name", compositionHashMap.get("text"), false, true, false);
 
-                if (isValueAndTextCorrect(compositionHashMap)) {
+                if (isValueAndTextNotNullAndNotEmpty(compositionHashMap)) {
                     if (nType.getComposition() == null) {
                         nType.setComposition(new Composition());
                     }
@@ -1105,7 +1406,7 @@ public class NumistaEditPageUtil {
             DebugUtil.printProperty("shape code", shape.get("value"), true, true, true);
             DebugUtil.printProperty("shape name", shape.get("text"), true, true, true);
         }
-        if (shape != null && isValueAndTextCorrect(shape)) {
+        if (shape != null && isValueAndTextNotNullAndNotEmpty(shape)) {
             nType.setShape(N4JUtil.getInstance().numistaService.shapeService.update(nType.getShape(), shape.get("value"), shape.get("text")));
         }
 
@@ -1176,7 +1477,7 @@ public class NumistaEditPageUtil {
             for (HashMap<String, String> technique : techniques) {
                 DebugUtil.printProperty("technique[] code", technique.get("value"), true, false, true);
                 DebugUtil.printProperty("technique[] name", technique.get("text"), true, false, true);
-                if (isValueAndTextCorrect(technique)) {
+                if (isValueAndTextNotNullAndNotEmpty(technique)) {
                     nType.getTechniques().add(N4JUtil.getInstance().numistaService.techniqueService.findByNid(technique.get("value"), technique.get("text")));
                 }
             }
@@ -1248,7 +1549,7 @@ public class NumistaEditPageUtil {
             for (HashMap<String, String> scriptAvers : scriptsAvers) {
                 DebugUtil.printProperty("obverse lettering_scripts[] code", scriptAvers.get("value"), true, false, true);
                 DebugUtil.printProperty("obverse lettering_scripts[] name", scriptAvers.get("text"), true, false, true);
-                if (isValueAndTextCorrect(scriptAvers)) {
+                if (isValueAndTextNotNullAndNotEmpty(scriptAvers)) {
                     nType.getObverse().getLetteringScripts().add(N4JUtil.getInstance().numistaService.letteringScriptService.findByNid(scriptAvers.get("value"), scriptAvers.get("text")));
                 }
             }
@@ -1332,7 +1633,7 @@ public class NumistaEditPageUtil {
                 DebugUtil.printProperty("reverse lettering_scripts[] code", scriptRevers.get("value"), true, false, true);
                 DebugUtil.printProperty("reverse lettering_scripts[] name", scriptRevers.get("text"), true, false, true);
 
-                if (isValueAndTextCorrect(scriptRevers)) {
+                if (isValueAndTextNotNullAndNotEmpty(scriptRevers)) {
                     nType.getReverse().getLetteringScripts().add(N4JUtil.getInstance().numistaService.letteringScriptService.findByNid(scriptRevers.get("value"), scriptRevers.get("text")));
                 }
             }
@@ -1390,7 +1691,7 @@ public class NumistaEditPageUtil {
             for (HashMap<String, String> scriptTranche : scriptsTranche) {
                 DebugUtil.printProperty("edge lettering_scripts[] code", scriptTranche.get("value"), false, false, false);
                 DebugUtil.printProperty("edge lettering_scripts[] name", scriptTranche.get("text"), false, false, false);
-                if (isValueAndTextCorrect(scriptTranche)) {
+                if (isValueAndTextNotNullAndNotEmpty(scriptTranche)) {
                     nType.getEdge().getLetteringScripts().add(N4JUtil.getInstance().numistaService.letteringScriptService.findByNid(scriptTranche.get("value"), scriptTranche.get("text")));
                 }
             }
@@ -1461,7 +1762,7 @@ public class NumistaEditPageUtil {
                     HashMap<String, String> mintCode = getAttributeWithTextSingleOption(mintElement, "value");
                     DebugUtil.printProperty("mints[] id", mintCode.get("value"), true, false, false);
                     DebugUtil.printProperty("mints[] name_full", mintCode.get("text"), true, false, false);
-                    if (isValueAndTextCorrect(mintCode)) {
+                    if (isValueAndTextNotNullAndNotEmpty(mintCode)) {
                         mint = N4JUtil.getInstance().numistaService.mintService.findByNid(mintCode.get("value"), mintCode.get("text"));
                     }
 
@@ -1479,7 +1780,7 @@ public class NumistaEditPageUtil {
                         DebugUtil.printProperty("mints[] mintmark code", mintmarkHashMap.get("value"), true, false, false);
                         DebugUtil.printProperty("mints[] mintmark picture", mintmarkHashMap.get("text"), true, false, false);
 
-                        if (isValueAndTextCorrect(mintmarkHashMap)) {
+                        if (isValueAndTextNotNullAndNotEmpty(mintmarkHashMap)) {
                             mintmark = N4JUtil.getInstance().numistaService.mintmarkService.findByNid(mintmarkHashMap.get("value"));
                             if (mintmark != null && mintmark.getPicture() != null && !mintmark.getPicture().equals(mintmarkHashMap.get("text"))) {
                                 mintmark.setPicture(mintmarkHashMap.get("text"));
@@ -1488,7 +1789,7 @@ public class NumistaEditPageUtil {
                         }
 
                         SpecifiedMint specifiedMint = N4JUtil.getInstance().numistaService.specifiedMintService.findByIdentifierMintMintmark(mintmarkIdentifier, mint.getNid(), mintmark != null ? mintmark.getNid() : null);
-                        if(specifiedMint == null){
+                        if (specifiedMint == null) {
                             specifiedMint = new SpecifiedMint();
                             specifiedMint.setIdentifier(mintmarkIdentifier);
                             specifiedMint.setMint(mint);
@@ -1516,7 +1817,7 @@ public class NumistaEditPageUtil {
                 if (mint != null) {
                     DebugUtil.printProperty("printer mint value", mint.get("value"), false, true, false);
                     DebugUtil.printProperty("printer mint name", mint.get("text"), false, true, false);
-                    if (isValueAndTextCorrect(mint)) {
+                    if (isValueAndTextNotNullAndNotEmpty(mint)) {
                         nType.getPrinters().add(N4JUtil.getInstance().numistaService.printerService.findByNid(mint.get("value"), mint.get("text")));
                     }
                 }
@@ -1546,12 +1847,12 @@ public class NumistaEditPageUtil {
 
     private static void loadMintageCalendar(Document page, NType nType) {
         HashMap<String, String> calendar = getAttributeWithTextSelectedOption(page.selectFirst("#annees"));
-        if(calendar == null) {
+        if (calendar == null) {
             nType.setCalendar(N4JUtil.getInstance().numistaService.calendarService.findByCode("inconnu", "Unknown"));
         } else {
             DebugUtil.printProperty("issues calendar code", calendar.get("value"), true, true, true);
             DebugUtil.printProperty("issues calendar name", calendar.get("text"), true, true, true);
-            if (isValueAndTextCorrect(calendar)) {
+            if (isValueAndTextNotNullAndNotEmpty(calendar)) {
                 nType.setCalendar(N4JUtil.getInstance().numistaService.calendarService.findByCode(calendar.get("value"), calendar.get("text")));
             }
         }
@@ -1593,7 +1894,7 @@ public class NumistaEditPageUtil {
                                 Element datesElement = page.selectFirst("#dates" + id);
                                 if (datesElement != null) {
                                     Element datedElement = datesElement.selectFirst("input[name=dated" + id + "]");
-                                    if(datedElement != null){
+                                    if (datedElement != null) {
                                         String min_year = datedElement.attributes().get("value");
 
                                         DebugUtil.printProperty("issues[] min_year", min_year, true, false, false);
@@ -1644,11 +1945,9 @@ public class NumistaEditPageUtil {
                                 DebugUtil.printProperty("issues[] year", year, true, true, true);
 
                                 if (variant != null && !Objects.equals(variant.getDateYear(), Integer.valueOf(year))) {
-                                    DebugUtil.showServiceMessage(NumistaEditPageUtil.class, "New value for Year of Variant with nid="
-                                            + variant.getNid() + " will be set (" + variant.getDateYear() + " -> "
-                                            + Integer.valueOf(year), DebugUtil.MESSAGE_LEVEL.WARNING);
+                                    DebugUtil.showServiceMessage(NumistaEditPageUtil.class, "New value for Year of Variant with nid=" + variant.getNid() + " will be set (" + variant.getDateYear() + " -> " + Integer.valueOf(year), DebugUtil.MESSAGE_LEVEL.WARNING);
                                     variant.setDateYear(Integer.parseInt(year));
-                                    if(nType.getCalendar() != null && nType.getCalendar().getToGregorianShift() != null){
+                                    if (nType.getCalendar() != null && nType.getCalendar().getToGregorianShift() != null) {
                                         variant.setGregorianYear(Integer.parseInt(year) + nType.getCalendar().getToGregorianShift());
                                     }
 
@@ -1668,9 +1967,7 @@ public class NumistaEditPageUtil {
                                     DebugUtil.printProperty("issues[] month", month, false, false, false);
 
                                     if (variant != null && variant.getDateMonth() != null && !Objects.equals(variant.getDateMonth(), Integer.valueOf(month))) {
-                                        DebugUtil.showServiceMessage(NumistaEditPageUtil.class, "New value for Month of Variant with nid="
-                                                + variant.getNid() + " will be set (" + variant.getDateMonth() + " -> "
-                                                + Integer.valueOf(month), DebugUtil.MESSAGE_LEVEL.WARNING);
+                                        DebugUtil.showServiceMessage(NumistaEditPageUtil.class, "New value for Month of Variant with nid=" + variant.getNid() + " will be set (" + variant.getDateMonth() + " -> " + Integer.valueOf(month), DebugUtil.MESSAGE_LEVEL.WARNING);
                                         variant.setDateMonth(Integer.parseInt(month));
                                     }
                                 }
@@ -1689,9 +1986,7 @@ public class NumistaEditPageUtil {
                                     DebugUtil.printProperty("issues[] day", day, false, false, false);
 
                                     if (variant != null && variant.getDateDay() != null && !Objects.equals(variant.getDateDay(), Integer.valueOf(day))) {
-                                        DebugUtil.showServiceMessage(NumistaEditPageUtil.class, "New value for Day of Variant with nid="
-                                                + variant.getNid() + " will be set (" + variant.getDateDay() + " -> "
-                                                + Integer.valueOf(day), DebugUtil.MESSAGE_LEVEL.WARNING);
+                                        DebugUtil.showServiceMessage(NumistaEditPageUtil.class, "New value for Day of Variant with nid=" + variant.getNid() + " will be set (" + variant.getDateDay() + " -> " + Integer.valueOf(day), DebugUtil.MESSAGE_LEVEL.WARNING);
                                         variant.setDateDay(Integer.parseInt(day));
                                     }
                                 }
@@ -1705,7 +2000,7 @@ public class NumistaEditPageUtil {
                                 DebugUtil.printProperty("issues[] mint", mint, true, false, false);
                                 if (variant != null && !mint.isEmpty()) {
                                     variant.setSpecifiedMint(nType.getSpecifiedMints().stream().filter(specifiedMint -> {
-                                        if(specifiedMint.getIdentifier().contains(mint)){
+                                        if (specifiedMint.getIdentifier().contains(mint)) {
                                             return true;
                                         }
                                         return false;
@@ -1760,10 +2055,9 @@ public class NumistaEditPageUtil {
     }
 
 
+    private static void loadTagReferences(Document page, NType nType) {
 
-        private static void loadTagReferences(Document page, NType nType) {
-
-        nType.getnTags().clear();
+        nType.getNTags().clear();
 
         //Tags (an hierarchy of tags (1st and 2nd levels))
         // <option value="34">Agriculture</option> <option value="12" disabled>Animals</option> <option value="133" data-level="2">Amphibian</option> <option value="151" data-level="2">Arachnid</option> <option value="68" selected data-level="2">Bear</option> <option value="13" data-level="2">Bird</option> <option value="82" data-level="2">Camel or camelid</option> <option value="16" data-level="2">Cat or feline</option> <option value="84" data-level="2">Cow or bovine</option> <option value="152" data-level="2">Crustacean</option> <option value="146" data-level="2">Deer or cervid</option> <option value="17" data-level="2">Dog or canid</option> <option value="64" data-level="2">Eagle</option> <option value="67" data-level="2">Elephant</option> <option value="65" data-level="2">Fantasy animal</option> <option value="14" data-level="2">Fish</option> <option value="153" data-level="2">Goat or caprine</option> <option value="15" data-level="2">Horse or equine</option> <option value="66" data-level="2">Insect</option> <option value="89" data-level="2">Marine invertebrate</option> <option value="69" data-level="2">Marine mammal</option> <option value="127" data-level="2">Marsupial</option> <option value="147" data-level="2">Other animal</option> <option value="126" data-level="2">Pig or porcine</option> <option value="40" data-level="2">Prehistoric animal</option> <option value="124" data-level="2">Primate</option> <option value="136" data-level="2">Rabbit</option> <option value="88" data-level="2">Reptile</option> <option value="135" data-level="2">Rodent</option> <option value="83" data-level="2">Sheep or ovine</option> <option value="70" data-level="2">Shell</option> <option value="63" data-level="2">Turtle or tortoise</option> <option value="185">Armour</option> <option value="24" disabled>Art</option> <option value="114" data-level="2">Cinema</option> <option value="27" data-level="2">Dance</option> <option value="26" data-level="2">Literature</option> <option value="25" data-level="2">Music</option> <option value="28" data-level="2">Painting</option> <option value="62" data-level="2">Sculpture</option> <option value="113" data-level="2">Theatre</option> <option value="30" disabled>Astrology</option> <option value="31" data-level="2">Chinese calendar</option> <option value="32" data-level="2">Western astrological sign</option> <option value="48" disabled>Buildings</option> <option value="90" data-level="2">Bridge</option> <option value="50" data-level="2">Castle or fortification</option> <option value="188" data-level="2">Government building</option> <option value="111" data-level="2">Lighthouse</option> <option value="187" data-level="2">Memorial</option> <option value="123" data-level="2">Museum</option> <option value="148" data-level="2">Other building</option> <option value="110" data-level="2">Palace</option> <option value="49" data-level="2">Religious building</option> <option value="149" data-level="2">Sports venue</option> <option value="76" data-level="2">Tower</option> <option value="168" data-level="2">Tunnel</option> <option value="176" disabled>Coins, banknotes, stamps</option> <option value="177" data-level="2">Banknote depiction</option> <option value="6" data-level="2">Coin depiction</option> <option value="178" data-level="2">Stamp depiction</option> <option value="121">Education</option> <option value="77" disabled>Events</option> <option value="80" data-level="2">Birth anniversary</option> <option value="154" data-level="2">Carnival or festival</option> <option value="78" data-level="2">Coronation</option> <option value="81" data-level="2">Death anniversary</option> <option value="118" data-level="2">Fair or exhibition</option> <option value="128" data-level="2">Independence</option> <option value="47" data-level="2">Marriage</option> <option value="166" data-level="2">National day</option> <option value="183" data-level="2">Religious holiday</option> <option value="167" data-level="2">Revolution or civil war</option> <option value="112" data-level="2">Treaty</option> <option value="91" disabled>Famous people</option> <option value="97" data-level="2">Artist</option> <option value="95" data-level="2">Explorer</option> <option value="179" data-level="2">Fictional character</option> <option value="180" data-level="2">Military leader</option> <option value="92" data-level="2">Monarch</option> <option value="96" data-level="2">Philosopher</option> <option value="93" data-level="2">Politician</option> <option value="143" data-level="2">Religious figure</option> <option value="94" data-level="2">Scientist</option> <option value="181" data-level="2">Sportsperson</option> <option value="122">Firearm or handheld weapon</option> <option value="5">Flag</option> <option value="37" disabled>Games and sports events</option> <option value="51" data-level="2">Asian Games</option> <option value="39" data-level="2">Commonwealth Games</option> <option value="175" data-level="2">FIFA World Cup</option> <option value="38" data-level="2">Summer Olympic Games</option> <option value="45" data-level="2">Winter Olympic Games</option> <option value="150">Hand</option> <option value="184">Handicraft</option> <option value="41">Hat</option> <option value="119">Health</option> <option value="35">Industry</option> <option value="71" disabled>Landscapes</option> <option value="75" data-level="2">Desert</option> <option value="73" data-level="2">Lake</option> <option value="72" data-level="2">Mountain</option> <option value="140" data-level="2">River</option> <option value="74" data-level="2">Sea</option> <option value="7">Map</option> <option value="18" disabled>Means of transport</option> <option value="170" data-level="2">Bike or motorcycle</option> <option value="20" data-level="2">Boat or watercraft</option> <option value="21" data-level="2">Car</option> <option value="22" data-level="2">Plane or aircraft</option> <option value="19" data-level="2">Train</option> <option value="169" data-level="2">Truck or tractor</option> <option value="36">Millennium</option> <option value="42">Mustache</option> <option value="29">Mythology</option> <option value="163">Natural phenomenon</option> <option value="134" disabled>Objects</option> <option value="137" data-level="2">Anchor</option> <option value="172" data-level="2">Armillary sphere</option> <option value="144" data-level="2">Container or tableware</option> <option value="138" data-level="2">Crown</option> <option value="164" data-level="2">Globe</option> <option value="139" data-level="2">Scale</option> <option value="155" data-level="2">Toy or game</option> <option value="157" disabled>Organizations</option> <option value="1" data-level="2">FAO</option> <option value="165" data-level="2">Red Cross</option> <option value="44" data-level="2">United Nations</option> <option value="120">Peace</option> <option value="85" disabled>Places</option> <option value="115" data-level="2">Beach</option> <option value="87" data-level="2">Park</option> <option value="116" data-level="2">Region</option> <option value="86" data-level="2">Town</option> <option value="9" disabled>Plants</option> <option value="11" data-level="2">Flower</option> <option value="131" data-level="2">Fruit</option> <option value="10" data-level="2">Tree</option> <option value="145">Puzzle coin</option> <option value="46">Science</option> <option value="159" disabled>Social history</option> <option value="160" data-level="2">Feminism</option> <option value="161" data-level="2">Human rights</option> <option value="162" data-level="2">Slavery</option> <option value="23">Space</option> <option value="2" disabled>Sports</option> <option value="54" data-level="2">Athletics</option> <option value="107" data-level="2">Baseball</option> <option value="52" data-level="2">Basketball</option> <option value="129" data-level="2">Boxing or wrestling</option> <option value="79" data-level="2">Cricket</option> <option value="108" data-level="2">Cycling</option> <option value="132" data-level="2">Golf</option> <option value="59" data-level="2">Gymnastics</option> <option value="53" data-level="2">Hockey</option> <option value="109" data-level="2">Martial arts</option> <option value="182" data-level="2">Other sport</option> <option value="56" data-level="2">Rugby</option> <option value="55" data-level="2">Ski</option> <option value="3" data-level="2">Soccer</option> <option value="61" data-level="2">Swimming</option> <option value="60" data-level="2">Table tennis</option> <option value="57" data-level="2">Tennis</option> <option value="58" data-level="2">Volleyball</option> <option value="158">Sustainability</option> <option value="98" disabled>Symbols</option> <option value="43" data-level="2">Allegory</option> <option value="100" data-level="2">Caduceus</option> <option value="156" data-level="2">Christogram</option> <option value="4" data-level="2">Coat of Arms</option> <option value="102" data-level="2">Cornucopia</option> <option value="105" data-level="2">Crescent</option> <option value="101" data-level="2">Cross</option> <option value="171" data-level="2">Double-headed eagle</option> <option value="117" data-level="2">Fasces</option> <option value="99" data-level="2">Fleur-de-lis</option> <option value="173" data-level="2">Globus cruciger</option> <option value="104" data-level="2">Hammer and sickle</option> <option value="141" data-level="2">Monogram</option> <option value="103" data-level="2">Phrygian cap</option> <option value="106" data-level="2">Star of David</option> <option value="142" data-level="2">Triskelion</option> <option value="186" data-level="2">Trophy of arms</option> <option value="130" data-level="2">Wreath</option> <option value="174">Technology</option> <option value="33">Trade</option> <option value="8">War</option>
@@ -1800,7 +2094,7 @@ public class NumistaEditPageUtil {
 
                             nTagSecondLevel.setParent(nTagFirstLevel);
                             N4JUtil.getInstance().numistaService.nTagService.save(nTagSecondLevel);
-                            nType.getnTags().add(nTagSecondLevel);
+                            nType.getNTags().add(nTagSecondLevel);
 
                         }
 
@@ -1812,7 +2106,7 @@ public class NumistaEditPageUtil {
                         DebugUtil.printProperty("tags[] first_level name", tagFirstLevelName, true, true, true);
 
                         NTag nTagFirstLevel = N4JUtil.getInstance().numistaService.nTagService.findByNid(tagFirstLevelCode, tagFirstLevelName);
-                        nType.getnTags().add(nTagFirstLevel);
+                        nType.getNTags().add(nTagFirstLevel);
 
                     }
                 }
@@ -1820,7 +2114,6 @@ public class NumistaEditPageUtil {
         }
 
     }
-
 
 
     private static HashMap<String, String> parseCompositionMetal(String metalId, String finenessId, Document document) {
@@ -1859,6 +2152,132 @@ public class NumistaEditPageUtil {
         try {
 
             URL url = new URL("https://en.numista.com/catalogue/contributions/modifier.php?id=" + numistaNumber);
+
+            CookieHandler.setDefault(new CookieManager(null, CookiePolicy.ACCEPT_ALL));
+            HttpURLConnection con = (HttpURLConnection) url.openConnection();
+            con.setRequestMethod("GET");
+            con.setRequestProperty("User-Agent", USER_AGENT);
+
+            // Set the cookie value to send
+            con.setRequestProperty("Cookie", "_pk_id.10.0242=98c7c0d8feae54a1.1669823762.; _pk_ref.10.0242=%5B%22%22%2C%22%22%2C1679756455%2C%22https%3A%2F%2Fwww.google.com%2F%22%5D; _pk_ses.10.0242=1; _pk_testcookie=1; tb=y; tc=y; tn=y; tp=n; tt=n; PHPSESSID=k0ot7rr75am7q6r72prfvva4bj; carte=piece; tbb=y; tbc=y; tbl=y; tbt=y; _ga=GA1.2.1130692859.1674417278; ph_phc_Tbfg4EiRsr5iefFoth2Y1Hi3sttTeLQ5RV5TLg4hL1W_posthog=%7B%22distinct_id%22%3A%22185db0c0ab81ff-058fac83e2a881-3c626b4b-29b188-185db0c0ab91eea%22%2C%22%24device_id%22%3A%22185db0c0ab81ff-058fac83e2a881-3c626b4b-29b188-185db0c0ab91eea%22%2C%22%24session_recording_enabled_server_side%22%3Afalse%2C%22%24initial_referrer%22%3A%22https%3A%2F%2Fen.numista.com%2F%22%2C%22%24initial_referring_domain%22%3A%22en.numista.com%22%2C%22%24referrer%22%3A%22https%3A%2F%2Fen.numista.com%2F%22%2C%22%24referring_domain%22%3A%22en.numista.com%22%2C%22%24sesid%22%3A%5B1677792463026%2C%22186a43948b3efc-076d29a9c96b9d-3d626b4b-29b188-186a43948b4159f%22%2C1677792463026%5D%7D; pass=44e1894842815ca70e0e4727b600765f; pseudo=kbobryakov; _gcl_au=1.1.1579430192.1674417278; pieces_par_page=200");
+
+            int responseCode = con.getResponseCode();
+            System.out.println("\nSending 'GET' request to URL : " + url);
+            System.out.println("Response Code : " + responseCode);
+
+            if (responseCode == 404) return null;
+
+            BufferedReader in = new BufferedReader(new InputStreamReader(con.getInputStream()));
+            String inputLine;
+            StringBuffer response = new StringBuffer();
+
+            while ((inputLine = in.readLine()) != null) {
+                response.append(inputLine);
+                response.append(System.getProperty("line.separator"));
+            }
+
+            in.close();
+
+            // Send the request to the server
+            document = Jsoup.parse(response.toString());
+        } catch (IOException e) {
+            e.printStackTrace();
+            return null;
+        }
+        return document;
+    }
+
+    private static Document getNumistaIssuingEntitiesByPHP(String issuerCode) {
+        Document document;
+        try {
+
+            URL url = URI.create("https://en.numista.com/catalogue/get_issuing_entities.php?country=" + issuerCode + "&prefill=").toURL();
+
+            CookieHandler.setDefault(new CookieManager(null, CookiePolicy.ACCEPT_ALL));
+            HttpURLConnection con = (HttpURLConnection) url.openConnection();
+            con.setRequestMethod("GET");
+            con.setRequestProperty("User-Agent", USER_AGENT);
+
+            // Set the cookie value to send
+            con.setRequestProperty("Cookie", "_pk_id.10.0242=98c7c0d8feae54a1.1669823762.; _pk_ref.10.0242=%5B%22%22%2C%22%22%2C1679756455%2C%22https%3A%2F%2Fwww.google.com%2F%22%5D; _pk_ses.10.0242=1; _pk_testcookie=1; tb=y; tc=y; tn=y; tp=n; tt=n; PHPSESSID=k0ot7rr75am7q6r72prfvva4bj; carte=piece; tbb=y; tbc=y; tbl=y; tbt=y; _ga=GA1.2.1130692859.1674417278; ph_phc_Tbfg4EiRsr5iefFoth2Y1Hi3sttTeLQ5RV5TLg4hL1W_posthog=%7B%22distinct_id%22%3A%22185db0c0ab81ff-058fac83e2a881-3c626b4b-29b188-185db0c0ab91eea%22%2C%22%24device_id%22%3A%22185db0c0ab81ff-058fac83e2a881-3c626b4b-29b188-185db0c0ab91eea%22%2C%22%24session_recording_enabled_server_side%22%3Afalse%2C%22%24initial_referrer%22%3A%22https%3A%2F%2Fen.numista.com%2F%22%2C%22%24initial_referring_domain%22%3A%22en.numista.com%22%2C%22%24referrer%22%3A%22https%3A%2F%2Fen.numista.com%2F%22%2C%22%24referring_domain%22%3A%22en.numista.com%22%2C%22%24sesid%22%3A%5B1677792463026%2C%22186a43948b3efc-076d29a9c96b9d-3d626b4b-29b188-186a43948b4159f%22%2C1677792463026%5D%7D; pass=44e1894842815ca70e0e4727b600765f; pseudo=kbobryakov; _gcl_au=1.1.1579430192.1674417278; pieces_par_page=200");
+
+            int responseCode = con.getResponseCode();
+            System.out.println("\nSending 'GET' request to URL : " + url);
+            System.out.println("Response Code : " + responseCode);
+
+            if (responseCode == 404) return null;
+
+            BufferedReader in = new BufferedReader(new InputStreamReader(con.getInputStream()));
+            String inputLine;
+            StringBuffer response = new StringBuffer();
+
+            while ((inputLine = in.readLine()) != null) {
+                response.append(inputLine);
+                response.append(System.getProperty("line.separator"));
+            }
+
+            in.close();
+
+            // Send the request to the server
+            document = Jsoup.parse(response.toString());
+        } catch (IOException e) {
+            e.printStackTrace();
+            return null;
+        }
+        return document;
+    }
+
+    /**
+     * Load Denominations from Numista PHP GET request with countryNid input value
+     *
+     * @param currencyNid
+     * @return
+     */
+    private static Document getNumistaDenominationsByPHP(String currencyNid) {
+        Document document;
+        try {
+
+            URL url = URI.create("/catalogue/get_denominations.php?currency=" + currencyNid + "&prefill=").toURL();
+
+            CookieHandler.setDefault(new CookieManager(null, CookiePolicy.ACCEPT_ALL));
+            HttpURLConnection con = (HttpURLConnection) url.openConnection();
+            con.setRequestMethod("GET");
+            con.setRequestProperty("User-Agent", USER_AGENT);
+
+            // Set the cookie value to send
+            con.setRequestProperty("Cookie", "_pk_id.10.0242=98c7c0d8feae54a1.1669823762.; _pk_ref.10.0242=%5B%22%22%2C%22%22%2C1679756455%2C%22https%3A%2F%2Fwww.google.com%2F%22%5D; _pk_ses.10.0242=1; _pk_testcookie=1; tb=y; tc=y; tn=y; tp=n; tt=n; PHPSESSID=k0ot7rr75am7q6r72prfvva4bj; carte=piece; tbb=y; tbc=y; tbl=y; tbt=y; _ga=GA1.2.1130692859.1674417278; ph_phc_Tbfg4EiRsr5iefFoth2Y1Hi3sttTeLQ5RV5TLg4hL1W_posthog=%7B%22distinct_id%22%3A%22185db0c0ab81ff-058fac83e2a881-3c626b4b-29b188-185db0c0ab91eea%22%2C%22%24device_id%22%3A%22185db0c0ab81ff-058fac83e2a881-3c626b4b-29b188-185db0c0ab91eea%22%2C%22%24session_recording_enabled_server_side%22%3Afalse%2C%22%24initial_referrer%22%3A%22https%3A%2F%2Fen.numista.com%2F%22%2C%22%24initial_referring_domain%22%3A%22en.numista.com%22%2C%22%24referrer%22%3A%22https%3A%2F%2Fen.numista.com%2F%22%2C%22%24referring_domain%22%3A%22en.numista.com%22%2C%22%24sesid%22%3A%5B1677792463026%2C%22186a43948b3efc-076d29a9c96b9d-3d626b4b-29b188-186a43948b4159f%22%2C1677792463026%5D%7D; pass=44e1894842815ca70e0e4727b600765f; pseudo=kbobryakov; _gcl_au=1.1.1579430192.1674417278; pieces_par_page=200");
+
+            int responseCode = con.getResponseCode();
+            System.out.println("\nSending 'GET' request to URL : " + url);
+            System.out.println("Response Code : " + responseCode);
+
+            if (responseCode == 404) return null;
+
+            BufferedReader in = new BufferedReader(new InputStreamReader(con.getInputStream()));
+            String inputLine;
+            StringBuffer response = new StringBuffer();
+
+            while ((inputLine = in.readLine()) != null) {
+                response.append(inputLine);
+                response.append(System.getProperty("line.separator"));
+            }
+
+            in.close();
+
+            // Send the request to the server
+            document = Jsoup.parse(response.toString());
+        } catch (IOException e) {
+            e.printStackTrace();
+            return null;
+        }
+        return document;
+    }
+
+    private static Document getNumistaCurrenciesByPHP(String issuerCode) {
+        Document document;
+        try {
+
+            URL url = URI.create("https://en.numista.com/catalogue/get_currencies.php?country=" + issuerCode).toURL();
 
             CookieHandler.setDefault(new CookieManager(null, CookiePolicy.ACCEPT_ALL));
             HttpURLConnection con = (HttpURLConnection) url.openConnection();
@@ -2017,12 +2436,12 @@ public class NumistaEditPageUtil {
     }
 
 
-    private Document getNumistaAllCoinsFronFile() {
+    public Document getNumistaAllCoinsFronFile() {
         Document document;
         try {
 
             // Send the request to the server
-            document = Jsoup.parse(new File("/Users/kirillbobryakov/Coins/all.html"));
+            document = Jsoup.parse(new File("/Users/kirillbobryakov/Coins/Numista/Numista_coin_list.html"));
         } catch (IOException e) {
             e.printStackTrace();
             return null;
@@ -2030,7 +2449,7 @@ public class NumistaEditPageUtil {
         return document;
     }
 
-    private Document getNumistaAllCoins() {
+    public Document getNumistaAllCoins() {
         Document document;
         try {
 
@@ -2042,7 +2461,7 @@ public class NumistaEditPageUtil {
             con.setRequestProperty("User-Agent", USER_AGENT);
 
             // Set the cookie value to send
-            con.setRequestProperty("Cookie", "_pk_id.10.0242=98c7c0d8feae54a1.1669823762.; _pk_ref.10.0242=%5B%22%22%2C%22%22%2C1679756455%2C%22https%3A%2F%2Fwww.google.com%2F%22%5D; _pk_ses.10.0242=1; _pk_testcookie=1; tb=y; tc=y; tn=y; tp=n; tt=n; PHPSESSID=k0ot7rr75am7q6r72prfvva4bj; carte=piece; tbb=y; tbc=y; tbl=y; tbt=y; _ga=GA1.2.1130692859.1674417278; ph_phc_Tbfg4EiRsr5iefFoth2Y1Hi3sttTeLQ5RV5TLg4hL1W_posthog=%7B%22distinct_id%22%3A%22185db0c0ab81ff-058fac83e2a881-3c626b4b-29b188-185db0c0ab91eea%22%2C%22%24device_id%22%3A%22185db0c0ab81ff-058fac83e2a881-3c626b4b-29b188-185db0c0ab91eea%22%2C%22%24session_recording_enabled_server_side%22%3Afalse%2C%22%24initial_referrer%22%3A%22https%3A%2F%2Fen.numista.com%2F%22%2C%22%24initial_referring_domain%22%3A%22en.numista.com%22%2C%22%24referrer%22%3A%22https%3A%2F%2Fen.numista.com%2F%22%2C%22%24referring_domain%22%3A%22en.numista.com%22%2C%22%24sesid%22%3A%5B1677792463026%2C%22186a43948b3efc-076d29a9c96b9d-3d626b4b-29b188-186a43948b4159f%22%2C1677792463026%5D%7D; pass=44e1894842815ca70e0e4727b600765f; pseudo=kbobryakov; _gcl_au=1.1.1579430192.1674417278; pieces_par_page=200");
+//            con.setRequestProperty("Cookie", "_pk_id.10.0242=98c7c0d8feae54a1.1669823762.; _pk_ref.10.0242=%5B%22%22%2C%22%22%2C1679756455%2C%22https%3A%2F%2Fwww.google.com%2F%22%5D; _pk_ses.10.0242=1; _pk_testcookie=1; tb=y; tc=y; tn=y; tp=n; tt=n; PHPSESSID=k0ot7rr75am7q6r72prfvva4bj; carte=piece; tbb=y; tbc=y; tbl=y; tbt=y; _ga=GA1.2.1130692859.1674417278; ph_phc_Tbfg4EiRsr5iefFoth2Y1Hi3sttTeLQ5RV5TLg4hL1W_posthog=%7B%22distinct_id%22%3A%22185db0c0ab81ff-058fac83e2a881-3c626b4b-29b188-185db0c0ab91eea%22%2C%22%24device_id%22%3A%22185db0c0ab81ff-058fac83e2a881-3c626b4b-29b188-185db0c0ab91eea%22%2C%22%24session_recording_enabled_server_side%22%3Afalse%2C%22%24initial_referrer%22%3A%22https%3A%2F%2Fen.numista.com%2F%22%2C%22%24initial_referring_domain%22%3A%22en.numista.com%22%2C%22%24referrer%22%3A%22https%3A%2F%2Fen.numista.com%2F%22%2C%22%24referring_domain%22%3A%22en.numista.com%22%2C%22%24sesid%22%3A%5B1677792463026%2C%22186a43948b3efc-076d29a9c96b9d-3d626b4b-29b188-186a43948b4159f%22%2C1677792463026%5D%7D; pass=44e1894842815ca70e0e4727b600765f; pseudo=kbobryakov; _gcl_au=1.1.1579430192.1674417278; pieces_par_page=200");
 
             int responseCode = con.getResponseCode();
             System.out.println("\nSending 'GET' request to URL : " + url);

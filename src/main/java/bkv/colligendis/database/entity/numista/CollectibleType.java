@@ -7,6 +7,8 @@ import lombok.EqualsAndHashCode;
 import org.springframework.data.neo4j.core.schema.Node;
 import org.springframework.data.neo4j.core.schema.Relationship;
 
+import java.util.ArrayList;
+
 /*
  * Assign the coin to an appropriate category.
  *
@@ -20,11 +22,10 @@ import org.springframework.data.neo4j.core.schema.Relationship;
  *
  * Information takes from https://en.numista.com/help/type-108.html
  */
-@Node("COLLECTIBLE_SUBTYPE")
+@Node("COLLECTIBLE_TYPE")
 @Data
-@AllArgsConstructor
 @EqualsAndHashCode(callSuper=true)
-public class CollectibleSubtype extends AbstractEntity {
+public class CollectibleType extends AbstractEntity {
 
     //Coin
 //    String common_coin = "Standard circulation coin";
@@ -147,14 +148,21 @@ public class CollectibleSubtype extends AbstractEntity {
 //          <option value="other_token">Miscellaneous token</option>
 //      </optgroup>
 
-    public static final String UNDER_TYPE_GROUP = "UNDER_TYPE_GROUP";
+    public static final String HAS_COLLECTIBLE_TYPE_CHILD = "HAS_COLLECTIBLE_TYPE_CHILD";
 
     private String code;
 
     private String name;
 
-//    private Category category;
+    public CollectibleType(String code, String name, CollectibleType collectibleTypeParent) {
+        this.code = code;
+        this.name = name;
+        this.collectibleTypeParent = collectibleTypeParent;
+    }
 
-    @Relationship(type = UNDER_TYPE_GROUP, direction = Relationship.Direction.OUTGOING)
-    private TypeGroup group;
+    @Relationship(type = HAS_COLLECTIBLE_TYPE_CHILD, direction = Relationship.Direction.INCOMING)
+    private CollectibleType collectibleTypeParent;
+
+//    @Relationship(type = HAS_COLLECTIBLE_TYPE_CHILD, direction = Relationship.Direction.OUTGOING)
+//    private ArrayList<CollectibleType> collectibleTypeChildren;
 }

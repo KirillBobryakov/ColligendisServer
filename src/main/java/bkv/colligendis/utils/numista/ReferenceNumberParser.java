@@ -1,82 +1,150 @@
 package bkv.colligendis.utils.numista;
 
+import bkv.colligendis.database.entity.numista.Catalogue;
+import bkv.colligendis.database.entity.numista.CatalogueReference;
+import bkv.colligendis.database.entity.numista.Issuer;
 import bkv.colligendis.utils.DebugUtil;
 import bkv.colligendis.utils.N4JUtil;
+import com.google.gson.Gson;
+import lombok.AllArgsConstructor;
+import lombok.Data;
+import lombok.RequiredArgsConstructor;
+import org.jsoup.nodes.Document;
 import org.jsoup.nodes.Element;
+import org.jsoup.select.Elements;
 
-import java.util.Objects;
+import java.text.Normalizer;
+import java.util.ArrayList;
 
-public class DemonetizedParser extends NumistaPartParser {
+public class ReferenceNumberParser extends NumistaPartParser {
+
+    public static final String CATALOGUE_SEARCH = "https://en.numista.com/catalogue/search_catalogues.php?q=";
 
 
     /*
-            Select the appropriate option:
+                       References
+            Last update: 26 September 2024
 
-        Unknown: for coins that were never in circulation, such as patterns, and for coins with an uncertain legal tender status.
-        No: for coins that are currently accepted as legal tender
-        Yes: for coins that are no longer legal tender.
+            The field specifies the alphanumeric code that identifies the coin type in a reference catalogue. Up to ten references can be specified (if some reference catalogues are missing, you can request their addition to the database). If more references exist for a coin, the additional ones may be added in the comments section.
 
+            Order of references
+            When possible, the same sequence of references should be used for all the coin types of an issuer. Newer, more authoritative, and more exhaustive standard references should appear first.
 
-        Date: for demonetized coins, record the date of the withdrawal of the legal tender status as yyyy-mm-dd. Note that this date may be different from the date of the retirement from circulation. Should the precise day not be known, “00” can be used:
+            What if same entry on Numista is linked to multiple reference numbers in the same catalogue?
+            If a coin type has more than one code in a reference catalogue, always add the first one (or the most relevant). The same reference catalogue may be added in a new line for recording multiple codes, provided you did not reach the maximum number of references.
 
-        2001-12-31
-        1875-00-00
+            Missing coin in a catalogue
+            If only a small number of coins are missing from a standard monograph (reference catalogue dedicated to a very specific topic) that is used consistently for an issuer, then an en dash (“–”) can be used instead of a reference code, to show that the coins are unlisted, for instance this unlisted 20 Batzen coin in the Hofer catalogue. All other coins of the Helvetic Republic have a Hofer reference.
+
+            Similar reference
+            If a coin type is absent from a catalog, the similarity to another type in that catalog can be indicated by “var.” after the code.
      */
 
-    public DemonetizedParser() {
+    public ReferenceNumberParser() {
         super((page, nType) -> {
 
-            Element demonetisationYesElement = page.selectFirst("input[type=radio][name=demonetisation][value=oui]");
-            Element demonetisationNoElement = page.selectFirst("input[type=radio][name=demonetisation][value=non]");
-            Element demonetisationUnknownElement = page.selectFirst("input[type=radio][name=demonetisation][value=inconnu]");
+            ParseEvent result = ParseEvent.NOT_CHANGED;
 
-            if(demonetisationNoElement != null && demonetisationNoElement.attributes().hasKey("checked")){
-                DebugUtil.showInfo(DemonetizedParser.class, "The Demonetisation of NType is NO.");
-                if(nType.getDemonetized() != null && nType.getDemonetized().equals("0")){
-                    return ParseEvent.NOT_CHANGED;
-                } else {
-                    nType.setDemonetized("0");
-                    nType.setDemonetizationDay(null);
-                    nType.setDemonetizationMonth(null);
-                    nType.setDemonetizationYear(null);
+            ArrayList<ReferenceToCatalogue> references = new ArrayList<>();
 
-                    return ParseEvent.CHANGED;
+
+            Elements referenceInputs = page.select("div[class=reference_input]");
+
+
+            for (Element element : referenceInputs) {
+                Element catalogueElement = element.selectFirst("option");
+                Element numberElement = element.selectFirst("input");
+
+                if (catalogueElement == null || numberElement == null) continue;
+
+                if (!numberElement.attr("value").isEmpty()) {
+                    ReferenceToCatalogue referenceToCatalogue = new ReferenceToCatalogue(
+                            catalogueElement.attr("value"),
+                            catalogueElement.text(),
+                            numberElement.attr("value"));
+
+
+                    references.add(referenceToCatalogue);
                 }
-            } else if(demonetisationUnknownElement != null && demonetisationUnknownElement.attributes().hasKey("checked")){
-                DebugUtil.showInfo(DemonetizedParser.class, "The Demonetisation of NType is Unknown.");
-                if(nType.getDemonetized() != null && nType.getDemonetized().equals("2")){
-                    return ParseEvent.NOT_CHANGED;
-                } else {
-                    nType.setDemonetized("2");
-                    nType.setDemonetizationDay(null);
-                    nType.setDemonetizationMonth(null);
-                    nType.setDemonetizationYear(null);
+            }
 
-                    return ParseEvent.CHANGED;
-                }
-            } else if(demonetisationYesElement != null && demonetisationYesElement.attributes().hasKey("checked")){
-                DebugUtil.showInfo(DemonetizedParser.class, "The Demonetisation of NType is Yes.");
+            int countReferences = nType.getCatalogueReferences().size();
+            // Find mood Rulers in NType
+            nType.getCatalogueReferences().removeIf(catalogueReference -> references.stream()
+                    .noneMatch(reference -> reference.getCatalogueNid().equals(catalogueReference.getCatalogue().getNid())
+                            && reference.getNumber().equals(catalogueReference.getNumber())));
 
-                String year = getAttribute(page.selectFirst("#ad"), "value");
-                String month = getAttribute(page.selectFirst("#md"), "value");
-                String day = getAttribute(page.selectFirst("#jd"), "value");
+            if (nType.getCatalogueReferences().size() != countReferences) result = ParseEvent.CHANGED;
 
-                if(nType.getDemonetized() != null && nType.getDemonetized().equals("1")) {
-                    return ParseEvent.NOT_CHANGED;
-                } else {
-                    nType.setDemonetized("1");
-                    nType.setDemonetizationYear(year);
-                    nType.setDemonetizationMonth(month);
-                    nType.setDemonetizationDay(day);
+            for (ReferenceToCatalogue reference : references) {
+                if (nType.getCatalogueReferences().stream().noneMatch(ref -> ref.getCatalogue().getNid().equals(reference.getCatalogueNid())
+                        && ref.getNumber().equals(reference.getNumber()))) {
 
-                    return ParseEvent.CHANGED;
+                    Catalogue catalogue = N4JUtil.getInstance().numistaService.catalogueService.findByNid(reference.catalogueNid, reference.catalogueCode);
+                    if (catalogue == null) {
+                        parseReferenceCataloguesByCode(reference.catalogueCode);
+                        catalogue = N4JUtil.getInstance().numistaService.catalogueService.findByNid(reference.catalogueNid, reference.catalogueCode);
+
+                        if (catalogue == null) {
+                            DebugUtil.showError(ReferenceNumberParser.class, "Error with find or create new Catalogue with nid=" + reference.catalogueNid + " and code=" + reference.catalogueCode + ".");
+                            return ParseEvent.ERROR;
+                        }
+                    }
+
+
+                    CatalogueReference catalogueReference = N4JUtil.getInstance().numistaService.catalogueReferenceService.findByNumberAndCatalogueNid(reference.number, catalogue);
+                    if (catalogueReference == null) {
+                        DebugUtil.showError(ReferenceNumberParser.class, "New CatalogueReference with nid=" + reference.catalogueNid + " and code=" + reference.catalogueCode + " and number=" + reference.number + " can't be created.");
+                        return ParseEvent.ERROR;
+                    }
+
+                    nType.getCatalogueReferences().add(catalogueReference);
+                    result = ParseEvent.CHANGED;
                 }
 
             }
 
-            DebugUtil.showError(DemonetizedParser.class, "The Demonetisation of NType can't be parsed.");
-
-            return ParseEvent.NOT_CHANGED;
+            return result;
         });
+
+        this.partName = "ReferenceNumber";
     }
+
+
+    public static boolean parseReferenceCataloguesByCode(String code) {
+
+        Document catalogueSearchDocument = loadPageByURL(CATALOGUE_SEARCH + code, false);
+        Element body = catalogueSearchDocument.selectFirst("body");
+
+        String jsonRefs = body.text().replace("\\r\\n", "").replace("<\\/em>", "");
+
+        Gson gson = new Gson();
+        ReferencedCatalogue[] referencedCatalogues = gson.fromJson(jsonRefs, ReferencedCatalogue[].class);
+
+        for (ReferencedCatalogue referencedCatalogue : referencedCatalogues) {
+            Catalogue catalogue = N4JUtil.getInstance().numistaService.catalogueService.create(referencedCatalogue.id, referencedCatalogue.text, referencedCatalogue.bibliography);
+            if (catalogue == null)
+                DebugUtil.showError(ReferenceNumberParser.class, "New Catalogue with nid=" + referencedCatalogue.id + " and code=" + referencedCatalogue.text + " can't be created.");
+        }
+
+        return true;
+    }
+
+
+}
+
+@Data
+@AllArgsConstructor
+class ReferenceToCatalogue {
+    String catalogueNid;
+    String catalogueCode;
+    String number;
+
+}
+
+@Data
+class ReferencedCatalogue {
+    String id;
+    String text;
+    String bibliography;
 }

@@ -7,9 +7,9 @@ import bkv.colligendis.utils.DebugUtil;
 import org.springframework.stereotype.Service;
 
 @Service
-public class TypeService extends AbstractService<CollectibleType, TypeRepository> {
+public class CollectibleTypeService extends AbstractService<CollectibleType, TypeRepository> {
 
-    public TypeService(TypeRepository repository) {
+    public CollectibleTypeService(TypeRepository repository) {
         super(repository);
     }
 
@@ -20,31 +20,25 @@ public class TypeService extends AbstractService<CollectibleType, TypeRepository
     }
 
 
-    public CollectibleType update(CollectibleType collectibleType, String code, String name, CollectibleTypeGroup collectibleTypeGroup){
-        if(collectibleType == null || !collectibleType.getCode().equals(code)) {
+    public CollectibleType update(CollectibleType collectibleType, String code, String name, CollectibleType collectibleTypeParent){
+        if(collectibleType == null && code != null && !code.isEmpty()){
             collectibleType = repository.findByCode(code);
         }
-        if (collectibleType != null) {
-            if(!collectibleType.getName().equals(name)){
-                DebugUtil.showServiceMessage(this, "Trying to find CollectibleType with code=" + code + " and name=" + name
-                        + ". But there is an CollectibleType with the same code and other name= " + collectibleType.getName() + "in DB already.", DebugUtil.MESSAGE_LEVEL.WARNING);
-                DebugUtil.showWarning(this, "Type.name was updated.");
+
+        if(collectibleType != null){
+            if(name != null && !name.isEmpty()){
+                if(!collectibleType.getName().equals(name)){
+                    DebugUtil.showInfo(CollectibleTypeService.class, "CollectibleType name is changing from " + collectibleType.getName() + " to " + name);
+                }
                 collectibleType.setName(name);
             }
 
-            if(collectibleTypeGroup != null && !collectibleTypeGroup.equals(collectibleType.getCollectibleTypeGroup())){
-                DebugUtil.showServiceMessage(this, "Trying to find CollectibleType with code=" + code + " and name=" + name
-                        + ". But there is an CollectibleTypeGroup " + collectibleTypeGroup + " with the same code and other group= " + collectibleType.getCollectibleTypeGroup() + "in DB already.", DebugUtil.MESSAGE_LEVEL.WARNING);
-                collectibleType.setCollectibleTypeGroup(collectibleTypeGroup);
-            }
+            collectibleType.setCollectibleTypeParent(collectibleTypeParent);
 
             return repository.save(collectibleType);
-        } else {
-            DebugUtil.showInfo(this, "New CollectibleType with code=" + code + " and name=" + name + " in CollectibleTypeGroup=" + collectibleTypeGroup + " was created.");
-            return repository.save(new CollectibleType(code, name, collectibleTypeGroup));
         }
 
+
+        return repository.save(new CollectibleType(code, name, collectibleTypeParent));
     }
-
-
 }

@@ -2,10 +2,7 @@ package bkv.colligendis.database.service.numista;
 
 import bkv.colligendis.database.entity.numista.Variant;
 import bkv.colligendis.services.AbstractService;
-import org.neo4j.driver.GraphDatabase;
-import org.neo4j.driver.Record;
 import org.springframework.stereotype.Service;
-import reactor.core.publisher.Flux;
 
 import java.util.*;
 import java.util.stream.Collectors;
@@ -17,21 +14,21 @@ public class VariantService extends AbstractService<Variant, VariantRepository> 
     }
 
     public Variant findByNid(String nid){
-        Variant mark = repository.findByNid(nid).block();
+        Variant mark = repository.findByNid(nid);
         if (mark == null) {
-            return repository.save(new Variant(nid)).block();
+            return repository.save(new Variant(nid));
         }
         return mark;
     }
 
     public List<Integer> getYearsOfVariantsByIssuerEid(String eid){
 
-        Flux<Integer> gregorianYears = repository.getYearsOfVariantsByIssuerEid(eid);
-        Set<Integer> years = new HashSet<>(Objects.requireNonNull(gregorianYears.collectList().block()));
+        List<Integer> gregorianYears = repository.getYearsOfVariantsByIssuerEid(eid);
+        Set<Integer> years = new HashSet<>(Objects.requireNonNull(gregorianYears));
 
-        Flux<Variant> variantFlux = repository.getBetweenMinMaxYearsOfVariantsByIssuerEid(eid);
+        List<Variant> variantFlux = repository.getBetweenMinMaxYearsOfVariantsByIssuerEid(eid);
 
-        variantFlux.collectList().blockOptional().orElse(new ArrayList<>()).forEach(variant -> {
+        variantFlux.forEach(variant -> {
             if(variant.getMinYear() != null && variant.getMaxYear() != null){
                 if(variant.getMinYear() != Integer.MIN_VALUE && variant.getMaxYear() != Integer.MAX_VALUE){
                     for(int i = variant.getMinYear(); i <= variant.getMaxYear(); i++){
@@ -43,8 +40,4 @@ public class VariantService extends AbstractService<Variant, VariantRepository> 
         return years.stream().sorted(Integer::compareTo).collect(Collectors.toList());
     }
 
-    @Override
-    public Variant setPropertyValue(Long id, String name, String value) {
-        return null;
-    }
 }

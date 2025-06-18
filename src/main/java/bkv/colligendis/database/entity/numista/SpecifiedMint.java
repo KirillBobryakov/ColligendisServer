@@ -2,10 +2,17 @@ package bkv.colligendis.database.entity.numista;
 
 
 import bkv.colligendis.database.entity.AbstractEntity;
+import lombok.Data;
+import lombok.EqualsAndHashCode;
+import lombok.ToString;
+
 import org.springframework.data.neo4j.core.schema.Node;
 import org.springframework.data.neo4j.core.schema.Relationship;
 
 @Node("SPECIFIED_MINT")
+@Data
+@EqualsAndHashCode(callSuper = true)
+@ToString(callSuper = true, onlyExplicitlyIncluded = true)
 public class SpecifiedMint extends AbstractEntity {
 
 
@@ -44,75 +51,7 @@ public class SpecifiedMint extends AbstractEntity {
         this.identifier = identifier;
     }
 
-    public String getName() {
-        return name;
-    }
 
-    public void setName(String name) {
-        this.name = name;
-    }
 
-    public String getDescription() {
-        return description;
-    }
 
-    public void setDescription(String description) {
-        this.description = description;
-    }
-
-    public String getPhotoSymbol() {
-        return photoSymbol;
-    }
-
-    public void setPhotoSymbol(String photoSymbol) {
-        this.photoSymbol = photoSymbol;
-    }
-
-    public String getNumistaURL() {
-        return numistaURL;
-    }
-
-    public void setNumistaURL(String numistaURL) {
-        this.numistaURL = numistaURL;
-    }
-
-    public String getNid() {
-        return nid;
-    }
-
-    public void setNid(String nid) {
-        this.nid = nid;
-    }
-
-    public String getPicture() {
-        return picture;
-    }
-
-    public void setPicture(String picture) {
-        this.picture = picture;
-    }
-
-    public String getIdentifier() {
-        return identifier;
-    }
-
-    public void setIdentifier(String identifier) {
-        this.identifier = identifier;
-    }
-
-    public Mint getMint() {
-        return mint;
-    }
-
-    public void setMint(Mint mint) {
-        this.mint = mint;
-    }
-
-    public Mintmark getMintmark() {
-        return mintmark;
-    }
-
-    public void setMintmark(Mintmark mintmark) {
-        this.mintmark = mintmark;
-    }
 }

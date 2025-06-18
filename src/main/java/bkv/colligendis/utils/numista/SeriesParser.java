@@ -1,51 +1,62 @@
 package bkv.colligendis.utils.numista;
 
-import bkv.colligendis.database.entity.numista.CollectibleType;
-import bkv.colligendis.database.entity.numista.CommemoratedEvent;
 import bkv.colligendis.utils.DebugUtil;
 import bkv.colligendis.utils.N4JUtil;
-import lombok.NonNull;
 
-public class CommemoratedEventParser extends NumistaPartParser {
+import java.util.HashMap;
+import java.util.Map;
+import java.util.Objects;
+
+public class SeriesParser extends NumistaPartParser {
 
 
     /*
-    Specify the subject of the commemorative issue. Do not include dates. Format the subject according to the following examples:
-
-        100th anniversary of the birth of Albert Einstein (only “Albert Einstein” in the title)
-        100th anniversary of the Gotthard Railway (only “Gotthard Railway” in the title)
-        150th anniversary of the death of Johann Heinrich Pestalozzi (only “Johann Heinrich Pestalozzi” in the title)
-        500th anniversary of the Treaty of Stans (only “Treaty of Stans” in the title)
-        600th anniversary of the Battle of Grunwald (only “Battle of Grunwald” in the title)
-        Wedding of Prince Philip and Princess Mathilde (only “Wedding of Philip and Mathilde” in the title)
-        Franklin Delano Roosevelt (just specify the subject if no particular event is commemorated)
+    If the commemorative coin is part of a series, specify the name of the series. Ensure that the name of the series is consistent for all the coins. For commemorative series, do not repeat the word “series”.
+        Swiss mountains
+        Swiss mountain series
+        Circulating non-commemorative coins are usually issued in suites of denominations covering a spectrum of values. For example, from 1 cent up to 2 euros. You may assign the same series name to all the denominations of a particular suite. If possible, name the suite using a distinguishing design or physical feature. Otherwise, name the series after the year when the first coin of the suite was issued. Series should not be named using ordinal numerals. For circulating coins, include the word “series” in the name.
+        16 orbits series
+        Copper-nickel series
+        1991 series
+        3rd series  ||  3rd issue  ||  3rd type
+        Use sentence case.
+        Copper-nickel series
+        Copper-Nickel Series  ||  copper-nickel series
+        For a given issuer, series names should be unique: two different series of the same issuer should not have the same name.
      */
 
-    public CommemoratedEventParser() {
+    public SeriesParser() {
         super((page, nType) -> {
 
-            String evenement = getAttribute(page.selectFirst("#evenement"), "value");
-            DebugUtil.printProperty("evenement", evenement, false, false, false);
+            HashMap<String, String> map = getAttributeWithTextSelectedOption(page, "#series");
 
-            if (evenement != null && !evenement.isEmpty()) {
+            if(map == null) return ParseEvent.NOT_CHANGED;
 
-                if (nType.getCommemoratedEvent() != null) {
-                    if (nType.getCommemoratedEvent().getName().equals(evenement)) {
-                        DebugUtil.showInfo(CommemoratedEventParser.class, "The CommemoratedEvent of existing NType is equal with CommemoratedEvent on the page.");
+            String series = Objects.requireNonNull(map).get("text");
+            DebugUtil.printProperty("series", series, false, false, false);
+
+
+            if (series != null && !series.isEmpty()) {
+
+                if (nType.getSeries() != null) {
+                    if (nType.getSeries().getName().equals(series)) {
+                        DebugUtil.showInfo(SeriesParser.class, "The Series of existing NType is equal with Series on the page.");
                         return ParseEvent.NOT_CHANGED;
                     } else {
-                        nType.setCommemoratedEvent(N4JUtil.getInstance().numistaService.commemoratedEventService.findByNameOrCreate(evenement));
-                        DebugUtil.showWarning(CommemoratedEventParser.class, "The CommemoratedEvent of existing NType is not equal with CommemoratedEvent on the page.");
+                        nType.setSeries(N4JUtil.getInstance().numistaService.seriesService.findByNameOrCreate(series));
+                        DebugUtil.showWarning(CommemoratedEventParser.class, "The Series of existing NType is not equal with Series on the page.");
                         return ParseEvent.CHANGED;
                     }
                 }
 
-                nType.setCommemoratedEvent(N4JUtil.getInstance().numistaService.commemoratedEventService.findByNameOrCreate(evenement));
+                nType.setSeries(N4JUtil.getInstance().numistaService.seriesService.findByNameOrCreate(series));
                 return ParseEvent.CHANGED;
 
             }
 
             return ParseEvent.NOT_CHANGED;
         });
+
+        this.partName = "Series";
     }
 }

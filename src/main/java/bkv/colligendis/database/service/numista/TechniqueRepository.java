@@ -8,5 +8,5 @@ import reactor.core.publisher.Mono;
 
 public interface TechniqueRepository extends AbstractNeo4jRepository<Technique> {
 
-    Mono<Technique> findByNid(String nid);
+    Technique findByNid(String nid);
 }

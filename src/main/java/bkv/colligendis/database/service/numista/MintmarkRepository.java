@@ -7,5 +7,5 @@ import reactor.core.publisher.Mono;
 
 public interface MintmarkRepository extends AbstractNeo4jRepository<Mintmark> {
 
-    Mono<Mintmark> findByNid(String nid);
+    Mintmark findByNid(String nid);
 }

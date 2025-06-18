@@ -6,6 +6,8 @@ import bkv.colligendis.services.AbstractService;
 
 public class DebugUtil {
 
+    private static final boolean SHOW_INFO = true;
+
     public static final String ANSI_RESET = "\u001B[0m";
 
     public static final String ANSI_BLACK = "\u001B[30m";
@@ -20,7 +22,9 @@ public class DebugUtil {
 
     public enum MESSAGE_LEVEL {
         ERROR, WARNING, INFO;
-    };
+    }
+
+    ;
 
 
     private static final boolean IS_NumistaEditPageUtil_TESTING = false;
@@ -33,39 +37,47 @@ public class DebugUtil {
     private static final boolean IS_RulerService_TESTING = true;
     private static final boolean IS_IssuerService_TESTING = true;
 
-    public static void showMessage(Object o, String message, MESSAGE_LEVEL messageLevel){
-        switch (messageLevel){
-            case ERROR : System.out.println(ANSI_RED + o.getClass().getSimpleName() + " : " + message + ANSI_RESET); break;
-            case WARNING: System.out.println(ANSI_YELLOW + o.getClass().getSimpleName() + " : " + message + ANSI_RESET); break;
-            case INFO: System.out.println(ANSI_GREEN + o.getClass().getSimpleName() + " : " + message + ANSI_RESET); break;
+    public static void showMessage(Object o, String message, MESSAGE_LEVEL messageLevel) {
+        switch (messageLevel) {
+            case ERROR:
+                System.out.println(ANSI_RED + o.getClass().getSimpleName() + " : " + message + ANSI_RESET);
+                break;
+            case WARNING:
+                System.out.println(ANSI_YELLOW + o.getClass().getSimpleName() + " : " + message + ANSI_RESET);
+                break;
+            case INFO: {
+                if (SHOW_INFO) {
+                    System.out.println(ANSI_GREEN + o.getClass().getSimpleName() + " : " + message + ANSI_RESET);
+                }
+                break;
+            }
 //            default: System.out.println(ANSI_BLACK + o.getClass().getSimpleName() + " : " + message + ANSI_RESET);
         }
     }
 
-    public static void showError(Object o, String message){
+    public static void showError(Object o, String message) {
         showMessage(o, message, MESSAGE_LEVEL.ERROR);
     }
 
-    public static void showWarning(Object o, String message){
+    public static void showWarning(Object o, String message) {
         showMessage(o, message, MESSAGE_LEVEL.WARNING);
     }
 
-    public static void showInfo(Object o, String message){
+    public static void showInfo(Object o, String message) {
         showMessage(o, message, MESSAGE_LEVEL.INFO);
     }
 
 
-
-    public static void showServiceMessage(Object o, String message, MESSAGE_LEVEL messageLevel){
-        if(IS_Services_TESTING){
-            if(IS_NumistaServices_TESTING){
-                if(o instanceof IssuerService && IS_IssuerService_TESTING){
+    public static void showServiceMessage(Object o, String message, MESSAGE_LEVEL messageLevel) {
+        if (IS_Services_TESTING) {
+            if (IS_NumistaServices_TESTING) {
+                if (o instanceof IssuerService && IS_IssuerService_TESTING) {
                     showMessage(o, message, messageLevel);
-                } else if(o instanceof RulerService && IS_RulerService_TESTING){
+                } else if (o instanceof RulerService && IS_RulerService_TESTING) {
                     showMessage(o, message, messageLevel);
                 }
-            } else if (IS_N4JEntities_TESTING){
-                if(o instanceof AbstractService && IS_AbstractService_TESTING){
+            } else if (IS_N4JEntities_TESTING) {
+                if (o instanceof AbstractService && IS_AbstractService_TESTING) {
                     showMessage(o, message, messageLevel);
                 }
             }
@@ -84,10 +96,6 @@ public class DebugUtil {
             System.out.println(stringBuffer);
         }
     }
-
-
-
-
 
 
 }

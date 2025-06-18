@@ -1,20 +1,32 @@
 package bkv.colligendis.database.entity.numista;
 
 import bkv.colligendis.database.entity.AbstractEntity;
+import bkv.colligendis.database.entity.features.LocalImage;
+import bkv.colligendis.utils.numista.PART_TYPE;
+import lombok.Data;
+import lombok.EqualsAndHashCode;
 import org.springframework.data.neo4j.core.schema.Node;
 import org.springframework.data.neo4j.core.schema.Relationship;
 
 import java.util.ArrayList;
 import java.util.List;
 
+@EqualsAndHashCode(callSuper = true)
 @Node("NTYPE_PART")
+@Data
 public class NTypePart extends AbstractEntity {
 
 //    public static final String ENGRAVED_BY = "ENGRAVED_BY";
 //    public static final String DESIGNED_BY = "DESIGNED_BY";
     public static final String WRITE_ON_SCRIPT = "WRITE_ON_SCRIPT";
 
-//    @Relationship(type = ENGRAVED_BY, direction = Relationship.Direction.OUTGOING)
+    private PART_TYPE partType;
+
+    public NTypePart(PART_TYPE partType) {
+        this.partType = partType;
+    }
+
+    //    @Relationship(type = ENGRAVED_BY, direction = Relationship.Direction.OUTGOING)
     private List<String> engravers = new ArrayList<>();
 
 //    @Relationship(type = DESIGNED_BY, direction = Relationship.Direction.OUTGOING)
@@ -30,69 +42,7 @@ public class NTypePart extends AbstractEntity {
     private String letteringTranslation;
     private String picture;
 
+    private LocalImage localImage;
 
 
-    public List<String> getEngravers() {
-        return engravers;
-    }
-
-    public void setEngravers(List<String> engravers) {
-        this.engravers = engravers;
-    }
-
-    public List<String> getDesigners() {
-        return designers;
-    }
-
-    public void setDesigners(List<String> designers) {
-        this.designers = designers;
-    }
-
-    public String getDescription() {
-        return description;
-    }
-
-    public void setDescription(String description) {
-        this.description = description;
-    }
-
-    public String getLettering() {
-        return lettering;
-    }
-
-    public void setLettering(String lettering) {
-        this.lettering = lettering;
-    }
-
-    public List<LetteringScript> getLetteringScripts() {
-        return letteringScripts;
-    }
-
-    public void setLetteringScripts(List<LetteringScript> letteringScripts) {
-        this.letteringScripts = letteringScripts;
-    }
-
-    public String getUnabridgedLegend() {
-        return unabridgedLegend;
-    }
-
-    public void setUnabridgedLegend(String unabridgedLegend) {
-        this.unabridgedLegend = unabridgedLegend;
-    }
-
-    public String getLetteringTranslation() {
-        return letteringTranslation;
-    }
-
-    public void setLetteringTranslation(String letteringTranslation) {
-        this.letteringTranslation = letteringTranslation;
-    }
-
-    public String getPicture() {
-        return picture;
-    }
-
-    public void setPicture(String picture) {
-        this.picture = picture;
-    }
 }

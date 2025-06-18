@@ -2,6 +2,7 @@ package bkv.colligendis.services;
 
 
 import bkv.colligendis.database.service.numista.*;
+import bkv.colligendis.database.service.features.YearService;
 import org.springframework.stereotype.Service;
 
 @Service
@@ -16,10 +17,12 @@ public class NumistaServices {
     public final CategoryService categoryService;
     public final IssuerService issuerService;
     public final RulerService rulerService;
+    public final RulerGroupService rulerGroupService;
     public final IssuingEntityService issuingEntityService;
 
+    public final DenominationService denominationService;
     public final CurrencyService currencyService;
-    public final TypeService typeService;
+    public final CollectibleTypeService collectibleTypeService;
     public final TypeGroupService typeGroupService;
 
     public final CommemoratedEventService commemoratedEventService;
@@ -46,6 +49,7 @@ public class NumistaServices {
     public final NTagService nTagService;
 
     public final CalendarService calendarService;
+    public final YearService yearService;
     public final VariantService variantService;
 
     public final MarkService markService;
@@ -54,16 +58,18 @@ public class NumistaServices {
 
 
 
-    public NumistaServices(CountryService countryService, SubjectService subjectService, NTypeService nTypeService, CategoryService categoryService, IssuerService issuerService, RulerService rulerService, IssuingEntityService issuingEntityService, CurrencyService currencyService, TypeService typeService, TypeGroupService typeGroupService, CommemoratedEventService commemoratedEventService, SeriesService seriesService, CatalogueService catalogueService, CatalogueReferenceService catalogueReferenceService, CompositionService compositionService, MetalService metalService, ShapeService shapeService, TechniqueService techniqueService, NTypePartService nTypePartService, LetteringScriptService letteringScriptService, MintService mintService, MintmarkService mintmarkService, SpecifiedMintService specifiedMintService, PrinterService printerService, NTagService nTagService, CalendarService calendarService, VariantService variantService, MarkService markService) {
+    public NumistaServices(CountryService countryService, SubjectService subjectService, NTypeService nTypeService, CategoryService categoryService, IssuerService issuerService, RulerService rulerService, RulerGroupService rulerGroupService, IssuingEntityService issuingEntityService, DenominationService denominationService, CurrencyService currencyService, CollectibleTypeService collectibleTypeService, TypeGroupService typeGroupService, CommemoratedEventService commemoratedEventService, SeriesService seriesService, CatalogueService catalogueService, CatalogueReferenceService catalogueReferenceService, CompositionService compositionService, MetalService metalService, ShapeService shapeService, TechniqueService techniqueService, NTypePartService nTypePartService, LetteringScriptService letteringScriptService, MintService mintService, MintmarkService mintmarkService, SpecifiedMintService specifiedMintService, PrinterService printerService, NTagService nTagService, CalendarService calendarService, YearService yearService, VariantService variantService, MarkService markService) {
         this.countryService = countryService;
         this.subjectService = subjectService;
         this.nTypeService = nTypeService;
         this.categoryService = categoryService;
         this.issuerService = issuerService;
         this.rulerService = rulerService;
+        this.rulerGroupService = rulerGroupService;
         this.issuingEntityService = issuingEntityService;
+        this.denominationService = denominationService;
         this.currencyService = currencyService;
-        this.typeService = typeService;
+        this.collectibleTypeService = collectibleTypeService;
         this.typeGroupService = typeGroupService;
         this.commemoratedEventService = commemoratedEventService;
         this.seriesService = seriesService;
@@ -81,6 +87,7 @@ public class NumistaServices {
         this.printerService = printerService;
         this.nTagService = nTagService;
         this.calendarService = calendarService;
+        this.yearService = yearService;
         this.variantService = variantService;
         this.markService = markService;
     }

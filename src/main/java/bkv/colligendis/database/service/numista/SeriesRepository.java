@@ -8,5 +8,5 @@ import reactor.core.publisher.Mono;
 
 public interface SeriesRepository extends AbstractNeo4jRepository<Series> {
 
-    Mono<Series> findByName(String name);
+    Series findByName(String name);
 }

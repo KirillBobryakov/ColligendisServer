@@ -2,70 +2,101 @@ package bkv.colligendis.database.service.numista;
 
 import bkv.colligendis.database.entity.numista.NType;
 import bkv.colligendis.database.service.AbstractNeo4jRepository;
-import org.springframework.data.neo4j.repository.Neo4jRepository;
 import org.springframework.data.neo4j.repository.query.Query;
-import reactor.core.publisher.Flux;
-import reactor.core.publisher.Mono;
 
 import java.util.List;
-import java.util.UUID;
 
-public interface NTypeRepository2 extends Neo4jRepository<NType, UUID> {
+public interface NTypeRepository extends AbstractNeo4jRepository<NType> {
+
 
     NType findByNid(String nid);
 
-//    @Query("MATCH (n:NTYPE) WHERE n.nid='201394' " +
-//            "OPTIONAL MATCH (n)-[uc:UNDER_CATEGORY]->(c:CATEGORY) OPTIONAL MATCH (n)-[ib:ISSUED_BY]->(i:ISSUER) OPTIONAL MATCH (n)-[dor:DURING_OF_RULER]->(r:ISSUER) OPTIONAL MATCH (n)-[pb:PROVIDED_BY]->(ie:ISSUING_ENTITY) OPTIONAL MATCH (n)-[ucur:UNDER_CURRENCY]->(cur:CURRENCY) OPTIONAL MATCH (n)-[ht:HAS_TYPE]->(t:TYPE) OPTIONAL MATCH (n)-[cf:COMMEMORATE_FOR]->(ce:COMMEMORATED_EVENT) OPTIONAL MATCH (n)-[hs:HAS_SERIES]->(s:SERIES) OPTIONAL MATCH (n)-[hr:HAS_REFERENCE]->(cr:CATALOGUE_REFERENCE) OPTIONAL MATCH (n)-[hc:HAS_COMPOSITION]->(comp:COMPOSITION) OPTIONAL MATCH (n)-[hsh:HAS_SHAPE]->(sh:SHAPE) OPTIONAL MATCH (n)-[wt:WITH_TECHNIQUE]->(tq:TECHNIQUE) OPTIONAL MATCH (n)-[hob:HAS_OBVERSE]->(ntpo:NTYPE_PART) OPTIONAL MATCH (n)-[hrv:HAS_REVERSE]->(ntpr:NTYPE_PART) OPTIONAL MATCH (n)-[hed:HAS_EDGE]->(ntpe:NTYPE_PART) OPTIONAL MATCH (n)-[hsm:HAS_SPECIFIED_MINT]->(sm:SPECIFIED_MINT) OPTIONAL MATCH (n)-[hw:HAS_WATERMARK]->(ntpw:NTYPE_PART) OPTIONAL MATCH (n)-[prb:PRINTED_BY]->(p:PRINTER) OPTIONAL MATCH (n)-[rw:REFERENCED_WITH]->(ntag:NTAG) OPTIONAL MATCH (n)-[dw:DATED_WITHIN]->(cal:CALENDAR) " +
-////            "RETURN count(n)" +
-//            "RETURN DISTINCT n, collect(uc), collect(c), collect(ib), collect(i), collect(dor), collect(r), collect(pb), collect(ie), collect(ucur), collect(cur), collect(ht), collect(t), collect(cf), collect(ce), collect(hs), collect(s), collect(hr), collect(cr), collect(hc), collect(comp), collect(hsh), collect(sh), collect(wt), collect(tq), collect(hob), collect(ntpo), collect(hrv), collect(ntpr), collect(hed), collect(ntpe), collect(hsm), collect(sm), collect(hw), collect(ntpw), collect(prb), collect(p), collect(rw), collect(ntag), collect(dw), collect(cal)" +
-//            "")
-//    NType findByNidAll(String nid);
+    /**
+     * Find an NTYPE by NTYPE's UUID and compare unique field NTYPE's {@code title} with parameter {@code title}.
+     * @param nTypeUuid NTYPE's UUID
+     * @param title compared with parameter
+     * @return result of comparing
+     */
+    @Query("MATCH (n) WHERE n.uuid=$nTypeUuid RETURN n.title = $title")
+    Boolean compareTitle(String nTypeUuid, String title);
 //
-//    @Query("MATCH (n:NTYPE) WHERE n.nid='201394' " +
-//            "OPTIONAL MATCH (n)-[uc:UNDER_CATEGORY]->(c:CATEGORY) OPTIONAL MATCH (n)-[ib:ISSUED_BY]->(i:ISSUER) OPTIONAL MATCH (n)-[dor:DURING_OF_RULER]->(r:ISSUER) OPTIONAL MATCH (n)-[pb:PROVIDED_BY]->(ie:ISSUING_ENTITY) OPTIONAL MATCH (n)-[ucur:UNDER_CURRENCY]->(cur:CURRENCY) OPTIONAL MATCH (n)-[ht:HAS_TYPE]->(t:TYPE) OPTIONAL MATCH (n)-[cf:COMMEMORATE_FOR]->(ce:COMMEMORATED_EVENT) OPTIONAL MATCH (n)-[hs:HAS_SERIES]->(s:SERIES) OPTIONAL MATCH (n)-[hr:HAS_REFERENCE]->(cr:CATALOGUE_REFERENCE) OPTIONAL MATCH (n)-[hc:HAS_COMPOSITION]->(comp:COMPOSITION) OPTIONAL MATCH (n)-[hsh:HAS_SHAPE]->(sh:SHAPE) OPTIONAL MATCH (n)-[wt:WITH_TECHNIQUE]->(tq:TECHNIQUE) OPTIONAL MATCH (n)-[hob:HAS_OBVERSE]->(ntpo:NTYPE_PART) OPTIONAL MATCH (n)-[hrv:HAS_REVERSE]->(ntpr:NTYPE_PART) OPTIONAL MATCH (n)-[hed:HAS_EDGE]->(ntpe:NTYPE_PART) OPTIONAL MATCH (n)-[hsm:HAS_SPECIFIED_MINT]->(sm:SPECIFIED_MINT) OPTIONAL MATCH (n)-[hw:HAS_WATERMARK]->(ntpw:NTYPE_PART) OPTIONAL MATCH (n)-[prb:PRINTED_BY]->(p:PRINTER) OPTIONAL MATCH (n)-[rw:REFERENCED_WITH]->(ntag:NTAG) OPTIONAL MATCH (n)-[dw:DATED_WITHIN]->(cal:CALENDAR) " +
-//            "RETURN count(n)" +
-////            "DISTINCT n, uc, c, ib, i, dor, r, pb, ie, ucur, cur, ht, t, cf, ce, hs, s, hr, cr, hc, comp, hsh, sh, wt, tq, hob, ntpo, hrv, ntpr, hed, ntpe, hsm, sm, hw, ntpw, prb, p, rw, ntag, dw, cal" +
-//            "")
-//    Integer findByNidAllCount();
-
-//    @Query("MATCH (n:NTYPE) WHERE n.nid='201394' RETURN n")
-//    NType findByNid(String nid);
-
-
+//
+//    /**
+//     * Find related ISSUER's code by NTYPE's UUID
+//     * @param uuid NTYPE's UUID
+//     * @return UUID  in String value
+//     */
+//    @Query("MATCH (n:NTYPE)-[:ISSUED_BY]->(i:ISSUER) WHERE n.uuid=$uuid RETURN i.code")
+//    String getNTypeIssuerCode(String uuid);
 
     Boolean existsByNid(String nid);
 
-    @Query("MATCH (n:NTYPE {nid:$nid}) SET n.isActual = toBoolean(true) return n")
-    NType setActual(String nid);
 
-    @Query("MATCH (n:NTYPE) WHERE n.isActual = toBoolean($isActual) return n")
-    List<NType> findByIsActual(Boolean isActual);
+    /**
+     * Find a NType's uuid by {@code nid}
+     * @param nid NType's nid
+     * @return NType's uuid if exists, or null
+     */
+    @Query("MATCH (n:NTYPE) WHERE n.nid = $nid RETURN n.uuid")
+    String findNTypeUuidByNid(String nid);
+
+    /**
+     * Set NTYPE's isActual in true
+     * @param uuid NTYPE's UUID
+     */
+    @Query("MATCH (n:NTYPE {uuid:$uuid}) SET n.isActual = toBoolean(true)")
+    void setActual(String uuid);
 
 
-    @Query("MATCH (n:NTYPE) WHERE n.title =~ $filter RETURN n ORDER BY n.name LIMIT 50")
-    List<NType> findByTitleFilter(String filter);
+    /**
+     * Find an Issuer's uuid with relationship to NType
+     * (n:NTYPE)-[:ISSUED_BY]->(i:ISSUER)
+     * @param nTypeUuid NType's uuid
+     * @return String value of Issuer's uuid
+     */
+    @Query("MATCH (n:NTYPE)-[:ISSUED_BY]->(i:ISSUER) WHERE n.uuid = $nTypeUuid RETURN i.uuid")
+    String getNTypeIssuerUuid(String nTypeUuid);
 
-    @Query("MATCH (c:COUNTRY {eid:$eid})-[*1..5]-(n:NTYPE) RETURN n ORDER BY n.name LIMIT 50")
-    List<NType> findByCountryEid(String eid);
+    /**
+     * Find all NTYPE's nid where NTYPE's isActual property is {@code isActual}
+     * @param isActual - parameter for a searching proper NTYPEs
+     * @return List of NTYPE's nid
+     */
+    @Query("MATCH (n:NTYPE) WHERE n.isActual = toBoolean($isActual) return n.nid")
+    List<String> findNTypeNidListByIsActual(Boolean isActual);
 
-    @Query("MATCH (c:COUNTRY {eid:$eid})-[*1..5]-(n:NTYPE) WHERE n.title =~ $filter RETURN n ORDER BY n.name LIMIT 50")
-    List<NType> findByTitleFilterAndCountryEid(String filter, String eid);
 
-    @Query("MATCH (c:SUBJECT {eid:$eid})-[*1..5]->(:ISSUER)-[:ISSUED_BY]-(n:NTYPE) RETURN n ORDER BY n.name LIMIT 50")
-    List<NType> findBySubjectEid(String eid);
 
-    @Query("MATCH (c:SUBJECT {eid:$eid})-[*1..5]->(:ISSUER)-[:ISSUED_BY]-(n:NTYPE)-[rv:VARIANTS]->(v:VARIANT), " +
-            "(n)-[ro:HAS_OBVERSE]->(o:NTYPE_PART), " +
-            "(n)-[rr:HAS_REVERSE]-(r:NTYPE_PART) " +
-            "WHERE (v.gregorianYear IS NOT NULL AND v.gregorianYear=$year) OR (v.gregorianYear IS NULL AND  v.minYear <= $year AND v.maxYear >= $year) " +
-            "RETURN DISTINCT n, collect(ro),collect(o),collect(rr),collect(r), collect(rv), collect(v) ORDER BY n.name LIMIT 50")
-    List<NType> findBySubjectEidAndYear(String eid, int year);
+//    @Query("MATCH (n:NTYPE) WHERE n.title =~ $filter RETURN n ORDER BY n.name LIMIT 50")
+//    List<NType> findByTitleFilter(String filter);
 
-    @Query("MATCH (c:SUBJECT {eid:$eid})-[*1..5]->(:ISSUER)-[:ISSUED_BY]-(n:NTYPE) WHERE n.title =~ $filter RETURN n ORDER BY n.name LIMIT 50")
-    List<NType> findByTitleFilterAndSubjectEid(String filter, String eid);
+//    @Query("MATCH (c:COUNTRY {eid:$eid})-[*1..5]-(n:NTYPE) RETURN n ORDER BY n.name LIMIT 50")
+//    List<NType> findByCountryEid(String eid);
 
-    @Query("MATCH (c:ISSUER {eid:$eid})<-[:ISSUED_BY]-(n:NTYPE) RETURN n ORDER BY n.title")
-    List<NType> findByIssuerEid(String eid);
+//    @Query("MATCH (c:COUNTRY {eid:$eid})-[*1..5]-(n:NTYPE) WHERE n.title =~ $filter RETURN n ORDER BY n.name LIMIT 50")
+//    List<NType> findByTitleFilterAndCountryEid(String filter, String eid);
+
+//    @Query("MATCH (c:SUBJECT {eid:$eid})-[*1..5]->(:ISSUER)-[:ISSUED_BY]-(n:NTYPE) RETURN n ORDER BY n.name LIMIT 50")
+//    List<NType> findBySubjectEid(String eid);
+
+//    @Query("MATCH (c:SUBJECT {eid:$eid})-[*1..5]->(:ISSUER)-[:ISSUED_BY]-(n:NTYPE)-[rv:VARIANTS]->(v:VARIANT), " +
+//            "(n)-[ro:HAS_OBVERSE]->(o:NTYPE_PART), " +
+//            "(n)-[rr:HAS_REVERSE]-(r:NTYPE_PART) " +
+//            "WHERE (v.gregorianYear IS NOT NULL AND v.gregorianYear=$year) OR (v.gregorianYear IS NULL AND  v.minYear <= $year AND v.maxYear >= $year) " +
+//            "RETURN DISTINCT n, collect(ro),collect(o),collect(rr),collect(r), collect(rv), collect(v) ORDER BY n.name LIMIT 50")
+//    List<NType> findBySubjectEidAndYear(String eid, int year);
+
+//    @Query("MATCH (c:SUBJECT {eid:$eid})-[*1..5]->(:ISSUER)-[:ISSUED_BY]-(n:NTYPE) WHERE n.title =~ $filter RETURN n ORDER BY n.name LIMIT 50")
+//    List<NType> findByTitleFilterAndSubjectEid(String filter, String eid);
+
+
+    /**
+     * Find List of NType's {@code nid} by Issuer's uuid
+     * @param uuid Issuer's uuid
+     * @return List of NType's nid
+     */
+    @Query("MATCH (i:ISSUER)<-[:ISSUED_BY]-(n:NTYPE) WHERE i.uuid = $uuid RETURN n.nid ORDER BY n.title")
+    List<String> findNTypeNidListByIssuerEid(String uuid);
 
     @Query("MATCH (c:ISSUER {eid:$eid})<-[:ISSUED_BY]-(n:NTYPE) RETURN n.nid ORDER BY n.title")
     List<String> findNTypeNidByIssuerEid(String eid);

@@ -10,21 +10,19 @@ import org.jsoup.nodes.Element;
 import java.util.HashMap;
 import java.util.List;
 
-public class ReverseParser extends NumistaPartParser {
+public class EdgeParser extends NumistaPartParser {
 
-    public ReverseParser() {
+    public EdgeParser() {
         super((page, nType) -> {
             ParseEvent result = ParseEvent.NOT_CHANGED;
 
             ParseEvent[] parseFunctions = new ParseEvent[] {
-                    parseReverseEngravers(page, nType),
-                    parseReverseDesigners(page, nType),
-                    parseReverseDescription(page, nType),
-                    parseReverseLettering(page, nType),
-                    parseReverseScripts(page, nType),
-                    parseReverseUnabridgedLegend(page, nType),
-                    parseReverseLetteringTranslation(page, nType),
-                    parseReversePicture(page, nType),
+                    parseEdgeDescription(page, nType),
+                    parseEdgeLettering(page, nType),
+                    parseEdgeScripts(page, nType),
+                    parseEdgeUnabridgedLegend(page, nType),
+                    parseEdgeLetteringTranslation(page, nType),
+                    parseEdgePicture(page, nType),
             };
 
             for (ParseEvent partResult : parseFunctions) {
@@ -38,140 +36,93 @@ public class ReverseParser extends NumistaPartParser {
             return result;
         });
 
-        this.partName = "ReverseParser";
+        this.partName = "EdgeParser";
     }
 
-    private static ParseEvent parseReverseEngravers(Document page, NType nType) {
+    private static ParseEvent parseEdgeDescription(Document page, NType nType) {
         ParseEvent result = ParseEvent.NOT_CHANGED;
-
-        List<String> graveursRevers = getTextsSelectedOptions(page.selectFirst("#graveur_revers"));
-        if (graveursRevers != null) {
-            for (String engraver : graveursRevers) {
-                if (engraver != null && !engraver.isEmpty()) {
-
-                    if (nType.getReverse() == null) {
-                        nType.setReverse(new NTypePart());
-                    } else if (nType.getReverse().getEngravers().contains(engraver)) {
-                        continue;
-                    }
-
-                    assert nType.getReverse().getEngravers() != null;
-
-                    nType.getReverse().getEngravers().add(engraver);
-                    result = ParseEvent.CHANGED;
-                }
-            }
-        }
-        return result;
-    }
-
-    private static ParseEvent parseReverseDesigners(Document page, NType nType) {
-        ParseEvent result = ParseEvent.NOT_CHANGED;
-        List<String> designersRevers = getTextsSelectedOptions(page.selectFirst("#designer_revers"));
-        if (designersRevers != null) {
-            for (String designer : designersRevers) {
-                if (designer != null && !designer.isEmpty()) {
-
-                    if (nType.getReverse() == null) {
-                        nType.setReverse(new NTypePart());
-                    } else if (nType.getObverse().getDesigners().contains(designer)) {
-                        continue;
-                    }
-
-                    assert nType.getReverse().getDesigners() != null;
-
-                    nType.getReverse().getDesigners().add(designer);
-                    result = ParseEvent.CHANGED;
-                }
-            }
-        }
-        return result;
-    }
-
-
-    private static ParseEvent parseReverseDescription(Document page, NType nType) {
-        ParseEvent result = ParseEvent.NOT_CHANGED;
-        String descriptionRevers = getTagText(page.selectFirst("#description_revers"));
-        if (descriptionRevers != null && !descriptionRevers.isEmpty()) {
-            if (nType.getReverse() == null) nType.setReverse(new NTypePart());
-
-            nType.getReverse().setDescription(descriptionRevers);
+        String descriptionTranche = getTagText(page.selectFirst("#description_tranche"));
+        if (descriptionTranche != null && !descriptionTranche.isEmpty()) {
+            if(nType.getEdge() == null) nType.setEdge(new NTypePart(PART_TYPE.EDGE));
+            nType.getEdge().setDescription(descriptionTranche);
             result = ParseEvent.CHANGED;
         }
         return result;
     }
 
-    private static ParseEvent parseReverseLettering(Document page, NType nType) {
+    private static ParseEvent parseEdgeLettering(Document page, NType nType) {
         ParseEvent result = ParseEvent.NOT_CHANGED;
-        String texteRevers = getTagText(page.selectFirst("#texte_revers"));
-        if (texteRevers != null && !texteRevers.isEmpty()) {
-            if (nType.getReverse() == null) nType.setReverse(new NTypePart());
+        String texteTranche = getTagText(page.selectFirst("texte_tranche"));
+        if (texteTranche != null && !texteTranche.isEmpty()) {
+            if(nType.getEdge() == null) nType.setEdge(new NTypePart(PART_TYPE.EDGE));
 
-            nType.getReverse().setLettering(texteRevers);
+            nType.getEdge().setLettering(texteTranche);
             result = ParseEvent.CHANGED;
         }
         return result;
     }
 
-    private static ParseEvent parseReverseScripts(Document page, NType nType) {
+    private static ParseEvent parseEdgeScripts(Document page, NType nType) {
         ParseEvent result = ParseEvent.NOT_CHANGED;
-
 
         //todo Change code on without clearing Lettering scripts.
-        if(nType.getReverse() != null && nType.getReverse().getLetteringScripts() != null && !nType.getReverse().getLetteringScripts().isEmpty()) {
-            nType.getReverse().getLetteringScripts().clear();
+        if(nType.getEdge() != null && nType.getEdge().getLetteringScripts() != null && !nType.getEdge().getLetteringScripts().isEmpty()) {
+            nType.getEdge().getLetteringScripts().clear();
         }
 
-        List<HashMap<String, String>> scriptsRevers = getAttributesWithTextSelectedOptions(page.selectFirst("#script_revers"));
-        if (scriptsRevers != null) {
-            for (HashMap<String, String> scriptRevers : scriptsRevers) {
-                if (isValueAndTextNotNullAndNotEmpty(scriptRevers)) {
-                    if (nType.getReverse() == null) nType.setReverse(new NTypePart());
 
-                    assert nType.getReverse().getLetteringScripts() != null;
+        List<HashMap<String, String>> scriptsTranche = getAttributesWithTextSelectedOptions(page.selectFirst("#script_tranche"));
+        if (scriptsTranche != null) {
+            for (HashMap<String, String> scriptTranche : scriptsTranche) {
+                if (isValueAndTextNotNullAndNotEmpty(scriptTranche)) {
+                    if(nType.getEdge() == null) nType.setEdge(new NTypePart(PART_TYPE.EDGE));
 
-                    nType.getReverse().getLetteringScripts().add(N4JUtil.getInstance().numistaService.letteringScriptService.findByNid(scriptRevers.get("value"), scriptRevers.get("text")));
+                    assert nType.getEdge().getLetteringScripts() != null;
+
+                    nType.getEdge().getLetteringScripts().add(N4JUtil.getInstance().numistaService.letteringScriptService.findByNid(scriptTranche.get("value"), scriptTranche.get("text")));
                     result = ParseEvent.CHANGED;
                 }
             }
         }
+
         return result;
     }
 
-    private static ParseEvent parseReverseUnabridgedLegend(Document page, NType nType) {
+    private static ParseEvent parseEdgeUnabridgedLegend(Document page, NType nType) {
         ParseEvent result = ParseEvent.NOT_CHANGED;
 
-        String unabridgedRevers = getTagText(page.selectFirst("#unabridged_revers"));
-        if (unabridgedRevers != null && !unabridgedRevers.isEmpty()) {
-            if (nType.getReverse() == null) nType.setReverse(new NTypePart());
+        String unabridgedTranche = getTagText(page.selectFirst("#unabridged_tranche"));
+        if (unabridgedTranche != null && !unabridgedTranche.isEmpty()) {
+            if(nType.getEdge() == null) nType.setEdge(new NTypePart(PART_TYPE.EDGE));
 
-            nType.getReverse().setUnabridgedLegend(unabridgedRevers);
+            nType.getEdge().setUnabridgedLegend(unabridgedTranche);
             result = ParseEvent.CHANGED;
         }
         return result;
     }
 
-    private static ParseEvent parseReverseLetteringTranslation(Document page, NType nType) {
+    private static ParseEvent parseEdgeLetteringTranslation(Document page, NType nType) {
         ParseEvent result = ParseEvent.NOT_CHANGED;
-        String traductionRevers = getTagText(page.selectFirst("#traduction_revers"));
-        if (traductionRevers != null && !traductionRevers.isEmpty()) {
-            if (nType.getReverse() == null) nType.setReverse(new NTypePart());
 
-            nType.getReverse().setLetteringTranslation(traductionRevers);
+        String traductionTranche = getTagText(page.selectFirst("#traduction_tranche"));
+        if (traductionTranche != null && !traductionTranche.isEmpty()) {
+            if(nType.getEdge() == null) nType.setEdge(new NTypePart(PART_TYPE.EDGE));
+
+            nType.getEdge().setLetteringTranslation(traductionTranche);
             result = ParseEvent.CHANGED;
         }
         return result;
     }
 
-    private static ParseEvent parseReversePicture(Document page, NType nType) {
+    private static ParseEvent parseEdgePicture(Document page, NType nType) {
         ParseEvent result = ParseEvent.NOT_CHANGED;
-        Element reverse = page.selectFirst("fieldset:contains(Reverse (back))");
-        if (reverse != null) {
-            String reversePhoto = getAttribute(reverse.selectFirst("a[target=_blank]"), "href");
-            if (reversePhoto != null && !reversePhoto.isEmpty()) {
-                if (nType.getReverse() == null) nType.setReverse(new NTypePart());
+        Element legendEdge = page.selectFirst("fieldset>legend:containsOwn(Edge)");
+        if (legendEdge != null) {
+            String edgePhoto = getAttribute(legendEdge.parent().selectFirst("a[target=_blank]"), "href");
+            if (edgePhoto != null && !edgePhoto.isEmpty()) {
+                if(nType.getEdge() == null) nType.setEdge(new NTypePart(PART_TYPE.EDGE));
 
-                nType.getReverse().setPicture(reversePhoto);
+                nType.getEdge().setPicture(edgePhoto);
                 result = ParseEvent.CHANGED;
             }
         }

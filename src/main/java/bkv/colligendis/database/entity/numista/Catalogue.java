@@ -2,13 +2,16 @@ package bkv.colligendis.database.entity.numista;
 
 
 import bkv.colligendis.database.entity.AbstractEntity;
+import lombok.Data;
 import org.springframework.data.neo4j.core.schema.Node;
 
 @Node("CATALOGUE")
+@Data
 public class Catalogue extends AbstractEntity {
 
     private String nid;
     private String code;
+    private String bibliography;
 
 //    private String code;
 //    private String authors;
@@ -21,24 +24,17 @@ public class Catalogue extends AbstractEntity {
 //    private String ISBN13;
 
 
+    public Catalogue() {
+    }
+
     public Catalogue(String nid, String code) {
         this.nid = nid;
         this.code = code;
     }
 
-    public String getNid() {
-        return nid;
-    }
-
-    public void setNid(String nid) {
+    public Catalogue(String nid, String code, String bibliography) {
         this.nid = nid;
-    }
-
-    public String getCode() {
-        return code;
-    }
-
-    public void setCode(String code) {
         this.code = code;
+        this.bibliography = bibliography;
     }
 }

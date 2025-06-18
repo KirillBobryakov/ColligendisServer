@@ -8,5 +8,5 @@ import reactor.core.publisher.Mono;
 
 public interface LetteringScriptRepository extends AbstractNeo4jRepository<LetteringScript> {
 
-    Mono<LetteringScript> findByNid(String nid);
+    LetteringScript findByNid(String nid);
 }

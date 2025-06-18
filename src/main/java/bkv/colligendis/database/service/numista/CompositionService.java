@@ -12,8 +12,4 @@ public class CompositionService extends AbstractService<Composition, Composition
         super(repository);
     }
 
-    @Override
-    public Composition setPropertyValue(Long id, String name, String value) {
-        return null;
-    }
 }

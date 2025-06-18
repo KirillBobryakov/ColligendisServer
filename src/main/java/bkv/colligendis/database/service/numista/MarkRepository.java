@@ -8,5 +8,5 @@ import reactor.core.publisher.Mono;
 
 public interface MarkRepository extends AbstractNeo4jRepository<Mark> {
 
-    Mono<Mark> findByNid(String nid);
+    Mark findByNid(String nid);
 }

@@ -1,10 +1,7 @@
 package bkv.colligendis.utils;
 
 import bkv.colligendis.database.entity.numista.Category;
-import bkv.colligendis.rest.CoinService;
 import bkv.colligendis.services.NumistaServices;
-
-import java.util.HashMap;
 
 public class N4JUtil {
 
@@ -13,6 +10,7 @@ public class N4JUtil {
     // match (n) WHERE NOT n:NTYPE AND NOT n:COUNTRY AND NOT n:SUBJECT AND NOT n:ISSUER AND NOT n:USER return n
 
     private static N4JUtil instance;
+
 
     public final NumistaServices numistaService;
 

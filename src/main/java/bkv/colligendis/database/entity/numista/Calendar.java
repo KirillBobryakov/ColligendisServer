@@ -6,6 +6,10 @@ import org.springframework.data.neo4j.core.schema.Node;
 @Node("CALENDAR")
 public class Calendar extends AbstractEntity {
 
+    public static final String GREGORIAN_CODE = "gregorien";
+    public static final String ISLAMI_HIJRI = "musulman";
+    public static final String IRANIAN_PERSIAN = "persan";
+
     private String code;
     private String name;
 

@@ -14,7 +14,7 @@ public class TechniqueService extends AbstractService<Technique, TechniqueReposi
     }
 
     public Technique findByNid(String nid, String name){
-        Technique technique = repository.findByNid(nid).block();
+        Technique technique = repository.findByNid(nid);
         if (technique != null) {
             if(!technique.getName().equals(name)){
                 DebugUtil.showServiceMessage(this, "Trying to find Technique with nid=" + nid + " and name=" + name
@@ -24,14 +24,10 @@ public class TechniqueService extends AbstractService<Technique, TechniqueReposi
             }
         } else {
             DebugUtil.showInfo(this, "New Technique with nid=" + nid + " and name=" + name + " was created.");
-            return repository.save(new Technique(nid, name)).block();
+            return repository.save(new Technique(nid, name));
         }
         return technique;
     }
 
 
-    @Override
-    public Technique setPropertyValue(Long id, String name, String value) {
-        return null;
-    }
 }

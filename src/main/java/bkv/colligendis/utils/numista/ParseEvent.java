@@ -1,5 +1,5 @@
 package bkv.colligendis.utils.numista;
 
-public enum Event {
+public enum ParseEvent {
     ERROR, CHANGED, NOT_CHANGED
 }

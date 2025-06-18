@@ -1,0 +1,9 @@
+{
+    "java.compile.nullAnalysis.mode": "automatic",
+    "java.configuration.updateBuildConfiguration": "automatic",
+    "neo4j.connection": {
+        "uri": "bolt://localhost:7687",
+        "username": "neo4j"
+    },
+    "java.debug.settings.onBuildFailureProceed": true
+}

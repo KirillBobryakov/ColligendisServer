@@ -2,16 +2,19 @@ package bkv.colligendis.security;
 
 import bkv.colligendis.services.UserService;
 import io.jsonwebtoken.*;
+import jakarta.annotation.PostConstruct;
+import jakarta.servlet.http.HttpServletRequest;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.Authentication;
+import org.springframework.security.core.GrantedAuthority;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.stereotype.Component;
 
-import javax.annotation.PostConstruct;
-import javax.servlet.http.HttpServletRequest;
+import javax.crypto.SecretKey;
 import java.util.Base64;
+import java.util.Collection;
 import java.util.Date;
 import java.util.List;
 
@@ -20,7 +23,10 @@ public class JwtTokenProvider {
     @Value("${security.jwt.token.secret-key:secret}")
     private String secretKey = "secret";
     @Value("${security.jwt.token.expire-length:3600000}")
-    private long validityInMilliseconds = 3600000; // 1h
+    private long validityInMilliseconds = 3600000*24; // 1h
+
+    SecretKey key = Jwts.SIG.HS256.key().build();
+
     @Autowired
     private UserService userDetailsService;
 
@@ -29,25 +35,58 @@ public class JwtTokenProvider {
         secretKey = Base64.getEncoder().encodeToString(secretKey.getBytes());
     }
     public String createToken(String username, String email, List<String> roles) {
-        Claims claims = Jwts.claims().setSubject(username);
-        claims.put("roles", roles);
-        claims.put("username", username);
-        claims.put("email", email);
         Date now = new Date();
         Date validity = new Date(now.getTime() + validityInMilliseconds);
-        return Jwts.builder()//
-                .setClaims(claims)//
-                .setIssuedAt(now)//
-                .setExpiration(validity)//
-                .signWith(SignatureAlgorithm.HS256, secretKey)//
+
+        return Jwts.builder()
+                .claims()
+                .add("role", roles)
+                .add("username", username)
+                .add("email", email)
+                .issuedAt(now)
+                .expiration(validity)
+                .and()
+                .signWith(key)//
                 .compact();
     }
     public Authentication getAuthentication(String token) {
-        UserDetails userDetails = this.userDetailsService.findByUsername(getEmail(token));
+        UserDetails userDetails = new UserDetails() {
+            @Override
+            public Collection<? extends GrantedAuthority> getAuthorities() {
+                return null;
+            }
+
+            @Override
+            public String getPassword() {
+                return null;
+            }
+
+            @Override
+            public String getUsername() {
+                return null;
+            }
+
+            @Override
+            public boolean isAccountNonExpired() {
+                return false;
+            }
+
+            @Override
+            public boolean isAccountNonLocked() {
+                return false;
+            }
+
+            @Override
+            public boolean isCredentialsNonExpired() {
+                return false;
+            }
+
+            @Override
+            public boolean isEnabled() {
+                return false;
+            }
+        };
         return new UsernamePasswordAuthenticationToken(userDetails, "", userDetails.getAuthorities());
-    }
-    public String getEmail(String token) {
-        return Jwts.parser().setSigningKey(secretKey).parseClaimsJws(token).getBody().getSubject();
     }
     public String resolveToken(HttpServletRequest req) {
         String bearerToken = req.getHeader("Authorization");
@@ -58,11 +97,8 @@ public class JwtTokenProvider {
     }
     public boolean validateToken(String token) {
         try {
-            Jws<Claims> claims = Jwts.parser().setSigningKey(secretKey).parseClaimsJws(token);
-            if (claims.getBody().getExpiration().before(new Date())) {
-                return false;
-            }
-            return true;
+            Jws<Claims> claims = Jwts.parser().verifyWith(key).build().parseSignedClaims(token);
+            return !claims.getPayload().getExpiration().before(new Date());
         } catch (JwtException | IllegalArgumentException e) {
             throw new JwtException("Expired or invalid JWT token");
         }

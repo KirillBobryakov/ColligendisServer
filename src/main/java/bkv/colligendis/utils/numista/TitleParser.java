@@ -1,43 +1,30 @@
 package bkv.colligendis.utils.numista;
 
-import bkv.colligendis.database.entity.numista.Category;
 import bkv.colligendis.utils.DebugUtil;
-import bkv.colligendis.utils.N4JUtil;
-import org.jsoup.nodes.Element;
 
-public class CategoryParser extends NumistaPartParser {
+import java.util.Objects;
 
-    public CategoryParser() {
-        super((document, nType) -> {
-            String categoryName = "";
-            String nid = "";
+public class TitleParser extends NumistaPartParser {
 
-            Element mainBreadcrumb = document.selectFirst("#main_breadcrumb");
-            if (mainBreadcrumb != null) {
-                Element categoryElement = mainBreadcrumb.selectFirst("a[href^=../index.php?ct=]");
-                if (categoryElement != null) {
-                    categoryName = categoryElement.attributes().get("href").replace("../index.php?ct=", "");
-                    DebugUtil.printProperty("category", categoryName, true, true, true);
-                }
-                if (categoryName.isEmpty()) {
-                    DebugUtil.showError(CategoryParser.class, "Category on page for type with nid:" + nid + " is empty.");
-                    return false;
-                }
+    public TitleParser() {
+        super((page, nType) -> {
+            String designation = getAttribute(page.selectFirst("#designation"), "value");
+            if(designation == null){
+                DebugUtil.showError(TitleParser.class, "The Title of NType with nid = " + nType.getNid() + " can't be found. " + Objects.requireNonNull(page.selectFirst("p[class=info_box]")).text());
 
-                if (nType.getCategory() != null && nType.getCategory().getName().equals(categoryName)) {
-                    return true;
-                }
+                return ParseEvent.ERROR;
+            }
+            DebugUtil.printProperty("title", designation, true, true, true);
 
-                Category categoryNode = N4JUtil.getInstance().numistaService.categoryService.findByName(categoryName);
-                nType.setCategory(categoryNode);
-
-                DebugUtil.showInfo(CategoryParser.class, "For NType with nid: " + nType.getNid() + " set new Category: " + nType.getCategory().getName());
-
-                return true;
+            if (nType.getTitle().equals(designation)) {
+                return ParseEvent.NOT_CHANGED;
             }
 
-            DebugUtil.showError(CategoryParser.class, "Can't find #main_breadcrumb on page nid: " + nType.getNid());
-            return false;
+            DebugUtil.showWarning(TitleParser.class, "The Title of existing NType (" + nType.getTitle() + ") is not equal with Title on the page (" + designation + ")");
+            nType.setTitle(designation);
+            return ParseEvent.CHANGED;
         });
+
+        this.partName = "Title";
     }
 }

@@ -1,37 +1,55 @@
 package bkv.colligendis.database.service.numista;
 
-import bkv.colligendis.database.entity.numista.Calendar;
-import bkv.colligendis.database.entity.numista.Issuer;
+import bkv.colligendis.database.entity.numista.Currency;
+import bkv.colligendis.database.entity.numista.Denomination;
 import bkv.colligendis.services.AbstractService;
-import bkv.colligendis.utils.DebugUtil;
 import org.springframework.stereotype.Service;
 
+import java.util.List;
+import java.util.UUID;
+
 @Service
-public class CalendarService extends AbstractService<Calendar, CalendarRepository> {
-    public CalendarService(CalendarRepository repository) {
+public class DenominationService extends AbstractService<Denomination, DenominationRepository> {
+    public DenominationService(DenominationRepository repository) {
         super(repository);
     }
 
 
-    public Calendar findByCode(String code, String name){
-        Calendar calendar = repository.findByCode(code);
-        if (calendar != null) {
-            if(!calendar.getName().equals(name)){
-                DebugUtil.showServiceMessage(this, "Trying to find Calendar with code=" + code + " and name=" + name
-                        + ". But there is an Calendar with the same code and other name= " + calendar.getName() + "in DB already.", DebugUtil.MESSAGE_LEVEL.WARNING);
-                DebugUtil.showWarning(this, "Calendar.name was updated.");
-                calendar.setName(name);
-                return repository.save(calendar);
-            }
-        } else {
-            DebugUtil.showInfo(this, "New Calendar with code=" + code + " and name=" + name + " was created.");
-            return repository.save(new Calendar(code, name));
-        }
-        return calendar;
+    public void deleteAll(){
+        repository.deleteAll();
     }
 
-    @Override
-    public Calendar setPropertyValue(Long id, String name, String value) {
-        return null;
+    /**
+     * Find a Denomination's UUID by nid
+     * @param nid Denomination's nid
+     * @return Denomination's Eid in UUID value, or null
+     */
+    public UUID findUuidByCode(String nid){
+        String eid = repository.findEidByCode(nid);
+        return eid != null ? UUID.fromString(eid) : null;
     }
+
+    /**
+     * Find Denomination's nid by Denomination's uuid
+     * @param uuid Denomination's uuid
+     * @return Denomination's nid
+     */
+    public String findDenominationNidByUuid(UUID uuid){
+        return repository.findDenominationNidByUuid(uuid.toString());
+    }
+
+    /**
+     * Find Denomination by Denomination's nid
+     * @param nid Denomination's nid
+     * @return Denomination
+     */
+    public Denomination findDenominationByNid(String nid){
+        return repository.findByNid(nid);
+    }
+
+    public List<Denomination> findDenominationsByCurrency(Currency currency){
+        return repository.findByCurrency_Nid(currency.getNid());
+    }
+
+
 }

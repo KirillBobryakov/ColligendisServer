@@ -13,16 +13,13 @@ public class CatalogueReferenceService extends AbstractService<CatalogueReferenc
     }
 
     public CatalogueReference findByNumberAndCatalogueNid(String number, Catalogue catalogue){
-        CatalogueReference catalogueReference = repository.findByNumberAndCatalogue_Nid(number, catalogue.getNid()).block();
+        CatalogueReference catalogueReference = repository.findByNumberAndCatalogue_Nid(number, catalogue.getNid());
         if (catalogueReference == null) {
             DebugUtil.showInfo(this, "New CatalogueReference with number=" + number + " and references to catalogue=" + catalogue + " was created.");
-            return repository.save(new CatalogueReference(catalogue, number)).block();
+            return repository.save(new CatalogueReference(catalogue, number));
         }
         return catalogueReference;
     }
 
-    @Override
-    public CatalogueReference setPropertyValue(Long id, String name, String value) {
-        return null;
-    }
+
 }

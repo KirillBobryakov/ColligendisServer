@@ -9,7 +9,7 @@ import org.springframework.context.annotation.Scope;
 @Configuration
 @Scope("singleton")
 @Data
-public class NumistaParserProperties {
+public class NumistaProperties {
 
     @Value("${spring.colligendis.numista.parser.showPageAfterLoad}")
     private boolean showPageAfterLoad;

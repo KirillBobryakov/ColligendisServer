@@ -2,30 +2,44 @@ package bkv.colligendis.database.entity.numista;
 
 
 import bkv.colligendis.database.entity.AbstractEntity;
+import lombok.Data;
+import lombok.EqualsAndHashCode;
+import lombok.ToString;
+
 import org.springframework.data.neo4j.core.schema.Node;
 import org.springframework.data.neo4j.core.schema.Relationship;
 
 import java.util.ArrayList;
+import java.util.List;
 
 @Node("SUBJECT")
+@Data
+@EqualsAndHashCode(callSuper=true)
+@ToString(callSuper = true, onlyExplicitlyIncluded = true)
 public class Subject extends AbstractEntity {
 
+    public static final String PARENT_SUBJECT = "PARENT_SUBJECT";
+    public static final String RELATE_TO_COUNTRY = "RELATE_TO_COUNTRY";
 
+    private String numistaCode;
     private String name;
 
-    @Relationship(value = Country.CONTAINS_CHILD_SUBJECT, direction = Relationship.Direction.INCOMING)
+
+    private List<String> ruAlternativeNames = new ArrayList<>();
+
+
+    @Relationship(value = RELATE_TO_COUNTRY, direction = Relationship.Direction.OUTGOING)
     private Country country;
 
 
-    @Relationship(value = Country.CONTAINS_CHILD_SUBJECT, direction = Relationship.Direction.INCOMING)
+    @Relationship(value = PARENT_SUBJECT, direction = Relationship.Direction.OUTGOING)
     private Subject parentSubject;
 
-    @Relationship(value = Country.CONTAINS_CHILD_SUBJECT, direction = Relationship.Direction.OUTGOING)
-    private ArrayList<Subject> childSubjects = new ArrayList<>();
+    // @Relationship(value = Country.CONTAINS_CHILD_SUBJECT, direction = Relationship.Direction.OUTGOING)
+    // private ArrayList<Subject> childSubjects = new ArrayList<>();
 
-
-    @Relationship(value = Country.CONTAINS_ISSUER, direction = Relationship.Direction.OUTGOING)
-    private ArrayList<Issuer> issuers = new ArrayList<>();
+    // @Relationship(value = Country.CONTAINS_ISSUER, direction = Relationship.Direction.OUTGOING)
+    // private ArrayList<Issuer> issuers = new ArrayList<>();
 
     public Subject() {
     }
@@ -34,44 +48,9 @@ public class Subject extends AbstractEntity {
         this.name = name;
     }
 
-
-    public String getName() {
-        return name;
-    }
-
-    public void setName(String name) {
+    public Subject(String numistaCode, String name) {
+        this.numistaCode = numistaCode;
         this.name = name;
     }
 
-    public Country getCountry() {
-        return country;
-    }
-
-    public void setCountry(Country country) {
-        this.country = country;
-    }
-
-    public Subject getParentSubject() {
-        return parentSubject;
-    }
-
-    public void setParentSubject(Subject parentSubject) {
-        this.parentSubject = parentSubject;
-    }
-
-    public ArrayList<Subject> getChildSubjects() {
-        return childSubjects;
-    }
-
-    public void setChildSubjects(ArrayList<Subject> childSubjects) {
-        this.childSubjects = childSubjects;
-    }
-
-    public ArrayList<Issuer> getIssuers() {
-        return issuers;
-    }
-
-    public void setIssuers(ArrayList<Issuer> issuers) {
-        this.issuers = issuers;
-    }
 }

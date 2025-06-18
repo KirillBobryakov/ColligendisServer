@@ -19,15 +19,15 @@ import java.util.stream.Stream;
 @RestController
 public class SubjectRestController {
 
-
-    @GetMapping(value = "/subject/filter/country/{eid}")
-    @ResponseBody
-    public ResponseEntity<List<SubjectNude>> getSubjectsOfCountry(@PathVariable(name = "eid") String ied) {
-        List<SubjectNude> subjects = N4JUtil.getInstance().numistaService.subjectService.findByCountryEid(ied).stream()
-                .map(subject -> new SubjectNude(subject.getId(), subject.getEid().toString(), subject.getName()))
-                .collect(Collectors.toList());
-        return ResponseEntity.ok(subjects);
-    }
+//
+//    @GetMapping(value = "/subject/filter/country/{eid}")
+//    @ResponseBody
+//    public ResponseEntity<List<SubjectNude>> getSubjectsOfCountry(@PathVariable(name = "eid") String ied) {
+//        List<SubjectNude> subjects = N4JUtil.getInstance().numistaService.subjectService.findByCountryEid(ied).stream()
+//                .map(subject -> new SubjectNude(subject.getId(), subject.getEid().toString(), subject.getName()))
+//                .collect(Collectors.toList());
+//        return ResponseEntity.ok(subjects);
+//    }
 
 
 }

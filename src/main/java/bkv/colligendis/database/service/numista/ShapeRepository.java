@@ -8,5 +8,5 @@ import reactor.core.publisher.Mono;
 
 public interface ShapeRepository extends AbstractNeo4jRepository<Shape> {
 
-    Mono<Shape> findByNid(String nid);
+    Shape findByNid(String nid);
 }

@@ -1,66 +1,80 @@
 package bkv.colligendis.utils.numista;
 
-import bkv.colligendis.database.entity.numista.NType;
-import bkv.colligendis.database.entity.numista.NTypePart;
-import bkv.colligendis.utils.DebugUtil;
+import bkv.colligendis.database.entity.numista.*;
 import bkv.colligendis.utils.N4JUtil;
-import org.jsoup.nodes.Document;
 import org.jsoup.nodes.Element;
 
 import java.util.HashMap;
-import java.util.List;
 
-public class WatermarkParser extends NumistaPartParser {
+public class MintsParser extends NumistaPartParser {
 
-    public WatermarkParser() {
+    public MintsParser() {
         super((page, nType) -> {
             ParseEvent result = ParseEvent.NOT_CHANGED;
 
-            ParseEvent[] parseFunctions = new ParseEvent[] {
-                    parseWatermarkDescription(page, nType),
-                    parseWatermarkPicture(page, nType),
-            };
+            Element mints = page.selectFirst("fieldset:contains(Mint(s))");
 
-            for (ParseEvent partResult : parseFunctions) {
-                if (partResult == ParseEvent.ERROR) {
-                    return ParseEvent.ERROR;
-                } else if (partResult == ParseEvent.CHANGED) {
-                    result = ParseEvent.CHANGED;
+            if (mints == null) return ParseEvent.NOT_CHANGED;
+
+            nType.getSpecifiedMints().clear();
+
+            int i = 0;
+            while (true) {
+                Element mintIdentifierElement = mints.selectFirst("input[name=mint_identifier" + i + "]");
+                Element mintElement = mints.selectFirst("select[name=mint" + i + "]");
+                Element mintmarkElement = mints.selectFirst("select[name=mintmark" + i + "]");
+                if (mintIdentifierElement != null && mintElement != null && mintmarkElement != null && mintElement.selectFirst("option") != null) {
+
+                    Mint mint = null;
+
+                    HashMap<String, String> mintCode = getAttributeWithTextSingleOption(mintElement, "value");
+                    if (isValueAndTextNotNullAndNotEmpty(mintCode)) {
+                        mint = N4JUtil.getInstance().numistaService.mintService.findByNid(mintCode.get("value"), mintCode.get("text"));
+                    }
+
+                    if (mint != null) {
+
+                        String mintmarkIdentifier = getAttribute(mintIdentifierElement, "value");
+
+                        if (mintmarkIdentifier == null) {
+                            mintmarkIdentifier = "";
+                        }
+
+                        Mintmark mintmark = null;
+                        HashMap<String, String> mintmarkHashMap = getAttributeWithTextSingleOption(mintmarkElement, "value");
+
+                        if (isValueAndTextNotNullAndNotEmpty(mintmarkHashMap)) {
+                            mintmark = N4JUtil.getInstance().numistaService.mintmarkService.findByNid(mintmarkHashMap.get("value"));
+                            if (mintmark != null && mintmark.getPicture() != null && !mintmark.getPicture().equals(mintmarkHashMap.get("text"))) {
+                                mintmark.setPicture(mintmarkHashMap.get("text"));
+                                N4JUtil.getInstance().numistaService.mintmarkService.save(mintmark);
+                            }
+                        }
+
+                        SpecifiedMint specifiedMint = N4JUtil.getInstance().numistaService.specifiedMintService.findByIdentifierMintMintmark(mintmarkIdentifier, mint.getNid(), mintmark != null ? mintmark.getNid() : null);
+                        if (specifiedMint == null) {
+                            specifiedMint = new SpecifiedMint();
+                            specifiedMint.setIdentifier(mintmarkIdentifier);
+                            specifiedMint.setMint(mint);
+                            specifiedMint.setMintmark(mintmark);
+                            specifiedMint = N4JUtil.getInstance().numistaService.specifiedMintService.save(specifiedMint);
+                        }
+
+
+                        nType.getSpecifiedMints().add(specifiedMint);
+                        result = ParseEvent.CHANGED;
+                    }
+                    i++;
+                } else {
+                    break;
                 }
             }
 
             return result;
         });
 
-        this.partName = "WatermarkParser";
+        this.partName = "MintsParser";
     }
 
-    private static ParseEvent parseWatermarkDescription(Document page, NType nType) {
-        ParseEvent result = ParseEvent.NOT_CHANGED;
-
-        String descriptionWatermark = getTagText(page.selectFirst("#description_watermark"));
-        if (descriptionWatermark != null && !descriptionWatermark.isEmpty()) {
-            if(nType.getWatermark() == null) nType.setWatermark(new NTypePart());
-
-            nType.getWatermark().setDescription(descriptionWatermark);
-            result = ParseEvent.CHANGED;
-        }
-        return result;
-    }
-
-    private static ParseEvent parseWatermarkPicture(Document page, NType nType) {
-        ParseEvent result = ParseEvent.NOT_CHANGED;
-        Element legendWatermarkElement = page.selectFirst("fieldset:contains(Watermark)");
-        if (legendWatermarkElement != null) {
-            String watermarkPhoto = getAttribute(legendWatermarkElement.selectFirst("a[target=_blank]"), "href");
-            if (watermarkPhoto != null && !watermarkPhoto.isEmpty() && !watermarkPhoto.equals("/vous/votre_compte.php#picture_license")) {
-                if(nType.getWatermark() == null) nType.setWatermark(new NTypePart());
-
-                nType.getWatermark().setPicture(watermarkPhoto);
-                result = ParseEvent.CHANGED;
-            }
-        }
-        return result;
-    }
 
 }

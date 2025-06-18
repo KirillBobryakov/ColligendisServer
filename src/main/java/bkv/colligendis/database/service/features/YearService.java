@@ -1,4 +1,4 @@
-package bkv.colligendis.services.features;
+package bkv.colligendis.database.service.features;
 
 import bkv.colligendis.database.entity.features.Year;
 import bkv.colligendis.services.AbstractService;

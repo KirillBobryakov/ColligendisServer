@@ -14,7 +14,7 @@ public class LetteringScriptService extends AbstractService<LetteringScript, Let
     }
 
     public LetteringScript findByNid(String nid, String name){
-        LetteringScript letteringScript = repository.findByNid(nid).block();
+        LetteringScript letteringScript = repository.findByNid(nid);
         if (letteringScript != null) {
             if(!letteringScript.getName().equals(name)){
                 DebugUtil.showServiceMessage(this, "Trying to find LetteringScript with nid=" + nid + " and name=" + name
@@ -24,16 +24,10 @@ public class LetteringScriptService extends AbstractService<LetteringScript, Let
             }
         } else {
             DebugUtil.showInfo(this, "New LetteringScript with nid=" + nid + " and name=" + name + " was created.");
-            return repository.save(new LetteringScript(nid, name)).block();
+            return repository.save(new LetteringScript(nid, name));
         }
         return letteringScript;
     }
 
 
-
-
-    @Override
-    public LetteringScript setPropertyValue(Long id, String name, String value) {
-        return null;
-    }
 }

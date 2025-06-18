@@ -2,8 +2,11 @@ package bkv.colligendis.rest;
 
 
 import bkv.colligendis.database.entity.User;
+import bkv.colligendis.database.entity.numista.Country;
 import bkv.colligendis.security.JwtTokenProvider;
 import bkv.colligendis.services.UserService;
+import bkv.colligendis.utils.N4JUtil;
+import lombok.Data;
 import lombok.RequiredArgsConstructor;
 import org.apache.commons.codec.digest.DigestUtils;
 import org.springframework.http.HttpStatus;
@@ -13,12 +16,12 @@ import org.springframework.security.authentication.BadCredentialsException;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.AuthenticationException;
 import org.springframework.security.crypto.password.PasswordEncoder;
-import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.RequestBody;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.*;
 
+import java.text.DateFormat;
+import java.time.LocalDateTime;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 
 @RestController
@@ -34,12 +37,13 @@ public class AuthController {
     @PostMapping("/signin")
     public ResponseEntity signin(@RequestBody AuthenticationRequest data) {
         try {
-            String username = data.getUsername();
+            String username = "admin";
+//            String username = data.getUsername();
             authenticationManager.authenticate(new UsernamePasswordAuthenticationToken(username, data.getPassword()));
             User user = userService.findByUsername(username);
             String token = jwtTokenProvider.createToken(username, user.getEmail(), this.userService.findByUsername(username).getRoles());
             Map<Object, Object> model = new HashMap<>();
-            model.put("username", username);
+            model.put("message", username);
             model.put("token", token);
             return ResponseEntity.ok(model);
         } catch (AuthenticationException e) {
@@ -47,22 +51,47 @@ public class AuthController {
         }
     }
 
-    @PostMapping("/signup")
-    public ResponseEntity<User> signUp(@RequestBody SignUpUser signUpUser){
 
-        if(signUpUser.getEmail() == null || signUpUser.getUsername() == null) return new ResponseEntity<>(HttpStatus.INTERNAL_SERVER_ERROR);
+    @GetMapping(value = "/users/{name}")
+    public ResponseEntity getUserInfo(@PathVariable(name = "name") String name) {
+        Map<Object, Object> model = new HashMap<>();
+        model.put("name", "somename");
+        model.put("email", "someemail");
+        model.put("created_at", "2025-02-09T21:55:20.000Z");
+        model.put("image_url", "https://itemimg.com/i/331116207.0.208x208.jpg");
+
+        return ResponseEntity.ok(model);
+    }
+
+    @PostMapping("/signup")
+    public ResponseEntity signUp(@RequestBody SignUpUser signUpUser){
+
+        if (signUpUser.getEmail() == null || signUpUser.getEmail().isEmpty()
+                || signUpUser.getUsername() == null || signUpUser.getUsername().isEmpty()
+                || signUpUser.getPassword() == null || signUpUser.getPassword().isEmpty())
+            return new ResponseEntity<>(HttpStatus.INTERNAL_SERVER_ERROR);
 
         User user = userService.findByUsername(signUpUser.getUsername());
-        if(user != null){
-            return new ResponseEntity<>(HttpStatus.NOT_ACCEPTABLE);
+//        if(user != null){
+//            return new ResponseEntity<>(HttpStatus.NOT_ACCEPTABLE);
+//        }
+
+        if(user == null){
+            user = new User();
+            user.setUsername(signUpUser.getUsername());
+            user.setEmail(signUpUser.getEmail());
+            user.setPassword(this.passwordEncoder.encode(signUpUser.getPassword()));
+            user = userService.save(user);
         }
 
-        user = new User();
-        user.setUsername(signUpUser.getUsername());
-        user.setEmail(signUpUser.getEmail());
-        user.setPassword(this.passwordEncoder.encode(signUpUser.getPassword()));
-        user = userService.save(user);
+        authenticationManager.authenticate(new UsernamePasswordAuthenticationToken(signUpUser.getUsername(), signUpUser.getPassword()));
+        String token = jwtTokenProvider.createToken(signUpUser.getUsername(), user.getEmail(), user.getRoles());
 
-        return new ResponseEntity<>(user, HttpStatus.OK);
+        Map<Object, Object> model = new HashMap<>();
+        model.put("message", signUpUser.getUsername());
+        model.put("token", token);
+
+
+        return ResponseEntity.ok(model);
     }
 }
