@@ -15,7 +15,6 @@ import org.springframework.security.crypto.factory.PasswordEncoderFactories;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.security.web.SecurityFilterChain;
 
-
 @EnableWebSecurity
 @Configuration
 public class SecurityConfiguration {
@@ -24,11 +23,11 @@ public class SecurityConfiguration {
 
     @Autowired
     UserService userService;
+
     @Bean
     public PasswordEncoder passwordEncoder() {
         return PasswordEncoderFactories.createDelegatingPasswordEncoder();
     }
-
 
     @Bean
     public AuthenticationManager authenticationManager() {
@@ -46,14 +45,14 @@ public class SecurityConfiguration {
                 .sessionManagement(httpSecuritySessionManagementConfigurer -> {
                     httpSecuritySessionManagementConfigurer.sessionCreationPolicy(SessionCreationPolicy.STATELESS);
                 })
-                .authorizeHttpRequests(authorizeHttpRequests ->
-                        authorizeHttpRequests
-                                .requestMatchers("/auth/signup").permitAll()
-                                .requestMatchers("/auth/signin").permitAll()
-                                .requestMatchers("/countries/all/names").permitAll()
-//                                .requestMatchers("/").permitAll()
-                                .anyRequest().authenticated()
-                ).with(new JwtConfigurer(jwtTokenProvider), jwtConfigurer -> {
+                .authorizeHttpRequests(authorizeHttpRequests -> authorizeHttpRequests
+                        .requestMatchers("/auth/signup").permitAll()
+                        .requestMatchers("/auth/signin").permitAll()
+                        .requestMatchers("/countries/all/names").permitAll()
+                        .requestMatchers("/catalogue/**").permitAll()
+                        // .requestMatchers("/").permitAll()
+                        .anyRequest().authenticated())
+                .with(new JwtConfigurer(jwtTokenProvider), jwtConfigurer -> {
                 });
 
         return http.build();

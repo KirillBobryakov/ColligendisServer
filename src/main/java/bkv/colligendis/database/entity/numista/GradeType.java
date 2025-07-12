@@ -9,7 +9,6 @@ public enum GradeType {
     AU("spl"),
     UNC("fdc");
 
-
     private final String value;
 
     GradeType(String value) {
@@ -25,8 +24,12 @@ public enum GradeType {
         throw new IllegalArgumentException("Unknown GradeType value: " + value);
     }
 
+    public String getNumistaValue() {
+        return value;
+    }
+
     @Override
     public String toString() {
-        return value;
+        return name();
     }
 }

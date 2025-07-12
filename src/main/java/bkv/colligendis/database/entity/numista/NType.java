@@ -1,6 +1,5 @@
 package bkv.colligendis.database.entity.numista;
 
-
 import bkv.colligendis.database.entity.AbstractEntity;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
@@ -42,6 +41,7 @@ public class NType extends AbstractEntity {
     public static final String REFERENCED_WITH = "REFERENCED_WITH";
     public static final String DATED_WITHIN = "DATED_WITHIN";
 
+    public static final String VARIANTS = "VARIANTS";
 
     @Relationship(type = UNDER_CATEGORY, direction = Relationship.Direction.OUTGOING)
     private Category category;
@@ -53,11 +53,10 @@ public class NType extends AbstractEntity {
     @ToString.Include
     private String nid;
 
-
-    //Start Overall information
+    // Start Overall information
 
     /*
-        Title for NType is unique field!
+     * Title for NType is unique field!
      */
     @ToString.Include
     private String title;
@@ -83,7 +82,6 @@ public class NType extends AbstractEntity {
     @Relationship(type = HAS_COLLECTIBLE_TYPE, direction = Relationship.Direction.OUTGOING)
     private CollectibleType collectibleType;
 
-
     @Relationship(type = COMMEMORATE_FOR, direction = Relationship.Direction.OUTGOING)
     private CommemoratedEvent commemoratedEvent;
 
@@ -91,20 +89,24 @@ public class NType extends AbstractEntity {
     private Series series;
 
     /*
-        Select the appropriate option:
-        Unknown: for coins that were never in circulation, such as patterns, and for coins with an uncertain legal tender status.
-        No: for coins that are currently accepted as legal tender
-        Yes: for coins that are no longer legal tender.
-
-        Date: for demonetized coins, record the date of the withdrawal of the legal tender status as yyyy-mm-dd. Note that this date may be different from the date of the retirement from circulation. Should the precise day not be known, “00” can be used:
-        2001-12-31
-        1875-00-00
+     * Select the appropriate option:
+     * Unknown: for coins that were never in circulation, such as patterns, and for
+     * coins with an uncertain legal tender status.
+     * No: for coins that are currently accepted as legal tender
+     * Yes: for coins that are no longer legal tender.
+     * 
+     * Date: for demonetized coins, record the date of the withdrawal of the legal
+     * tender status as yyyy-mm-dd. Note that this date may be different from the
+     * date of the retirement from circulation. Should the precise day not be known,
+     * “00” can be used:
+     * 2001-12-31
+     * 1875-00-00
      */
     /*
-     Has only 3 values:
-     0 - No, Didn't demonetized
-     1 - Yes, demonetized
-     2 - Unknown
+     * Has only 3 values:
+     * 0 - No, Didn't demonetized
+     * 1 - Yes, demonetized
+     * 2 - Unknown
      */
     private String demonetized;
     private String demonetizationYear;
@@ -121,7 +123,6 @@ public class NType extends AbstractEntity {
     @Relationship(type = HAS_COMPOSITION, direction = Relationship.Direction.OUTGOING)
     private Composition composition;
 
-
     @Relationship(type = HAS_SHAPE, direction = Relationship.Direction.OUTGOING)
     private Shape shape;
 
@@ -133,7 +134,6 @@ public class NType extends AbstractEntity {
     private String size2;
     private String thickness;
 
-
     @Relationship(type = WITH_TECHNIQUE, direction = Relationship.Direction.OUTGOING)
     private List<Technique> techniques = new ArrayList<>();
 
@@ -143,62 +143,36 @@ public class NType extends AbstractEntity {
 
     // End Technical data
 
-
-    // Start Obverse (head)
     @Relationship(type = HAS_OBVERSE, direction = Relationship.Direction.OUTGOING)
     private NTypePart obverse;
-    // End Obverse (head)
 
-    // Start Reverse (back)
     @Relationship(type = HAS_REVERSE, direction = Relationship.Direction.OUTGOING)
     private NTypePart reverse;
-    // End Reverse (back)
 
-    // Start Edge
     @Relationship(type = HAS_EDGE, direction = Relationship.Direction.OUTGOING)
     private NTypePart edge;
-    // End Edge
 
-    // Start Mint(s)
     @Relationship(type = HAS_SPECIFIED_MINT, direction = Relationship.Direction.OUTGOING)
     private List<SpecifiedMint> specifiedMints = new ArrayList<>();
 
-    // End Mint(s)
-
-    // Start Watermark
     @Relationship(type = HAS_WATERMARK, direction = Relationship.Direction.OUTGOING)
     private NTypePart watermark;
-    // End Watermark
-
-    // Start Printer(s)
 
     @Relationship(type = PRINTED_BY, direction = Relationship.Direction.OUTGOING)
     private List<Printer> printers = new ArrayList<>();
 
-    // End Printer(s)
-
-    // Start Comments
     private String comments;
-    // End Comments
-
-    // Start References
 
     @Relationship(type = REFERENCED_WITH, direction = Relationship.Direction.OUTGOING)
     private List<NTag> nTags = new ArrayList<>();
 
     private String links;
 
-    // End References
-
-    // Start Mintage | Varieties
-
     @Relationship(type = DATED_WITHIN, direction = Relationship.Direction.OUTGOING)
     private Calendar calendar;
 
+    @Relationship(type = VARIANTS, direction = Relationship.Direction.OUTGOING)
     private List<Variant> variants = new ArrayList<>();
-
-    // End Mintage | Varieties
-
 
     private Boolean isActual;
 
@@ -206,6 +180,5 @@ public class NType extends AbstractEntity {
         this.nid = nid;
         this.title = title;
     }
-
 
 }

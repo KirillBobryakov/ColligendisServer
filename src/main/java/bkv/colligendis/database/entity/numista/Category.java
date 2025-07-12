@@ -1,3 +1,4 @@
+
 package bkv.colligendis.database.entity.numista;
 
 import bkv.colligendis.database.entity.AbstractEntity;
@@ -8,7 +9,7 @@ import org.springframework.data.neo4j.core.schema.Node;
 
 @Node("CATEGORY")
 @Data
-@EqualsAndHashCode(callSuper=false)
+@EqualsAndHashCode(callSuper = false)
 public class Category extends AbstractEntity {
 
     public static final String COIN = "coin";
@@ -22,6 +23,5 @@ public class Category extends AbstractEntity {
 
     @NonNull
     private String name;
-
 
 }

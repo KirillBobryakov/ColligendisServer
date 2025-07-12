@@ -1,11 +1,15 @@
 package bkv.colligendis.database.service.numista;
 
 import bkv.colligendis.database.entity.numista.Country;
+import bkv.colligendis.rest.catalogue.CSIItem;
 import bkv.colligendis.services.AbstractService;
 import bkv.colligendis.utils.DebugUtil;
 import org.springframework.stereotype.Service;
+
+import java.util.ArrayList;
 import java.util.List;
 import java.util.UUID;
+import java.util.stream.Collectors;
 
 @Service
 public class CountryService extends AbstractService<Country, CountryRepository> {
@@ -13,9 +17,9 @@ public class CountryService extends AbstractService<Country, CountryRepository> 
         super(repository);
     }
 
-//    public Country findByName(String name){
-//        return repository.findByName(name);
-//    }
+    // public Country findByName(String name){
+    // return repository.findByName(name);
+    // }
 
     /**
      * Find an COUNTRY's UUID by {@code name}
@@ -29,7 +33,8 @@ public class CountryService extends AbstractService<Country, CountryRepository> 
     }
 
     /**
-     * Find COUNTRY's UUID by COUNTRY's name. If not, create new COUNTRY with {@code name}
+     * Find COUNTRY's UUID by COUNTRY's name. If not, create new COUNTRY with
+     * {@code name}
      *
      * @param name COUNTRY's name
      * @return COUNTRY's UUID
@@ -48,27 +53,32 @@ public class CountryService extends AbstractService<Country, CountryRepository> 
      *
      * @param countryUuid COUNTRY's UUID
      * @param issuerUuid  ISSUER's UUID
-     * @return {@code true} If a relationship was presented, return {@code false} if there isn't a relationship
+     * @return {@code true} If a relationship was presented, return {@code false} if
+     *         there isn't a relationship
      */
     public Boolean hasContainsIssuerRelationshipToIssuer(UUID countryUuid, UUID issuerUuid) {
-        return repository.hasSingleRelationshipToNode(countryUuid.toString(), issuerUuid.toString(), Country.CONTAINS_ISSUER);
+        return repository.hasSingleRelationshipToNode(countryUuid.toString(), issuerUuid.toString(),
+                Country.CONTAINS_ISSUER);
     }
 
     /**
-     * If there is no a relationship between COUNTRY (with UUID countryUuid) and ISSUER (with UUID issuerUuid), then create one with a label - CONTAINS_ISSUER.
+     * If there is no a relationship between COUNTRY (with UUID countryUuid) and
+     * ISSUER (with UUID issuerUuid), then create one with a label -
+     * CONTAINS_ISSUER.
      *
-     * @param countryUuid       COUNTRY's UUID
-     * @param issuerUuid ISSUER's UUID
-     * @return {@code true} If a relationship was presented, or was created; {@code false} There was not a relationship, and it was not created
+     * @param countryUuid COUNTRY's UUID
+     * @param issuerUuid  ISSUER's UUID
+     * @return {@code true} If a relationship was presented, or was created;
+     *         {@code false} There was not a relationship, and it was not created
      */
     public Boolean setContainsIssuer(UUID countryUuid, UUID issuerUuid) {
-        return repository.createSingleRelationshipToNode(countryUuid.toString(), issuerUuid.toString(), Country.CONTAINS_ISSUER);
+        return repository.createSingleRelationshipToNode(countryUuid.toString(), issuerUuid.toString(),
+                Country.CONTAINS_ISSUER);
     }
 
     public List<String> findAllCountriesNames() {
         return repository.findAllCountriesNames();
     }
-
 
     public List<Country> findByNameContainingIgnoreCase(String nameFilter) {
         return repository.findByNameContainingIgnoreCase(".*(?i)" + nameFilter + ".*");
@@ -76,18 +86,46 @@ public class CountryService extends AbstractService<Country, CountryRepository> 
 
     /**
      * Find Country by {@code numistaCode}
+     * 
      * @param numistaCode Country's numistaCode
      * @return Country if exists, or null
      */
-    public Country findCountryByNumistaCode(String numistaCode){
+    public Country findCountryByNumistaCode(String numistaCode) {
         return repository.findCountryByNumistaCode(numistaCode);
     }
 
-
-
-    public boolean connectToParentSubject(UUID countryUuid, UUID parentSubjectUuid){
+    public boolean connectToParentSubject(UUID countryUuid, UUID parentSubjectUuid) {
         return repository.connectToParentSubject(countryUuid.toString(), parentSubjectUuid.toString());
     }
 
+    public List<CSIItem> findCSItemsByName(String filter) {
+        List<CSIItem> csiItems = repository.findCSItemsByName(filter);
+        if (csiItems != null && !csiItems.isEmpty()) {
+            return csiItems.stream().map(t -> {
+                return new CSIItem(CSIItem.Label.COUNTRY, t.getCode(), t.getName());
+            }).collect(Collectors.toList());
+        }
+        return new ArrayList<CSIItem>();
+    }
+
+    public Integer countChildrenSubjects(String countryNumistaCode) {
+        return repository.countChildrenSubjects(countryNumistaCode);
+    }
+
+    public Integer countChildrenIssuers(String countryNumistaCode) {
+        return repository.countChildrenIssuers(countryNumistaCode);
+    }
+
+    public Integer countChildrenNTypes(String countryNumistaCode) {
+        return repository.countChildrenNTypes(countryNumistaCode);
+    }
+
+    public Country getParentCountryBySubjectNumistaCode(String subjectNumistaCode) {
+        return repository.getParentCountryBySubjectNumistaCode(subjectNumistaCode);
+    }
+
+    public Country getParentCountryByIssuerNumistaCode(String issuerNumistaCode) {
+        return repository.getParentCountryByIssuerNumistaCode(issuerNumistaCode);
+    }
 
 }

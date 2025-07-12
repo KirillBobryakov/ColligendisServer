@@ -72,15 +72,15 @@ public class ReverseParser extends NumistaPartParser {
             for (String designer : designersRevers) {
                 if (designer != null && !designer.isEmpty()) {
 
-                    if (nType.getReverse() == null) {
-                        nType.setReverse(new NTypePart(PART_TYPE.REVERSE));
+                    if (nType.getObverse() == null) {
+                        nType.setObverse(new NTypePart(PART_TYPE.OBVERSE));
                     } else if (nType.getObverse().getDesigners().contains(designer)) {
                         continue;
                     }
 
-                    assert nType.getReverse().getDesigners() != null;
+                    assert nType.getObverse().getDesigners() != null;
 
-                    nType.getReverse().getDesigners().add(designer);
+                    nType.getObverse().getDesigners().add(designer);
                     result = ParseEvent.CHANGED;
                 }
             }
@@ -88,15 +88,18 @@ public class ReverseParser extends NumistaPartParser {
         return result;
     }
 
-
     private static ParseEvent parseReverseDescription(Document page, NType nType) {
         ParseEvent result = ParseEvent.NOT_CHANGED;
         String descriptionRevers = getTagText(page.selectFirst("#description_revers"));
         if (descriptionRevers != null && !descriptionRevers.isEmpty()) {
-            if (nType.getReverse() == null) nType.setReverse(new NTypePart(PART_TYPE.REVERSE));
+            if (nType.getReverse() == null)
+                nType.setReverse(new NTypePart(PART_TYPE.REVERSE));
 
-            nType.getReverse().setDescription(descriptionRevers);
-            result = ParseEvent.CHANGED;
+            if (nType.getReverse().getDescription() == null
+                    || !nType.getReverse().getDescription().equals(descriptionRevers)) {
+                nType.getReverse().setDescription(descriptionRevers);
+                result = ParseEvent.CHANGED;
+            }
         }
         return result;
     }
@@ -105,10 +108,14 @@ public class ReverseParser extends NumistaPartParser {
         ParseEvent result = ParseEvent.NOT_CHANGED;
         String texteRevers = getTagText(page.selectFirst("#texte_revers"));
         if (texteRevers != null && !texteRevers.isEmpty()) {
-            if (nType.getReverse() == null) nType.setReverse(new NTypePart(PART_TYPE.REVERSE));
+            if (nType.getReverse() == null)
+                nType.setReverse(new NTypePart(PART_TYPE.REVERSE));
 
-            nType.getReverse().setLettering(texteRevers);
-            result = ParseEvent.CHANGED;
+            if (nType.getReverse().getLettering() == null
+                    || !nType.getReverse().getLettering().equals(texteRevers)) {
+                nType.getReverse().setLettering(texteRevers);
+                result = ParseEvent.CHANGED;
+            }
         }
         return result;
     }
@@ -116,23 +123,42 @@ public class ReverseParser extends NumistaPartParser {
     private static ParseEvent parseReverseScripts(Document page, NType nType) {
         ParseEvent result = ParseEvent.NOT_CHANGED;
 
-
-        //todo Change code on without clearing Lettering scripts.
-        if(nType.getReverse() != null && nType.getReverse().getLetteringScripts() != null && !nType.getReverse().getLetteringScripts().isEmpty()) {
-            nType.getReverse().getLetteringScripts().clear();
-        }
-
-        List<HashMap<String, String>> scriptsRevers = getAttributesWithTextSelectedOptions(page.selectFirst("#script_revers"));
+        List<HashMap<String, String>> scriptsRevers = getAttributesWithTextSelectedOptions(
+                page.selectFirst("#script_revers"));
         if (scriptsRevers != null) {
-            for (HashMap<String, String> scriptRevers : scriptsRevers) {
-                if (isValueAndTextNotNullAndNotEmpty(scriptRevers)) {
-                    if (nType.getReverse() == null) nType.setReverse(new NTypePart(PART_TYPE.REVERSE));
 
-                    assert nType.getReverse().getLetteringScripts() != null;
+            // Check if both lists have the same elements
+            boolean listsAreEqual = true;
 
-                    nType.getReverse().getLetteringScripts().add(N4JUtil.getInstance().numistaService.letteringScriptService.findByNid(scriptRevers.get("value"), scriptRevers.get("text")));
-                    result = ParseEvent.CHANGED;
+            if (nType.getReverse() == null) {
+                nType.setReverse(new NTypePart(PART_TYPE.REVERSE));
+                listsAreEqual = false;
+            } else if (nType.getReverse().getLetteringScripts().size() != scriptsRevers.size()) {
+                listsAreEqual = false;
+            } else {
+                for (HashMap<String, String> script : scriptsRevers) {
+                    if (isValueAndTextNotNullAndNotEmpty(script)) {
+                        boolean found = nType.getReverse().getLetteringScripts().stream()
+                                .anyMatch(t -> t.getNid().equals(script.get("value")));
+                        if (!found) {
+                            listsAreEqual = false;
+                            break;
+                        }
+                    }
                 }
+            }
+
+            // If lists are not equal, update nType.getTechniques() with parsed techniques
+            if (!listsAreEqual) {
+                nType.getReverse().getLetteringScripts().clear();
+                for (HashMap<String, String> script : scriptsRevers) {
+                    if (isValueAndTextNotNullAndNotEmpty(script)) {
+                        nType.getReverse().getLetteringScripts()
+                                .add(N4JUtil.getInstance().numistaService.letteringScriptService
+                                        .findByNid(script.get("value"), script.get("text")));
+                    }
+                }
+                result = ParseEvent.CHANGED;
             }
         }
         return result;
@@ -143,10 +169,14 @@ public class ReverseParser extends NumistaPartParser {
 
         String unabridgedRevers = getTagText(page.selectFirst("#unabridged_revers"));
         if (unabridgedRevers != null && !unabridgedRevers.isEmpty()) {
-            if (nType.getReverse() == null) nType.setReverse(new NTypePart(PART_TYPE.REVERSE));
+            if (nType.getReverse() == null)
+                nType.setReverse(new NTypePart(PART_TYPE.REVERSE));
 
-            nType.getReverse().setUnabridgedLegend(unabridgedRevers);
-            result = ParseEvent.CHANGED;
+            if (nType.getReverse().getUnabridgedLegend() == null
+                    || !nType.getReverse().getUnabridgedLegend().equals(unabridgedRevers)) {
+                nType.getReverse().setUnabridgedLegend(unabridgedRevers);
+                result = ParseEvent.CHANGED;
+            }
         }
         return result;
     }
@@ -155,10 +185,14 @@ public class ReverseParser extends NumistaPartParser {
         ParseEvent result = ParseEvent.NOT_CHANGED;
         String traductionRevers = getTagText(page.selectFirst("#traduction_revers"));
         if (traductionRevers != null && !traductionRevers.isEmpty()) {
-            if (nType.getReverse() == null) nType.setReverse(new NTypePart(PART_TYPE.REVERSE));
+            if (nType.getReverse() == null)
+                nType.setReverse(new NTypePart(PART_TYPE.REVERSE));
 
-            nType.getReverse().setLetteringTranslation(traductionRevers);
-            result = ParseEvent.CHANGED;
+            if (nType.getReverse().getLetteringTranslation() == null
+                    || !nType.getReverse().getLetteringTranslation().equals(traductionRevers)) {
+                nType.getReverse().setLetteringTranslation(traductionRevers);
+                result = ParseEvent.CHANGED;
+            }
         }
         return result;
     }
@@ -169,14 +203,17 @@ public class ReverseParser extends NumistaPartParser {
         if (reverse != null) {
             String reversePhoto = getAttribute(reverse.selectFirst("a[target=_blank]"), "href");
             if (reversePhoto != null && !reversePhoto.isEmpty()) {
-                if (nType.getReverse() == null) nType.setReverse(new NTypePart(PART_TYPE.REVERSE));
+                if (nType.getReverse() == null)
+                    nType.setReverse(new NTypePart(PART_TYPE.REVERSE));
 
-                nType.getReverse().setPicture(reversePhoto);
-                result = ParseEvent.CHANGED;
+                if (nType.getReverse().getPicture() == null
+                        || !nType.getReverse().getPicture().equals(reversePhoto)) {
+                    nType.getReverse().setPicture(reversePhoto);
+                    result = ParseEvent.CHANGED;
+                }
             }
         }
         return result;
     }
-
 
 }

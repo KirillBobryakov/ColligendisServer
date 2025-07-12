@@ -5,7 +5,6 @@ import bkv.colligendis.database.entity.numista.NTypePart;
 import org.jsoup.nodes.Document;
 import org.jsoup.nodes.Element;
 
-
 public class WatermarkParser extends NumistaPartParser {
 
     public WatermarkParser() {
@@ -36,10 +35,14 @@ public class WatermarkParser extends NumistaPartParser {
 
         String descriptionWatermark = getTagText(page.selectFirst("#description_watermark"));
         if (descriptionWatermark != null && !descriptionWatermark.isEmpty()) {
-            if(nType.getWatermark() == null) nType.setWatermark(new NTypePart(PART_TYPE.WATERMARK));
+            if (nType.getWatermark() == null)
+                nType.setWatermark(new NTypePart(PART_TYPE.WATERMARK));
 
-            nType.getWatermark().setDescription(descriptionWatermark);
-            result = ParseEvent.CHANGED;
+            if (nType.getWatermark().getDescription() == null
+                    || !nType.getWatermark().getDescription().equals(descriptionWatermark)) {
+                nType.getWatermark().setDescription(descriptionWatermark);
+                result = ParseEvent.CHANGED;
+            }
         }
         return result;
     }
@@ -49,12 +52,18 @@ public class WatermarkParser extends NumistaPartParser {
         Element legendWatermarkElement = page.selectFirst("fieldset:contains(Watermark)");
         if (legendWatermarkElement != null) {
             String watermarkPhoto = getAttribute(legendWatermarkElement.selectFirst("a[target=_blank]"), "href");
-            if (watermarkPhoto != null && !watermarkPhoto.isEmpty() && !watermarkPhoto.equals("/vous/votre_compte.php#picture_license")) {
-                if(nType.getWatermark() == null) nType.setWatermark(new NTypePart(PART_TYPE.WATERMARK));
+            if (watermarkPhoto != null && !watermarkPhoto.isEmpty()
+                    && !watermarkPhoto.equals("/vous/votre_compte.php#picture_license")) {
+                if (nType.getWatermark() == null)
+                    nType.setWatermark(new NTypePart(PART_TYPE.WATERMARK));
 
-                nType.getWatermark().setPicture(watermarkPhoto);
-                result = ParseEvent.CHANGED;
-            } else if(nType.getWatermark().getPicture() != null && !nType.getWatermark().getPicture().isEmpty()){
+                if (nType.getWatermark().getPicture() == null
+                        || !nType.getWatermark().getPicture().equals(watermarkPhoto)) {
+                    nType.getWatermark().setPicture(watermarkPhoto);
+                    result = ParseEvent.CHANGED;
+                }
+            } else if (nType.getWatermark() != null && nType.getWatermark().getPicture() != null
+                    && !nType.getWatermark().getPicture().isEmpty()) {
                 nType.getWatermark().setPicture(null);
                 result = ParseEvent.CHANGED;
             }

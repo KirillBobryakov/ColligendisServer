@@ -17,7 +17,7 @@ import java.util.stream.Collectors;
 
 @Node("USER")
 @Data
-@EqualsAndHashCode(callSuper=true)
+@EqualsAndHashCode(callSuper = true)
 @NoArgsConstructor
 @AllArgsConstructor
 @Builder
@@ -26,9 +26,10 @@ public class User extends AbstractEntity implements UserDetails {
     private String username;
 
     private String email;
-    //DigestUtils.sha256Hex
+    // DigestUtils.sha256Hex
     private String password;
 
+    @Builder.Default
     private List<String> roles = new ArrayList<>();
 
     private String profilePictureUrl;
@@ -40,7 +41,8 @@ public class User extends AbstractEntity implements UserDetails {
 
     @Override
     public Collection<? extends GrantedAuthority> getAuthorities() {
-        return this.roles != null ? this.roles.stream().map(SimpleGrantedAuthority::new).collect(Collectors.toList()) : null;
+        return this.roles != null ? this.roles.stream().map(SimpleGrantedAuthority::new).collect(Collectors.toList())
+                : null;
     }
 
     @Override
@@ -48,9 +50,9 @@ public class User extends AbstractEntity implements UserDetails {
         return username;
     }
 
-//    public void setUsername(String username) {
-//        this.username = username;
-//    }
+    // public void setUsername(String username) {
+    // this.username = username;
+    // }
 
     @Override
     public boolean isAccountNonExpired() {

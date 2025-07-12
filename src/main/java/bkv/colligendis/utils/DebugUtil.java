@@ -19,13 +19,9 @@ public class DebugUtil {
     public static final String ANSI_CYAN = "\u001B[36m";
     public static final String ANSI_WHITE = "\u001B[37m";
 
-
     public enum MESSAGE_LEVEL {
         ERROR, WARNING, INFO;
-    }
-
-    ;
-
+    };
 
     private static final boolean IS_NumistaEditPageUtil_TESTING = false;
 
@@ -36,6 +32,8 @@ public class DebugUtil {
     private static final boolean IS_NumistaServices_TESTING = true;
     private static final boolean IS_RulerService_TESTING = true;
     private static final boolean IS_IssuerService_TESTING = true;
+
+    private static final boolean SHOW_SERVICE_MESSAGE_ON_INFO = true;
 
     public static void showMessage(Object o, String message, MESSAGE_LEVEL messageLevel) {
         switch (messageLevel) {
@@ -51,7 +49,8 @@ public class DebugUtil {
                 }
                 break;
             }
-//            default: System.out.println(ANSI_BLACK + o.getClass().getSimpleName() + " : " + message + ANSI_RESET);
+            // default: System.out.println(ANSI_BLACK + o.getClass().getSimpleName() + " : "
+            // + message + ANSI_RESET);
         }
     }
 
@@ -66,7 +65,6 @@ public class DebugUtil {
     public static void showInfo(Object o, String message) {
         showMessage(o, message, MESSAGE_LEVEL.INFO);
     }
-
 
     public static void showServiceMessage(Object o, String message, MESSAGE_LEVEL messageLevel) {
         if (IS_Services_TESTING) {
@@ -84,18 +82,21 @@ public class DebugUtil {
         }
     }
 
-
-    public static void printProperty(String name, String value, boolean isTestedOnCoin, boolean isTestedOnBanknote, boolean isTestedOnExonumia) {
+    public static void printProperty(String name, String value, boolean isTestedOnCoin, boolean isTestedOnBanknote,
+            boolean isTestedOnExonumia) {
         if (value != null && IS_NumistaEditPageUtil_TESTING) {
             StringBuffer stringBuffer = new StringBuffer();
-            if (isTestedOnCoin || isTestedOnBanknote || isTestedOnExonumia) stringBuffer.append("tested on ");
-            if (isTestedOnCoin) stringBuffer.append("coins ");
-            if (isTestedOnBanknote) stringBuffer.append("banknotes ");
-            if (isTestedOnExonumia) stringBuffer.append("exonumias ");
+            if (isTestedOnCoin || isTestedOnBanknote || isTestedOnExonumia)
+                stringBuffer.append("tested on ");
+            if (isTestedOnCoin)
+                stringBuffer.append("coins ");
+            if (isTestedOnBanknote)
+                stringBuffer.append("banknotes ");
+            if (isTestedOnExonumia)
+                stringBuffer.append("exonumias ");
             stringBuffer.append("| ").append(name).append(": ").append(value);
             System.out.println(stringBuffer);
         }
     }
-
 
 }

@@ -42,9 +42,14 @@ public class EdgeParser extends NumistaPartParser {
         ParseEvent result = ParseEvent.NOT_CHANGED;
         String descriptionTranche = getTagText(page.selectFirst("#description_tranche"));
         if (descriptionTranche != null && !descriptionTranche.isEmpty()) {
-            if(nType.getEdge() == null) nType.setEdge(new NTypePart(PART_TYPE.EDGE));
-            nType.getEdge().setDescription(descriptionTranche);
-            result = ParseEvent.CHANGED;
+            if (nType.getEdge() == null)
+                nType.setEdge(new NTypePart(PART_TYPE.EDGE));
+
+            if (nType.getEdge().getDescription() == null
+                    || !nType.getEdge().getDescription().equals(descriptionTranche)) {
+                nType.getEdge().setDescription(descriptionTranche);
+                result = ParseEvent.CHANGED;
+            }
         }
         return result;
     }
@@ -53,10 +58,14 @@ public class EdgeParser extends NumistaPartParser {
         ParseEvent result = ParseEvent.NOT_CHANGED;
         String texteTranche = getTagText(page.selectFirst("texte_tranche"));
         if (texteTranche != null && !texteTranche.isEmpty()) {
-            if(nType.getEdge() == null) nType.setEdge(new NTypePart(PART_TYPE.EDGE));
+            if (nType.getEdge() == null)
+                nType.setEdge(new NTypePart(PART_TYPE.EDGE));
 
-            nType.getEdge().setLettering(texteTranche);
-            result = ParseEvent.CHANGED;
+            if (nType.getEdge().getLettering() == null
+                    || !nType.getEdge().getLettering().equals(texteTranche)) {
+                nType.getEdge().setLettering(texteTranche);
+                result = ParseEvent.CHANGED;
+            }
         }
         return result;
     }
@@ -64,23 +73,43 @@ public class EdgeParser extends NumistaPartParser {
     private static ParseEvent parseEdgeScripts(Document page, NType nType) {
         ParseEvent result = ParseEvent.NOT_CHANGED;
 
-        //todo Change code on without clearing Lettering scripts.
-        if(nType.getEdge() != null && nType.getEdge().getLetteringScripts() != null && !nType.getEdge().getLetteringScripts().isEmpty()) {
-            nType.getEdge().getLetteringScripts().clear();
-        }
-
-
-        List<HashMap<String, String>> scriptsTranche = getAttributesWithTextSelectedOptions(page.selectFirst("#script_tranche"));
+        List<HashMap<String, String>> scriptsTranche = getAttributesWithTextSelectedOptions(
+                page.selectFirst("#script_tranche"));
         if (scriptsTranche != null) {
-            for (HashMap<String, String> scriptTranche : scriptsTranche) {
-                if (isValueAndTextNotNullAndNotEmpty(scriptTranche)) {
-                    if(nType.getEdge() == null) nType.setEdge(new NTypePart(PART_TYPE.EDGE));
 
-                    assert nType.getEdge().getLetteringScripts() != null;
+            // Check if both lists have the same elements
+            boolean listsAreEqual = true;
 
-                    nType.getEdge().getLetteringScripts().add(N4JUtil.getInstance().numistaService.letteringScriptService.findByNid(scriptTranche.get("value"), scriptTranche.get("text")));
-                    result = ParseEvent.CHANGED;
+            if (nType.getEdge() == null) {
+                nType.setEdge(new NTypePart(PART_TYPE.EDGE));
+                listsAreEqual = false;
+            } else if (nType.getEdge().getLetteringScripts().size() != scriptsTranche.size()) {
+                listsAreEqual = false;
+            } else {
+                for (HashMap<String, String> script : scriptsTranche) {
+                    if (isValueAndTextNotNullAndNotEmpty(script)) {
+                        boolean found = nType.getEdge().getLetteringScripts().stream()
+                                .anyMatch(t -> t.getNid().equals(script.get("value")));
+                        if (!found) {
+                            listsAreEqual = false;
+                            break;
+                        }
+                    }
                 }
+            }
+
+            // If lists are not equal, update nType.getLetteringScripts() with parsed
+            // lettering scripts
+            if (!listsAreEqual) {
+                nType.getEdge().getLetteringScripts().clear();
+                for (HashMap<String, String> script : scriptsTranche) {
+                    if (isValueAndTextNotNullAndNotEmpty(script)) {
+                        nType.getEdge().getLetteringScripts()
+                                .add(N4JUtil.getInstance().numistaService.letteringScriptService
+                                        .findByNid(script.get("value"), script.get("text")));
+                    }
+                }
+                result = ParseEvent.CHANGED;
             }
         }
 
@@ -92,10 +121,14 @@ public class EdgeParser extends NumistaPartParser {
 
         String unabridgedTranche = getTagText(page.selectFirst("#unabridged_tranche"));
         if (unabridgedTranche != null && !unabridgedTranche.isEmpty()) {
-            if(nType.getEdge() == null) nType.setEdge(new NTypePart(PART_TYPE.EDGE));
+            if (nType.getEdge() == null)
+                nType.setEdge(new NTypePart(PART_TYPE.EDGE));
 
-            nType.getEdge().setUnabridgedLegend(unabridgedTranche);
-            result = ParseEvent.CHANGED;
+            if (nType.getEdge().getUnabridgedLegend() == null
+                    || !nType.getEdge().getUnabridgedLegend().equals(unabridgedTranche)) {
+                nType.getEdge().setUnabridgedLegend(unabridgedTranche);
+                result = ParseEvent.CHANGED;
+            }
         }
         return result;
     }
@@ -105,10 +138,14 @@ public class EdgeParser extends NumistaPartParser {
 
         String traductionTranche = getTagText(page.selectFirst("#traduction_tranche"));
         if (traductionTranche != null && !traductionTranche.isEmpty()) {
-            if(nType.getEdge() == null) nType.setEdge(new NTypePart(PART_TYPE.EDGE));
+            if (nType.getEdge() == null)
+                nType.setEdge(new NTypePart(PART_TYPE.EDGE));
 
-            nType.getEdge().setLetteringTranslation(traductionTranche);
-            result = ParseEvent.CHANGED;
+            if (nType.getEdge().getLetteringTranslation() == null
+                    || !nType.getEdge().getLetteringTranslation().equals(traductionTranche)) {
+                nType.getEdge().setLetteringTranslation(traductionTranche);
+                result = ParseEvent.CHANGED;
+            }
         }
         return result;
     }
@@ -119,14 +156,17 @@ public class EdgeParser extends NumistaPartParser {
         if (legendEdge != null) {
             String edgePhoto = getAttribute(legendEdge.parent().selectFirst("a[target=_blank]"), "href");
             if (edgePhoto != null && !edgePhoto.isEmpty()) {
-                if(nType.getEdge() == null) nType.setEdge(new NTypePart(PART_TYPE.EDGE));
+                if (nType.getEdge() == null)
+                    nType.setEdge(new NTypePart(PART_TYPE.EDGE));
 
-                nType.getEdge().setPicture(edgePhoto);
-                result = ParseEvent.CHANGED;
+                if (nType.getEdge().getPicture() == null
+                        || !nType.getEdge().getPicture().equals(edgePhoto)) {
+                    nType.getEdge().setPicture(edgePhoto);
+                    result = ParseEvent.CHANGED;
+                }
             }
         }
         return result;
     }
-
 
 }

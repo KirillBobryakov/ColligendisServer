@@ -6,4 +6,6 @@ import bkv.colligendis.database.service.AbstractNeo4jRepository;
 public interface ShapeRepository extends AbstractNeo4jRepository<Shape> {
 
     Shape findByNid(String nid);
+
+    Shape findByName(String name);
 }

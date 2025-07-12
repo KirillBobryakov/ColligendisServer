@@ -1,6 +1,5 @@
 package bkv.colligendis.database.entity.numista;
 
-
 import bkv.colligendis.database.entity.AbstractEntity;
 import bkv.colligendis.database.entity.features.Year;
 import lombok.Data;
@@ -46,7 +45,7 @@ import java.util.ArrayList;
 @EqualsAndHashCode(callSuper = true)
 public class Currency extends AbstractEntity {
 
-//    public static final String HAS_DENOMINATION = "HAS_DENOMINATION";
+    // public static final String HAS_DENOMINATION = "HAS_DENOMINATION";
     public static final String CIRCULATE_DURING = "CIRCULATE_DURING";
 
     public static final String CIRCULATED_FROM = "CIRCULATED_FROM";
@@ -59,14 +58,13 @@ public class Currency extends AbstractEntity {
     /**
      * Kind of currency like as
      * notgeld - Mark (notgeld, 1914-1924)
-     * Occupation currency - Mark (Occupation currency, 1918), Rouble (Occupation currency, 1916)
+     * Occupation currency - Mark (Occupation currency, 1918), Rouble (Occupation
+     * currency, 1916)
      */
     private String kind;
 
-
     @Relationship(type = Issuer.CONTAINS_CURRENCY, direction = Relationship.Direction.INCOMING)
     private Issuer issuer;
-
 
     @Relationship(type = CIRCULATED_FROM, direction = Relationship.Direction.OUTGOING)
     private ArrayList<Year> circulatedFromYears = new ArrayList<>();
@@ -74,6 +72,10 @@ public class Currency extends AbstractEntity {
     @Relationship(type = CIRCULATED_TILL, direction = Relationship.Direction.OUTGOING)
     private ArrayList<Year> circulatedTillYears = new ArrayList<>();
 
+    // todo: it might throw an error while parsing numista page
+    // @Relationship(type = Denomination.UNDER_CURRENCY, direction =
+    // Relationship.Direction.INCOMING)
+    // private ArrayList<Denomination> denominations = new ArrayList<>();
 
     private Boolean isActual;
 
@@ -88,6 +90,5 @@ public class Currency extends AbstractEntity {
         this.nid = nid;
         this.fullName = fullName;
     }
-
 
 }

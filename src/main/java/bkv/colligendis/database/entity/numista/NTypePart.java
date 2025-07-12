@@ -16,8 +16,6 @@ import java.util.List;
 @Data
 public class NTypePart extends AbstractEntity {
 
-//    public static final String ENGRAVED_BY = "ENGRAVED_BY";
-//    public static final String DESIGNED_BY = "DESIGNED_BY";
     public static final String WRITE_ON_SCRIPT = "WRITE_ON_SCRIPT";
 
     private PART_TYPE partType;
@@ -26,10 +24,7 @@ public class NTypePart extends AbstractEntity {
         this.partType = partType;
     }
 
-    //    @Relationship(type = ENGRAVED_BY, direction = Relationship.Direction.OUTGOING)
     private List<String> engravers = new ArrayList<>();
-
-//    @Relationship(type = DESIGNED_BY, direction = Relationship.Direction.OUTGOING)
     private List<String> designers = new ArrayList<>();
 
     private String description;
@@ -40,9 +35,9 @@ public class NTypePart extends AbstractEntity {
 
     private String unabridgedLegend;
     private String letteringTranslation;
+    private String letteringTranslationRu;
     private String picture;
 
     private LocalImage localImage;
-
 
 }

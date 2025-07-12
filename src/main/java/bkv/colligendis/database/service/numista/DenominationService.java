@@ -14,42 +14,47 @@ public class DenominationService extends AbstractService<Denomination, Denominat
         super(repository);
     }
 
-
-    public void deleteAll(){
+    public void deleteAll() {
         repository.deleteAll();
     }
 
     /**
      * Find a Denomination's UUID by nid
+     * 
      * @param nid Denomination's nid
      * @return Denomination's Eid in UUID value, or null
      */
-    public UUID findUuidByCode(String nid){
+    public UUID findUuidByCode(String nid) {
         String eid = repository.findEidByCode(nid);
         return eid != null ? UUID.fromString(eid) : null;
     }
 
     /**
      * Find Denomination's nid by Denomination's uuid
+     * 
      * @param uuid Denomination's uuid
      * @return Denomination's nid
      */
-    public String findDenominationNidByUuid(UUID uuid){
+    public String findDenominationNidByUuid(UUID uuid) {
         return repository.findDenominationNidByUuid(uuid.toString());
     }
 
     /**
      * Find Denomination by Denomination's nid
+     * 
      * @param nid Denomination's nid
      * @return Denomination
      */
-    public Denomination findDenominationByNid(String nid){
+    public Denomination findDenominationByNid(String nid) {
         return repository.findByNid(nid);
     }
 
-    public List<Denomination> findDenominationsByCurrency(Currency currency){
+    public List<Denomination> findDenominationsByCurrency(Currency currency) {
         return repository.findByCurrency_Nid(currency.getNid());
     }
 
+    public List<Denomination> findDenominationsByCurrencyUuid(UUID currencyUuid) {
+        return repository.findByCurrency_Uuid(currencyUuid.toString());
+    }
 
 }

@@ -23,7 +23,7 @@ public class JwtTokenProvider {
     @Value("${security.jwt.token.secret-key:secret}")
     private String secretKey = "secret";
     @Value("${security.jwt.token.expire-length:3600000}")
-    private long validityInMilliseconds = 3600000*24; // 1h
+    private long validityInMilliseconds = 1000 * 60 * 60 * 24 * 30; // 30d
 
     SecretKey key = Jwts.SIG.HS256.key().build();
 
@@ -34,6 +34,7 @@ public class JwtTokenProvider {
     protected void init() {
         secretKey = Base64.getEncoder().encodeToString(secretKey.getBytes());
     }
+
     public String createToken(String username, String email, List<String> roles) {
         Date now = new Date();
         Date validity = new Date(now.getTime() + validityInMilliseconds);
@@ -49,6 +50,7 @@ public class JwtTokenProvider {
                 .signWith(key)//
                 .compact();
     }
+
     public Authentication getAuthentication(String token) {
         UserDetails userDetails = new UserDetails() {
             @Override
@@ -88,6 +90,7 @@ public class JwtTokenProvider {
         };
         return new UsernamePasswordAuthenticationToken(userDetails, "", userDetails.getAuthorities());
     }
+
     public String resolveToken(HttpServletRequest req) {
         String bearerToken = req.getHeader("Authorization");
         if (bearerToken != null && bearerToken.startsWith("Bearer ")) {
@@ -95,6 +98,7 @@ public class JwtTokenProvider {
         }
         return null;
     }
+
     public boolean validateToken(String token) {
         try {
             Jws<Claims> claims = Jwts.parser().verifyWith(key).build().parseSignedClaims(token);

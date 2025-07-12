@@ -14,7 +14,7 @@ public class ObverseParser extends NumistaPartParser {
         super((page, nType) -> {
             ParseEvent result = ParseEvent.NOT_CHANGED;
 
-            ParseEvent[] parseFunctions = new ParseEvent[]{
+            ParseEvent[] parseFunctions = new ParseEvent[] {
                     parseObverseEngravers(page, nType),
                     parseObverseDesigners(page, nType),
                     parseObverseDescription(page, nType),
@@ -86,16 +86,19 @@ public class ObverseParser extends NumistaPartParser {
         return result;
     }
 
-
     private static ParseEvent parseObverseDescription(Document page, NType nType) {
         ParseEvent result = ParseEvent.NOT_CHANGED;
 
         String descriptionAvers = getTagText(page.selectFirst("#description_avers"));
         if (descriptionAvers != null && !descriptionAvers.isEmpty()) {
-            if (nType.getObverse() == null) nType.setObverse(new NTypePart(PART_TYPE.OBVERSE));
+            if (nType.getObverse() == null)
+                nType.setObverse(new NTypePart(PART_TYPE.OBVERSE));
 
-            nType.getObverse().setDescription(descriptionAvers);
-            result = ParseEvent.CHANGED;
+            if (nType.getObverse().getDescription() == null
+                    || !nType.getObverse().getDescription().equals(descriptionAvers)) {
+                nType.getObverse().setDescription(descriptionAvers);
+                result = ParseEvent.CHANGED;
+            }
         }
         return result;
     }
@@ -105,10 +108,14 @@ public class ObverseParser extends NumistaPartParser {
 
         String texteAvers = getTagText(page.selectFirst("#texte_avers"));
         if (texteAvers != null && !texteAvers.isEmpty()) {
-            if (nType.getObverse() == null) nType.setObverse(new NTypePart(PART_TYPE.OBVERSE));
+            if (nType.getObverse() == null)
+                nType.setObverse(new NTypePart(PART_TYPE.OBVERSE));
 
-            nType.getObverse().setLettering(texteAvers);
-            result = ParseEvent.CHANGED;
+            if (nType.getObverse().getLettering() == null
+                    || !nType.getObverse().getLettering().equals(texteAvers)) {
+                nType.getObverse().setLettering(texteAvers);
+                result = ParseEvent.CHANGED;
+            }
         }
         return result;
     }
@@ -116,24 +123,45 @@ public class ObverseParser extends NumistaPartParser {
     private static ParseEvent parseObverseScripts(Document page, NType nType) {
         ParseEvent result = ParseEvent.NOT_CHANGED;
 
-        //todo Change code on without clearing Lettering scripts.
-        if (nType.getObverse() != null && nType.getObverse().getLetteringScripts() != null && !nType.getObverse().getLetteringScripts().isEmpty()) {
-            nType.getObverse().getLetteringScripts().clear();
-        }
-
-        List<HashMap<String, String>> scriptsAvers = getAttributesWithTextSelectedOptions(page.selectFirst("#script_avers"));
+        List<HashMap<String, String>> scriptsAvers = getAttributesWithTextSelectedOptions(
+                page.selectFirst("#script_avers"));
         if (scriptsAvers != null) {
-            for (HashMap<String, String> scriptAvers : scriptsAvers) {
-                if (isValueAndTextNotNullAndNotEmpty(scriptAvers)) {
-                    if (nType.getObverse() == null) nType.setObverse(new NTypePart(PART_TYPE.OBVERSE));
 
-                    assert nType.getObverse().getLetteringScripts() != null;
+            // Check if both lists have the same elements
+            boolean listsAreEqual = true;
 
-                    nType.getObverse().getLetteringScripts().add(N4JUtil.getInstance().numistaService.letteringScriptService.findByNid(scriptAvers.get("value"), scriptAvers.get("text")));
-                    result = ParseEvent.CHANGED;
+            if (nType.getObverse() == null) {
+                nType.setObverse(new NTypePart(PART_TYPE.OBVERSE));
+                listsAreEqual = false;
+            } else if (nType.getObverse().getLetteringScripts().size() != scriptsAvers.size()) {
+                listsAreEqual = false;
+            } else {
+                for (HashMap<String, String> script : scriptsAvers) {
+                    if (isValueAndTextNotNullAndNotEmpty(script)) {
+                        boolean found = nType.getObverse().getLetteringScripts().stream()
+                                .anyMatch(t -> t.getNid().equals(script.get("value")));
+                        if (!found) {
+                            listsAreEqual = false;
+                            break;
+                        }
+                    }
                 }
             }
+
+            // If lists are not equal, update nType.getTechniques() with parsed techniques
+            if (!listsAreEqual) {
+                nType.getObverse().getLetteringScripts().clear();
+                for (HashMap<String, String> script : scriptsAvers) {
+                    if (isValueAndTextNotNullAndNotEmpty(script)) {
+                        nType.getObverse().getLetteringScripts()
+                                .add(N4JUtil.getInstance().numistaService.letteringScriptService
+                                        .findByNid(script.get("value"), script.get("text")));
+                    }
+                }
+                result = ParseEvent.CHANGED;
+            }
         }
+
         return result;
     }
 
@@ -142,10 +170,14 @@ public class ObverseParser extends NumistaPartParser {
 
         String unabridgedAvers = getTagText(page.selectFirst("#unabridged_avers"));
         if (unabridgedAvers != null && !unabridgedAvers.isEmpty()) {
-            if (nType.getObverse() == null) nType.setObverse(new NTypePart(PART_TYPE.OBVERSE));
+            if (nType.getObverse() == null)
+                nType.setObverse(new NTypePart(PART_TYPE.OBVERSE));
 
-            nType.getObverse().setUnabridgedLegend(unabridgedAvers);
-            result = ParseEvent.CHANGED;
+            if (nType.getObverse().getUnabridgedLegend() == null
+                    || !nType.getObverse().getUnabridgedLegend().equals(unabridgedAvers)) {
+                nType.getObverse().setUnabridgedLegend(unabridgedAvers);
+                result = ParseEvent.CHANGED;
+            }
         }
         return result;
     }
@@ -155,10 +187,14 @@ public class ObverseParser extends NumistaPartParser {
 
         String traductionAvers = getTagText(page.selectFirst("#traduction_avers"));
         if (traductionAvers != null && !traductionAvers.isEmpty()) {
-            if (nType.getObverse() == null) nType.setObverse(new NTypePart(PART_TYPE.OBVERSE));
+            if (nType.getObverse() == null)
+                nType.setObverse(new NTypePart(PART_TYPE.OBVERSE));
 
-            nType.getObverse().setLetteringTranslation(traductionAvers);
-            result = ParseEvent.CHANGED;
+            if (nType.getObverse().getLetteringTranslation() == null
+                    || !nType.getObverse().getLetteringTranslation().equals(traductionAvers)) {
+                nType.getObverse().setLetteringTranslation(traductionAvers);
+                result = ParseEvent.CHANGED;
+            }
         }
         return result;
     }
@@ -170,10 +206,14 @@ public class ObverseParser extends NumistaPartParser {
         if (obverse != null) {
             String obversePhoto = getAttribute(obverse.selectFirst("a[target=_blank]"), "href");
             if (obversePhoto != null && !obversePhoto.isEmpty()) {
-                if (nType.getObverse() == null) nType.setObverse(new NTypePart(PART_TYPE.OBVERSE));
+                if (nType.getObverse() == null)
+                    nType.setObverse(new NTypePart(PART_TYPE.OBVERSE));
 
-                nType.getObverse().setPicture(obversePhoto);
-                result = ParseEvent.CHANGED;
+                if (nType.getObverse().getPicture() == null
+                        || !nType.getObverse().getPicture().equals(obversePhoto)) {
+                    nType.getObverse().setPicture(obversePhoto);
+                    result = ParseEvent.CHANGED;
+                }
             }
         }
         return result;

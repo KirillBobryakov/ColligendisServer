@@ -1,6 +1,5 @@
 package bkv.colligendis.rest;
 
-
 import bkv.colligendis.database.entity.User;
 import bkv.colligendis.security.JwtTokenProvider;
 import bkv.colligendis.services.UserService;
@@ -31,19 +30,20 @@ public class AuthController {
     public ResponseEntity<Map<Object, Object>> signin(@RequestBody AuthenticationRequest data) {
         try {
             String username = "admin";
-//            String username = data.getUsername();
+            // String username = data.getUsername();
             authenticationManager.authenticate(new UsernamePasswordAuthenticationToken(username, data.getPassword()));
             User user = userService.findByUsername(username);
-            String token = jwtTokenProvider.createToken(username, user.getEmail(), this.userService.findByUsername(username).getRoles());
+            String token = jwtTokenProvider.createToken(username, user.getEmail(),
+                    this.userService.findByUsername(username).getRoles());
             Map<Object, Object> model = new HashMap<>();
-            model.put("message", username);
+            model.put("name", user.getUsername());
+            model.put("email", user.getEmail());
             model.put("token", token);
             return ResponseEntity.ok(model);
         } catch (AuthenticationException e) {
             throw new BadCredentialsException("Invalid username/password supplied");
         }
     }
-
 
     @GetMapping(value = "/users/{name}")
     public ResponseEntity<Map<Object, Object>> getUserInfo(@PathVariable(name = "name") String name) {
@@ -57,7 +57,7 @@ public class AuthController {
     }
 
     @PostMapping("/signup")
-    public ResponseEntity<Map<Object, Object>> signUp(@RequestBody SignUpUser signUpUser){
+    public ResponseEntity<Map<Object, Object>> signUp(@RequestBody SignUpUser signUpUser) {
 
         if (signUpUser.getEmail() == null || signUpUser.getEmail().isEmpty()
                 || signUpUser.getUsername() == null || signUpUser.getUsername().isEmpty()
@@ -65,11 +65,11 @@ public class AuthController {
             return new ResponseEntity<>(HttpStatus.INTERNAL_SERVER_ERROR);
 
         User user = userService.findByUsername(signUpUser.getUsername());
-//        if(user != null){
-//            return new ResponseEntity<>(HttpStatus.NOT_ACCEPTABLE);
-//        }
+        // if(user != null){
+        // return new ResponseEntity<>(HttpStatus.NOT_ACCEPTABLE);
+        // }
 
-        if(user == null){
+        if (user == null) {
             user = new User();
             user.setUsername(signUpUser.getUsername());
             user.setEmail(signUpUser.getEmail());
@@ -77,13 +77,13 @@ public class AuthController {
             user = userService.save(user);
         }
 
-        authenticationManager.authenticate(new UsernamePasswordAuthenticationToken(signUpUser.getUsername(), signUpUser.getPassword()));
+        authenticationManager.authenticate(
+                new UsernamePasswordAuthenticationToken(signUpUser.getUsername(), signUpUser.getPassword()));
         String token = jwtTokenProvider.createToken(signUpUser.getUsername(), user.getEmail(), user.getRoles());
 
         Map<Object, Object> model = new HashMap<>();
         model.put("message", signUpUser.getUsername());
         model.put("token", token);
-
 
         return ResponseEntity.ok(model);
     }

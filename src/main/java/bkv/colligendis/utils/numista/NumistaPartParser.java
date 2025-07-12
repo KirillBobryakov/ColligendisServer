@@ -4,7 +4,6 @@ import bkv.colligendis.database.entity.features.Year;
 import bkv.colligendis.database.entity.numista.NType;
 import bkv.colligendis.utils.DebugUtil;
 import bkv.colligendis.utils.N4JUtil;
-import bkv.colligendis.utils.NumistaEditPageUtil;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.lang3.tuple.MutablePair;
@@ -28,12 +27,10 @@ public abstract class NumistaPartParser {
     protected final PartParser parser;
 
     public static final String USER_AGENT = "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/18.3 Safari/605.1.15";
-    public static final String COOKIE = "pieces_par_page=50; _pk_id.10.0242=b29dbc2dcbfb4f7a.1744284220.; _pk_ses.10.0242=1; cf_clearance=EoU_vb941pfqqaT0zF39VD.nzDr4CewWdxBgCmJ0hVI-1749764393-1.2.1.1-H9KpPkdH5qFohG6HcY935vW0sbr2MFC2K9fW.qs7PoXzkOvmukGGsnzAc9C.nUiKVRxreN6aEayqQAKNNZ1W0CPbd86pG4WwYsK2EmwerTb6_aObiSnHXXVMe1wC9UOe0ODOoOeuwBcSuefr_X_aTzSiTn_NmaFCaawVgIRXA9inqVJg.VAud4lcic70z0aRFoFkK0D6L4pGvJaiUQM3c4Mqh7ds7JcTI_nN7ruSZYXEsej99FsLV_toWTVzDqS7nTghJU7ScXzJRh_MsLqn445X7PSu.5R6E2NpLGdVa_9i6BTKGbj1RRgAtKJKQynxdtZh4WktloOsZVBVg4FiOsvQLw_eUiwxoJa9wFjrBmDnia4pCIDMo6Uve7_b88CV; _pk_ref.10.0242=%5B%22%22%2C%22%22%2C1749761798%2C%22https%3A%2F%2Fwww.google.com%2F%22%5D; PHPSESSID=kluh9pgf7fei9csk3703nrat51; search_order=v; carte=type; issuer_sort=d; saisie_rapide=n; search_subtypes=148; tb=y; tc=y; tn=y; tp=y; tt=y; tbb=y; tbc=y; tbl=y; tbt=y; access_token=z78%7DpWXczbO3dY9IkhkT%25W.%3DIGj%3F65%3C%7C4jgHv%2Af%5B; pseudo=kbobryakov";
+    public static final String COOKIE = "_pk_ses.10.0242=1; PHPSESSID=0v3j70mj0pl61f329j70b6v6cj; _pk_ref.10.0242=%5B%22%22%2C%22%22%2C1752343548%2C%22https%3A%2F%2Fwww.google.com%2F%22%5D; test_cookies=1; carte=type; pieces_par_page=50; cf_clearance=4BVyMVqdzJhLEIVyIb83oHWw28Wjvi7d_7rRX7tbtxY-1752013302-1.2.1.1-ae26F5fbR4rGUn63S4W8E4iTI2HqteIPIge5GuxlRp1ieVDnuFLroUz38JPU6CO8MB3tIMDTDZMs.pm9RlfTwMblAxKG9q2z1lBK5CMUySi4xP30uRtkr3Ktrc7oRgIIj7zL7qiVESrNpwfpqwTTZkga8Y2DxQZp44mz_kalvbSw7BUIwV7NCq.tviEZD1V0UfM3vMzoTyQPZlilLYDuFXo1zW8ZBOwmvLnrjkQoi3Q; _pk_id.10.0242=a36509097c0e55fd.1751222019.; search_order=v; issuer_sort=d; saisie_rapide=n; search_subtypes=148; tb=y; tc=y; tn=y; tp=y; tt=y; tbb=y; tbc=y; tbl=y; tbt=y";
     private static final Boolean showPageAfterLoad = false;
 
-
     public static final String TYPE_PAGE_PREFIX = "https://en.numista.com/catalogue/contributions/modifier.php?id=";
-
 
     public NumistaPartParser(PartParser parser) {
         this.parser = parser;
@@ -53,7 +50,8 @@ public abstract class NumistaPartParser {
     ;
 
     private String composeTimeInfo(String message, long time) {
-        return message + " takes " + (System.currentTimeMillis() - time) / 1000 + " sec " + (System.currentTimeMillis() - time) % 1000 + " millis";
+        return message + " takes " + (System.currentTimeMillis() - time) / 1000 + " sec "
+                + (System.currentTimeMillis() - time) % 1000 + " millis";
     }
 
     public static String getAttribute(Element element, String key) {
@@ -67,30 +65,31 @@ public abstract class NumistaPartParser {
         Element element = page.selectFirst(searchQuery);
 
         if (element == null) {
-            DebugUtil.showWarning(NumistaEditPageUtil.class, "Can't find " + searchQuery + " on the page");
+            DebugUtil.showWarning(NumistaPartParser.class, "Can't find " + searchQuery + " on the page");
             return null;
         }
 
         Element option = element.selectFirst("option");
 
         if (option == null) {
-            DebugUtil.showWarning(NumistaEditPageUtil.class, "Can't find <option> tag in " + searchQuery + " on the page");
+            // DebugUtil.showInfo(NumistaEditPageUtil.class, "Can't find <option> tag in " +
+            // searchQuery + " on the page");
             return null;
         }
 
         if (option.text().isEmpty()) {
-            DebugUtil.showWarning(NumistaEditPageUtil.class, "The " + searchQuery + " name is empty on the page");
+            DebugUtil.showWarning(NumistaPartParser.class, "The " + searchQuery + " name is empty on the page");
             return null;
         }
 
         if (option.attributes().get(key).isEmpty()) {
-            DebugUtil.showWarning(NumistaEditPageUtil.class, "The " + searchQuery + " " + key + " is empty on the page");
+            DebugUtil.showWarning(NumistaPartParser.class,
+                    "The " + searchQuery + " " + key + " is empty on the page");
             return null;
         }
 
         return Map.of(key, option.attributes().get(key), "text", option.text());
     }
-
 
     public static HashMap<String, String> getAttributeWithTextSelectedOption(Object source, String searchQuery) {
         Element element = null;
@@ -100,17 +99,18 @@ public abstract class NumistaPartParser {
             element = ((Element) source).selectFirst(searchQuery);
         }
 
-        if (element == null) return null;
+        if (element == null)
+            return null;
 
-        return element.select("option").stream().filter(option -> option.attributes().hasKey("selected")).findFirst().map(option -> {
-            HashMap<String, String> r = new HashMap<>();
-            r.put("value", option.attributes().get("value"));
-            r.put("text", option.text());
-            return r;
-        }).orElse(null);
+        return element.select("option").stream().filter(option -> option.attributes().hasKey("selected")).findFirst()
+                .map(option -> {
+                    HashMap<String, String> r = new HashMap<>();
+                    r.put("value", option.attributes().get("value"));
+                    r.put("text", option.text());
+                    return r;
+                }).orElse(null);
 
     }
-
 
     /**
      * Parse string {@code fullName} to find year periods.
@@ -136,39 +136,49 @@ public abstract class NumistaPartParser {
             // After splitting by "-", we can get array of 2 strings or 1 string
 
             if (years.length == 0 || years.length > 2) {
-                DebugUtil.showError(NumistaEditPageUtil.class, "Can't parse PHP request (years for = " + fullName + " with length != 1 or 2).");
+                DebugUtil.showError(NumistaPartParser.class,
+                        "Can't parse PHP request (years for = " + fullName + " with length != 1 or 2).");
                 return null;
             } else if (years.length == 1) { // we have a period during one year, example "(1936)"
                 if (StringUtils.isNumeric(years[0])) {
-                    yearFrom = N4JUtil.getInstance().numistaService.calendarService.findGregorianYearByValueOrCreate(Integer.parseInt(years[0]));
+                    yearFrom = N4JUtil.getInstance().numistaService.calendarService
+                            .findGregorianYearByValueOrCreate(Integer.parseInt(years[0]));
                     yearTill = yearFrom;
-                } else {    // Try to catch another variants for ruler's period with one year which is not numeric
-                    DebugUtil.showError(NumistaEditPageUtil.class, "Can't parse PHP request (period for = " + fullName + " with one year which is not Numeric)");
+                } else { // Try to catch another variants for ruler's period with one year which is not
+                         // numeric
+                    DebugUtil.showError(NumistaPartParser.class, "Can't parse PHP request (period for = " + fullName
+                            + " with one year which is not Numeric)");
                     return null;
                 }
-            } else {    // Ruler's Period has two years (1887-1918) or (1990-date)
+            } else { // Ruler's Period has two years (1887-1918) or (1990-date)
 
-                if (StringUtils.isNumeric(years[0])) {    // Now I only know that the start year is only number
-                    yearFrom = N4JUtil.getInstance().numistaService.calendarService.findGregorianYearByValueOrCreate(Integer.parseInt(years[0]));
-                } else { // Try to catch another variants for ruler's period with two year which start year is not numeric
-                    DebugUtil.showError(NumistaEditPageUtil.class, "Can't parse PHP request (start year = " + fullName + " is not Numeric).");
+                if (StringUtils.isNumeric(years[0])) { // Now I only know that the start year is only number
+                    yearFrom = N4JUtil.getInstance().numistaService.calendarService
+                            .findGregorianYearByValueOrCreate(Integer.parseInt(years[0]));
+                } else { // Try to catch another variants for ruler's period with two year which start
+                         // year is not numeric
+                    DebugUtil.showError(NumistaPartParser.class,
+                            "Can't parse PHP request (start year = " + fullName + " is not Numeric).");
                     return null;
                 }
 
                 assert yearFrom != null;
 
-                if (years[1].equals("date")) {    //  End year can be Numeric or "date". The "date" means that the ruling is not finished.
+                if (years[1].equals("date")) { // End year can be Numeric or "date". The "date" means that the ruling is
+                                               // not finished.
                     yearTill = null;
                 } else if (StringUtils.isNumeric(years[1])) {
-                    yearTill = N4JUtil.getInstance().numistaService.calendarService.findGregorianYearByValueOrCreate(Integer.parseInt(years[1]));
-                } else { // Try to catch another variants for ruler's period with two year which end year is not numeric and not "date"
-                    DebugUtil.showError(NumistaEditPageUtil.class, "Can't parse PHP request (end year = " + fullName + " is not Numeric and not 'date').");
+                    yearTill = N4JUtil.getInstance().numistaService.calendarService
+                            .findGregorianYearByValueOrCreate(Integer.parseInt(years[1]));
+                } else { // Try to catch another variants for ruler's period with two year which end year
+                         // is not numeric and not "date"
+                    DebugUtil.showError(NumistaPartParser.class,
+                            "Can't parse PHP request (end year = " + fullName + " is not Numeric and not 'date').");
                     return null;
                 }
             }
 
             assert yearFrom != null;
-
 
             if (!result.getLeft().contains(yearFrom)) {
                 result.getLeft().add(yearFrom);
@@ -183,24 +193,27 @@ public abstract class NumistaPartParser {
     }
 
     /**
-     * Find in Map {@code hashMap} values with keys ("value", "text") and check on {@code null} and {@code empty}
+     * Find in Map {@code hashMap} values with keys ("value", "text") and check on
+     * {@code null} and {@code empty}
      *
      * @param hashMap Map with elements with "value" and "text" keys
-     * @return {@code true} if values by "value" and "text" keys in Map is not null and is not empty, else - {@code false}.
+     * @return {@code true} if values by "value" and "text" keys in Map is not null
+     *         and is not empty, else - {@code false}.
      */
     public static boolean isValueAndTextNotNullAndNotEmpty(HashMap<String, String> hashMap) {
-        return hashMap.get("value") != null && !hashMap.get("value").isEmpty() && hashMap.get("text") != null && !hashMap.get("text").isEmpty();
+        return hashMap.get("value") != null && !hashMap.get("value").isEmpty() && hashMap.get("text") != null
+                && !hashMap.get("text").isEmpty();
     }
-
 
     public static List<HashMap<String, String>> getAttributesWithTextSelectedOptions(Element element) {
         if (element != null) {
-            return element.select("option").stream().filter(option -> option.attributes().hasKey("selected")).findFirst().map(option -> {
-                HashMap<String, String> hashMap = new HashMap<>();
-                hashMap.put("value", option.attributes().get("value"));
-                hashMap.put("text", option.text());
-                return hashMap;
-            }).stream().collect(Collectors.toList());
+            return element.select("option").stream().filter(option -> option.attributes().hasKey("selected"))
+                    .findFirst().map(option -> {
+                        HashMap<String, String> hashMap = new HashMap<>();
+                        hashMap.put("value", option.attributes().get("value"));
+                        hashMap.put("text", option.text());
+                        return hashMap;
+                    }).stream().collect(Collectors.toList());
         }
         return null;
     }
@@ -218,10 +231,10 @@ public abstract class NumistaPartParser {
         return null;
     }
 
-
     public static List<String> getTextsSelectedOptions(Element element) {
         if (element != null) {
-            return element.select("option").stream().filter(option -> option.attributes().hasKey("selected")).map(Element::text).collect(Collectors.toList());
+            return element.select("option").stream().filter(option -> option.attributes().hasKey("selected"))
+                    .map(Element::text).collect(Collectors.toList());
         }
         return null;
     }
@@ -232,7 +245,6 @@ public abstract class NumistaPartParser {
         }
         return null;
     }
-
 
     public static Document loadPageByURL(String urlString, boolean useCookies) {
         Document document;
@@ -249,10 +261,11 @@ public abstract class NumistaPartParser {
             }
 
             int responseCode = con.getResponseCode();
-//            System.out.println("\nSending 'GET' request to URL : " + url);
-//            System.out.println("Response Code : " + responseCode);
+            // System.out.println("\nSending 'GET' request to URL : " + url);
+            // System.out.println("Response Code : " + responseCode);
 
-            if (responseCode == 404) return null;
+            if (responseCode == 404)
+                return null;
 
             BufferedReader in = new BufferedReader(new InputStreamReader(con.getInputStream()));
             String inputLine;
@@ -268,8 +281,8 @@ public abstract class NumistaPartParser {
             // Send the request to the server
             document = Jsoup.parse(response.toString());
 
-            if (showPageAfterLoad) System.out.println(document);
-
+            if (showPageAfterLoad)
+                System.out.println(document);
 
         } catch (IOException e) {
             e.printStackTrace();
@@ -278,12 +291,12 @@ public abstract class NumistaPartParser {
         return document;
     }
 
-
     /**
      * Fetches content from the given URL and parses it as a JSON object.
      *
-     * @param urlString The URL to fetch JSON data from.
-     * @param useCookies Whether to include the predefined COOKIE and USER_AGENT (useful for numista.com APIs).
+     * @param urlString  The URL to fetch JSON data from.
+     * @param useCookies Whether to include the predefined COOKIE and USER_AGENT
+     *                   (useful for numista.com APIs).
      * @return A JsonObject if parsing is successful, otherwise null.
      */
     public static <T> T fetchAndParseJson(String urlString, boolean useCookies, Class<T> clazz) {
@@ -314,7 +327,8 @@ public abstract class NumistaPartParser {
                 return objectMapper.readValue(responseContent.toString(), clazz);
 
             } else {
-                DebugUtil.showError(NumistaPartParser.class, "HTTP GET request failed with response code: " + responseCode + " for URL: " + urlString);
+                DebugUtil.showError(NumistaPartParser.class,
+                        "HTTP GET request failed with response code: " + responseCode + " for URL: " + urlString);
                 // Log error response body if any
                 try (BufferedReader errorStream = new BufferedReader(new InputStreamReader(con.getErrorStream()))) {
                     String errorLine;
@@ -329,19 +343,19 @@ public abstract class NumistaPartParser {
                 return null;
             }
         } catch (IOException e) {
-            DebugUtil.showError(NumistaPartParser.class, "IOException during fetching/parsing JSON from URL: " + urlString + " - " + e.getMessage());
+            DebugUtil.showError(NumistaPartParser.class,
+                    "IOException during fetching/parsing JSON from URL: " + urlString + " - " + e.getMessage());
             e.printStackTrace();
             return null;
         }
     }
 
-
-
     /**
      * Fetches content from the given URL and parses it as a JSON object.
      *
-     * @param urlString The URL to fetch JSON data from.
-     * @param useCookies Whether to include the predefined COOKIE and USER_AGENT (useful for numista.com APIs).
+     * @param urlString  The URL to fetch JSON data from.
+     * @param useCookies Whether to include the predefined COOKIE and USER_AGENT
+     *                   (useful for numista.com APIs).
      * @return A JsonObject if parsing is successful, otherwise null.
      */
     public static String fetchJson(String urlString, boolean useCookies) {
@@ -369,7 +383,8 @@ public abstract class NumistaPartParser {
 
                 return responseContent.toString();
             } else {
-                DebugUtil.showError(NumistaPartParser.class, "HTTP GET request failed with response code: " + responseCode + " for URL: " + urlString);
+                DebugUtil.showError(NumistaPartParser.class,
+                        "HTTP GET request failed with response code: " + responseCode + " for URL: " + urlString);
                 // Log error response body if any
                 try (BufferedReader errorStream = new BufferedReader(new InputStreamReader(con.getErrorStream()))) {
                     String errorLine;
@@ -384,11 +399,11 @@ public abstract class NumistaPartParser {
                 return null;
             }
         } catch (IOException e) {
-            DebugUtil.showError(NumistaPartParser.class, "IOException during fetching/parsing JSON from URL: " + urlString + " - " + e.getMessage());
+            DebugUtil.showError(NumistaPartParser.class,
+                    "IOException during fetching/parsing JSON from URL: " + urlString + " - " + e.getMessage());
             e.printStackTrace();
             return null;
         }
     }
-
 
 }
