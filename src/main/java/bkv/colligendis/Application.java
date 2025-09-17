@@ -1,7 +1,9 @@
 package bkv.colligendis;
 
+import bkv.colligendis.services.MeshokServices;
 import bkv.colligendis.services.NumistaServices;
 import bkv.colligendis.utils.N4JUtil;
+
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
 
@@ -10,10 +12,12 @@ import org.springframework.boot.autoconfigure.SpringBootApplication;
 public class Application {
 
     public final NumistaServices numistaServices;
+    public final MeshokServices meshokServices;
 
-    public Application(NumistaServices numistaServices) {
+    public Application(NumistaServices numistaServices, MeshokServices meshokServices) {
         this.numistaServices = numistaServices;
-        N4JUtil.InitInstance(numistaServices);
+        this.meshokServices = meshokServices;
+        N4JUtil.InitInstance(numistaServices, meshokServices);
 
         // Stream.of("336784").map(nid -> EditPageParser.create
         // .andThen(EditPageParser.loadNumistaPage)
@@ -65,6 +69,14 @@ public class Application {
         // https://en.numista.com/catalogue/index.php?e=germany&r=&st=148&cat=y&im1=&im2=&ru=&ie=&ca=3&no=&v=&a=&dg=&i=&b=&m=&f=&t=&t2=&w=&mt=&u=&g=&c=&wi=&sw=
         // https://en.numista.com/catalogue/index.php?e=germany&r=&st=148&cat=y&im1=&im2=&ru=&ie=&ca=3&no=&v=&a=&dg=&i=&b=&m=&f=&t=&t2=&w=&mt=&u=&g=&c=&wi=&sw=&q=200
         // https://en.numista.com/catalogue/index.php?e=germany&r=&st=147&cat=y&im1=&im2=&ru=&ie=&ca=3&no=&v=&a=&dg=&i=&b=&m=&f=&t=&t2=&w=&mt=&u=&g=&c=&wi=&sw=&p=2
+
+        // List<MeshokLot> lots =
+        // N4JUtil.getInstance().meshokService.meshokLotService.findAllLimitedWithCategory(100);
+        // for (MeshokLot lot : lots) {
+        // ImageUtil.saveMeshokImage(lot);
+        // System.out.println();
+        // }
+
     }
 
     public static void main(String[] args) {

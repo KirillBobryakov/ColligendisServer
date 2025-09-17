@@ -1,10 +1,15 @@
 package bkv.colligendis.database.service.numista;
 
+import bkv.colligendis.database.entity.numista.Country;
 import bkv.colligendis.database.entity.numista.Issuer;
+import bkv.colligendis.database.entity.numista.Subject;
 import bkv.colligendis.database.service.UniqueEntityException;
 import bkv.colligendis.rest.catalogue.CSIItem;
+import bkv.colligendis.rest.catalogue.csi_statistics.CSITreeNode;
 import bkv.colligendis.services.AbstractService;
 import bkv.colligendis.utils.DebugUtil;
+
+import org.modelmapper.ModelMapper;
 import org.springframework.stereotype.Service;
 
 import java.util.ArrayList;
@@ -15,8 +20,22 @@ import java.util.stream.Collectors;
 
 @Service
 public class IssuerService extends AbstractService<Issuer, IssuerRepository> {
-    public IssuerService(IssuerRepository repository) {
+
+    private final ModelMapper modelMapper;
+
+    public IssuerService(IssuerRepository repository, ModelMapper modelMapper) {
         super(repository);
+        this.modelMapper = modelMapper;
+    }
+
+    /**
+     * Find an Issuer of NType by NType's nid
+     * 
+     * @param nid NType's nid
+     * @return Issuer of NType if exists, or null
+     */
+    public Issuer findByNTypeNid(String nTypeNid) {
+        return repository.findByNTypeNid(nTypeNid);
     }
 
     /**
@@ -233,16 +252,86 @@ public class IssuerService extends AbstractService<Issuer, IssuerRepository> {
         return new ArrayList<>();
     }
 
+    public List<Issuer> findIssuersByName(String filter) {
+        return repository.findIssuersByName(filter);
+    }
+
     public Integer countChildrenNTypes(String numistaCode) {
         return repository.countChildrenNTypes(numistaCode);
+    }
+
+    public List<Issuer> findChildrenIssuersByCountryNumistaCode(String countryNumistaCode) {
+        return repository.findChildrenIssuersByCountryNumistaCode(countryNumistaCode);
+    }
+
+    public List<Issuer> findChildrenIssuersByCountryNumistaCodeWithFilterByIssuerName(String countryNumistaCode,
+            String filterName) {
+        return repository.findChildrenIssuersByCountryNumistaCodeWithFilterByIssuerName(countryNumistaCode, filterName);
     }
 
     public List<Issuer> findChildrenIssuersBySubjectNumistaCode(String subjectNumistaCode) {
         return repository.findChildrenIssuersBySubjectNumistaCode(subjectNumistaCode);
     }
 
-    public List<Issuer> findChildrenIssuersByCountryNumistaCode(String countryNumistaCode) {
-        return repository.findChildrenIssuersByCountryNumistaCode(countryNumistaCode);
+    public List<Issuer> findChildrenIssuersBySubjectNumistaCodeWithFilterByIssuerName(String subjectNumistaCode,
+            String filterName) {
+        return repository.findChildrenIssuersBySubjectNumistaCodeWithFilterByIssuerName(subjectNumistaCode,
+                filterName.toLowerCase());
+    }
+
+    public List<CSITreeNode> findByNameFilter(String nameFilter) {
+        List<Issuer> issuers = repository.findByNameFilter(nameFilter);
+
+        return issuers.stream()
+                .map(issuer -> convertToCSITreeNodes(issuer))
+                .collect(Collectors.toList());
+    }
+
+    public <T> CSITreeNode convertToCSITreeNodes(T entity) {
+        if (entity instanceof Country) {
+            Country country = (Country) entity;
+            CSITreeNode countryNode = modelMapper.map(country, CSITreeNode.class);
+            List<CSITreeNode> children = new ArrayList<>();
+            countryNode.setType("country");
+            if (country.getSubjects() != null && !country.getSubjects().isEmpty()) {
+                children.addAll(country.getSubjects().stream()
+                        .map(subject -> convertToCSITreeNodes(subject))
+                        .collect(Collectors.toList()));
+            }
+            if (country.getIssuers() != null && !country.getIssuers().isEmpty()) {
+                children.addAll(country.getIssuers().stream()
+                        .map(issuer -> convertToCSITreeNodes(issuer))
+                        .collect(Collectors.toList()));
+            }
+            countryNode.setChildren(children);
+
+            return countryNode;
+        } else if (entity instanceof Subject) {
+            Subject subject = (Subject) entity;
+            CSITreeNode subjectNode = modelMapper.map(subject, CSITreeNode.class);
+            subjectNode.setType("subject");
+            List<CSITreeNode> children = new ArrayList<>();
+            if (subject.getChildSubjects() != null && !subject.getChildSubjects().isEmpty()) {
+                children.addAll(subject.getChildSubjects().stream()
+                        .map(childSubject -> convertToCSITreeNodes(childSubject))
+                        .collect(Collectors.toList()));
+            }
+            if (subject.getIssuers() != null && !subject.getIssuers().isEmpty()) {
+                children.addAll(subject.getIssuers().stream()
+                        .map(issuer -> convertToCSITreeNodes(issuer))
+                        .collect(Collectors.toList()));
+            }
+            subjectNode.setChildren(children);
+
+            return subjectNode;
+        } else if (entity instanceof Issuer) {
+            Issuer issuer = (Issuer) entity;
+            CSITreeNode issuerNode = modelMapper.map(issuer, CSITreeNode.class);
+            issuerNode.setType("issuer");
+            return issuerNode;
+        }
+
+        return null;
     }
 
 }

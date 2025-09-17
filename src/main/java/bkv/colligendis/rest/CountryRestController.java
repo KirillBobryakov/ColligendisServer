@@ -1,82 +1,70 @@
 package bkv.colligendis.rest;
 
-import bkv.colligendis.database.entity.numista.Country;
-import bkv.colligendis.utils.N4JUtil;
-import lombok.Data;
-import org.springframework.http.ResponseEntity;
-import org.springframework.web.bind.annotation.*;
-
+import java.util.Comparator;
 import java.util.List;
+import java.util.stream.Collectors;
+
+import org.springframework.http.ResponseEntity;
+import org.springframework.web.bind.annotation.DeleteMapping;
+import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PathVariable;
+import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RestController;
+
+import bkv.colligendis.database.entity.numista.Country;
+import bkv.colligendis.rest.dto.CountryDTO;
+import bkv.colligendis.utils.N4JUtil;
 
 @RestController
+@RequestMapping("/database/country")
 public class CountryRestController {
 
-    @GetMapping(value = "/countries/all/names")
-    @ResponseBody
-    public ResponseEntity<List<String>> getAllCountriesNames() {
-        List<String> countriesNames = N4JUtil.getInstance().numistaService.countryService.findAllCountriesNames();
-        return ResponseEntity.ok(countriesNames);
+    @GetMapping(value = "/all")
+    public ResponseEntity<ApiResponse<List<CountryDTO>>> getAllCountries() {
+        try {
+            List<CountryDTO> countries = N4JUtil.getInstance().numistaService.countryService
+                    .findAllCountriesWithoutRelationships().stream()
+                    .sorted(Comparator.comparing(CountryDTO::getName))
+                    .collect(Collectors.toList());
+            return ResponseEntity
+                    .ok(new ApiResponse<>(countries, "Countries fetched successfully", ApiResponse.Status.SUCCESS));
+        } catch (Exception e) {
+            return ResponseEntity
+                    .internalServerError()
+                    .body(new ApiResponse<>(null, "Error fetching countries", ApiResponse.Status.ERROR));
+        }
+
     }
 
-    @PostMapping(value = "/countries/filter/")
-    public ResponseEntity<List<Country>> getCountriesWithNameFilter(@RequestBody Filter filter) {
-        List<Country> countries = N4JUtil.getInstance().numistaService.countryService
-                .findByNameContainingIgnoreCase(filter.getNameFilter());
-        return ResponseEntity.ok(countries);
+    @GetMapping(value = "/addRuAlternativeName/{numistaCode}/{ruAlternativeName}")
+    public ResponseEntity<ApiResponse<Boolean>> addRuAlternativeName(
+            @PathVariable(name = "numistaCode", required = true) String numistaCode,
+            @PathVariable(name = "ruAlternativeName", required = true) String ruAlternativeName) {
+
+        Country country = N4JUtil.getInstance().numistaService.countryService.findCountryByNumistaCode(numistaCode);
+        country.addRuAlternativeName(ruAlternativeName);
+        N4JUtil.getInstance().numistaService.countryService.save(country);
+        return ResponseEntity.ok(new ApiResponse<>(true, "Ru alternative name added successfully",
+                ApiResponse.Status.SUCCESS));
     }
-    //
-    // @PostMapping("/csi/filter/name")
-    // @ResponseBody
-    // public ResponseEntity<List<CSIListItem>>
-    // getCSIListWithNameFilter(@RequestBody Filter filter) {
-    //
-    // List<Country> countries =
-    // N4JUtil.getInstance().numistaService.countryService.findByNameContainingIgnoreCase(filter.getNameFilter());
-    // List<Subject> subjects =
-    // N4JUtil.getInstance().numistaService.subjectService.findByNameContainingIgnoreCase(filter.getNameFilter());
-    // List<Issuer> issuers =
-    // N4JUtil.getInstance().numistaService.issuerService.findByNameContainingIgnoreCase(filter.getNameFilter());
-    //
-    // Stream<CSIListItem> csiListItemStream = Stream.concat(Stream.concat(
-    // countries.stream().map(country -> {
-    // CSIListItem csiListItem = new CSIListItem(country.getEid().toString(),
-    // country.getName(), CSIListItem.Label.COUNTRY);
-    // if (!country.getRuAlternativeNames().isEmpty()) {
-    // csiListItem.setRuAlternativeName(country.getRuAlternativeNames().get(0));
-    // }
-    // csiListItem.setSubjectsCount(country.getSubjects().size());
-    // csiListItem.setIssuersCount(country.getIssuers().size());
-    // return csiListItem;
-    // }),
-    // subjects.stream().map(subject -> {
-    // CSIListItem csiListItem = new CSIListItem(subject.getEid().toString(),
-    // subject.getName(), CSIListItem.Label.SUBJECT);
-    // if (!subject.getRuAlternativeNames().isEmpty()) {
-    // csiListItem.setRuAlternativeName(subject.getRuAlternativeNames().get(0));
-    // }
-    // csiListItem.setSubjectsCount(subject.getChildSubjects().size());
-    // csiListItem.setIssuersCount(subject.getIssuers().size());
-    // return csiListItem;
-    // })),
-    // issuers.stream().map(issuer -> {
-    // CSIListItem csiListItem = new CSIListItem(issuer.getEid().toString(),
-    // issuer.getName(), CSIListItem.Label.ISSUER);
-    // if (!issuer.getRuAlternativeNames().isEmpty()) {
-    // csiListItem.setRuAlternativeName(issuer.getRuAlternativeNames().get(0));
-    // }
-    // csiListItem.setNTypesCount(issuer.getNTypes().size());
-    // return csiListItem;
-    // }));
-    //
-    //
-    // return
-    // ResponseEntity.ok(csiListItemStream.sorted(Comparator.comparing(CSIListItem::getName)).collect(Collectors.toList()));
-    // }
-    //
 
-}
+    @DeleteMapping(value = "/deleteRuAlternativeName/{numistaCode}/{ruAlternativeName}")
+    public ResponseEntity<ApiResponse<Boolean>> deleteRuAlternativeName(
+            @PathVariable(name = "numistaCode", required = true) String numistaCode,
+            @PathVariable(name = "ruAlternativeName", required = true) String ruAlternativeName) {
+        Country country = N4JUtil.getInstance().numistaService.countryService.findCountryByNumistaCode(numistaCode);
+        country.removeRuAlternativeName(ruAlternativeName);
+        N4JUtil.getInstance().numistaService.countryService.save(country);
+        return ResponseEntity.ok(new ApiResponse<>(true, "Ru alternative name deleted successfully",
+                ApiResponse.Status.SUCCESS));
+    }
 
-@Data
-class Filter {
-    String nameFilter;
+    @GetMapping(value = "/{numistaCode}")
+    public ResponseEntity<ApiResponse<Country>> getCountry(
+            @PathVariable(name = "numistaCode", required = true) String numistaCode) {
+        Country country = N4JUtil.getInstance().numistaService.countryService.findCountryByNumistaCode(numistaCode);
+        return ResponseEntity.ok(new ApiResponse<>(country, "Country fetched successfully",
+                ApiResponse.Status.SUCCESS));
+    }
+
 }

@@ -1,6 +1,7 @@
 package bkv.colligendis.database.entity.numista;
 
 import bkv.colligendis.database.entity.AbstractEntity;
+import bkv.colligendis.database.entity.User;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
 
@@ -18,6 +19,7 @@ public class Item extends AbstractEntity {
 
     public static final String RELATED_TO_TYPE = "RELATED_TO_TYPE";
     public static final String RELATED_TO_VARIANT = "RELATED_TO_VARIANT";
+    public static final String BELONGS_TO_USER = "BELONGS_TO_USER";
 
     // 'paper', 'round'
     // public String round_or_paper;
@@ -30,9 +32,13 @@ public class Item extends AbstractEntity {
 
     public int quantity;
 
-    @SerializedName("type")
-    @Relationship(type = RELATED_TO_TYPE, direction = Relationship.Direction.OUTGOING)
-    private NType nType;
+    // @SerializedName("type")
+    // @Relationship(type = RELATED_TO_TYPE, direction =
+    // Relationship.Direction.OUTGOING)
+    // private NType nType;
+
+    @Relationship(type = BELONGS_TO_USER, direction = Relationship.Direction.OUTGOING)
+    private User user;
 
     @SerializedName("issue")
     @Relationship(type = RELATED_TO_VARIANT, direction = Relationship.Direction.OUTGOING)

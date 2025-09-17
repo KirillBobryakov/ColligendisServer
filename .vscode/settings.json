@@ -5,5 +5,9 @@
         "uri": "bolt://localhost:7687",
         "username": "neo4j"
     },
-    "java.debug.settings.onBuildFailureProceed": true
+    "java.debug.settings.onBuildFailureProceed": true,
+    "bevel.java": "/Users/kirillbobryakov/.cursor/extensions/bevel-software.bevel-1.3.0-universal/backend/amazon-corretto-17.jdk/Contents/Home/bin/java",
+    "bevel.largeLanguageModel": "GEMINI",
+    "java.dependency.packagePresentation": "hierarchical",
+    "java.dependency.syncWithFolderExplorer": true
 }

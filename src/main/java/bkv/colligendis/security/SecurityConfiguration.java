@@ -1,6 +1,5 @@
 package bkv.colligendis.security;
 
-import bkv.colligendis.services.UserService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
@@ -14,6 +13,8 @@ import org.springframework.security.config.http.SessionCreationPolicy;
 import org.springframework.security.crypto.factory.PasswordEncoderFactories;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.security.web.SecurityFilterChain;
+
+import bkv.colligendis.database.service.users.UserService;
 
 @EnableWebSecurity
 @Configuration
@@ -32,7 +33,7 @@ public class SecurityConfiguration {
     @Bean
     public AuthenticationManager authenticationManager() {
         DaoAuthenticationProvider authProvider = new DaoAuthenticationProvider();
-        authProvider.setUserDetailsService(username -> userService.findByUsername(username));
+        authProvider.setUserDetailsService(email -> userService.findByEmail(email));
         authProvider.setPasswordEncoder(passwordEncoder());
         return new ProviderManager(authProvider);
     }
@@ -46,10 +47,14 @@ public class SecurityConfiguration {
                     httpSecuritySessionManagementConfigurer.sessionCreationPolicy(SessionCreationPolicy.STATELESS);
                 })
                 .authorizeHttpRequests(authorizeHttpRequests -> authorizeHttpRequests
-                        .requestMatchers("/auth/signup").permitAll()
-                        .requestMatchers("/auth/signin").permitAll()
-                        .requestMatchers("/countries/all/names").permitAll()
-                        .requestMatchers("/catalogue/**").permitAll()
+                        .requestMatchers("/auth/**").permitAll()
+                        .requestMatchers("/catalogue/issuer/hierarchical").permitAll()
+                        // .requestMatchers("/market/**").permitAll()
+                        // .requestMatchers("/countries/all/names").permitAll()
+                        // .requestMatchers("/catalogue/image/**").permitAll()
+                        // .requestMatchers("/market/**").permitAll()
+                        // .requestMatchers("/database/**").permitAll()
+                        // .requestMatchers("/statistics/**").permitAll()
                         // .requestMatchers("/").permitAll()
                         .anyRequest().authenticated())
                 .with(new JwtConfigurer(jwtTokenProvider), jwtConfigurer -> {

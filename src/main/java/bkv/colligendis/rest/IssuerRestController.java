@@ -1,11 +1,67 @@
 package bkv.colligendis.rest;
 
+import java.util.ArrayList;
+import java.util.Comparator;
 import java.util.List;
+import java.util.stream.Collectors;
 
+import org.springframework.http.ResponseEntity;
+import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
+import bkv.colligendis.database.entity.numista.Issuer;
+import bkv.colligendis.utils.N4JUtil;
+
 @RestController
+@RequestMapping("/database/issuer")
 public class IssuerRestController {
+
+    @GetMapping(value = "/all")
+    public ResponseEntity<ApiResponse<List<Issuer>>> getAllIssuers() {
+        try {
+
+            List<Issuer> issuers = N4JUtil.getInstance().numistaService.issuerService.findAll().stream()
+                    .sorted(Comparator.comparing(Issuer::getName))
+                    .collect(Collectors.toList());
+            return ResponseEntity
+                    .ok(new ApiResponse<>(issuers, "Issuers fetched successfully", ApiResponse.Status.SUCCESS));
+        } catch (Exception e) {
+            return ResponseEntity
+                    .internalServerError()
+                    .body(new ApiResponse<>(null, "Error fetching issuers", ApiResponse.Status.ERROR));
+        }
+    }
+
+    @GetMapping(value = "/filtered")
+    public ResponseEntity<ApiResponse<List<Issuer>>> getIssuers(@RequestParam(name = "q", required = true) String q,
+            @RequestParam(name = "countryNumistaCode", required = true) String countryNumistaCode,
+            @RequestParam(name = "subjectNumistaCode", required = true) String subjectNumistaCode) {
+
+        List<Issuer> issuers = new ArrayList<>();
+        if (subjectNumistaCode != null && !subjectNumistaCode.isEmpty()) {
+            issuers.addAll(N4JUtil.getInstance().numistaService.issuerService
+                    .findChildrenIssuersBySubjectNumistaCodeWithFilterByIssuerName(subjectNumistaCode, q).stream()
+                    .map(issuer -> new Issuer(issuer.getName(), issuer.getCode()))
+                    .sorted(Comparator.comparing(Issuer::getName))
+                    .collect(Collectors.toList()));
+        } else if (countryNumistaCode != null && !countryNumistaCode.isEmpty()) {
+            issuers.addAll(N4JUtil.getInstance().numistaService.issuerService
+                    .findChildrenIssuersByCountryNumistaCodeWithFilterByIssuerName(countryNumistaCode, q).stream()
+                    .map(issuer -> new Issuer(issuer.getName(), issuer.getCode()))
+                    .sorted(Comparator.comparing(Issuer::getName))
+                    .collect(Collectors.toList()));
+        } else if (!q.isEmpty()) {
+            issuers.addAll(N4JUtil.getInstance().numistaService.issuerService
+                    .findIssuersByName("(?i).*" + q.toLowerCase() + ".*").stream()
+                    .map(issuer -> new Issuer(issuer.getName(), issuer.getCode()))
+                    .sorted(Comparator.comparing(Issuer::getName))
+                    .collect(Collectors.toList()));
+        }
+        return ResponseEntity
+                .ok(new ApiResponse<>(issuers, "Issuers fetched successfully", ApiResponse.Status.SUCCESS));
+    }
 
     // @GetMapping(value = "/issuer/filter/country/{eid}")
     // @ResponseBody

@@ -14,19 +14,26 @@ public class CollectibleTypeParser extends NumistaPartParser {
 
             Element collectibleSubtype = page.selectFirst("#collectible_type");
 
-            if (collectibleSubtype == null) return ParseEvent.ERROR;
+            if (collectibleSubtype == null)
+                return ParseEvent.ERROR;
 
-            Element typeElement = collectibleSubtype.getAllElements().stream().filter(element -> !element.text().equals("Unknown") && getAttribute(element, "selected") != null && getAttribute(element, "selected").equals("selected")).findFirst().orElse(null);
+            Element typeElement = collectibleSubtype.getAllElements().stream()
+                    .filter(element -> !element.text().equals("Unknown") && getAttribute(element, "selected") != null
+                            && getAttribute(element, "selected").equals("selected"))
+                    .findFirst().orElse(null);
 
-            if (typeElement == null) return ParseEvent.NOT_CHANGED;
+            if (typeElement == null)
+                return ParseEvent.NOT_CHANGED;
 
             String collectibleTypeCode = getAttribute(typeElement, "value");
 
-            if(nType.getCollectibleType() != null && !collectibleTypeCode.isEmpty() && nType.getCollectibleType().getCode().equals(collectibleTypeCode)){
+            if (nType.getCollectibleType() != null && !collectibleTypeCode.isEmpty()
+                    && nType.getCollectibleType().getCode().equals(collectibleTypeCode)) {
                 return ParseEvent.NOT_CHANGED;
             }
 
-            CollectibleType collectibleType = N4JUtil.getInstance().numistaService.collectibleTypeService.findByCode(collectibleTypeCode);
+            CollectibleType collectibleType = N4JUtil.getInstance().numistaService.collectibleTypeService
+                    .findByCode(collectibleTypeCode);
 
             if (collectibleType == null) {
                 if (!parseAllTypes(collectibleSubtype)) {
@@ -34,7 +41,8 @@ public class CollectibleTypeParser extends NumistaPartParser {
                 }
             }
 
-            collectibleType = N4JUtil.getInstance().numistaService.collectibleTypeService.findByCode(getAttribute(typeElement, "value"));
+            collectibleType = N4JUtil.getInstance().numistaService.collectibleTypeService
+                    .findByCode(getAttribute(typeElement, "value"));
 
             assert collectibleType != null;
 
@@ -59,26 +67,29 @@ public class CollectibleTypeParser extends NumistaPartParser {
         int nbspCountLast = 0;
         for (Element optionElement : elements) {
             if (optionElement.tag().getName().equals("option")) {
-                if (optionElement.text().equals("Unknown")) continue;
+                if (optionElement.text().equals("Unknown"))
+                    continue;
 
                 String optionCode = getAttribute(optionElement, "value");
                 String optionName = optionElement.wholeOwnText();
 
-                if(!optionName.startsWith(" ")){
-                    collectibleTypeParent = N4JUtil.getInstance().numistaService.collectibleTypeService.update(null, optionCode, optionName.replace(" ", ""), null);
+                if (!optionName.startsWith(" ")) {
+                    collectibleTypeParent = N4JUtil.getInstance().numistaService.collectibleTypeService.update(null,
+                            optionCode, optionName.replace(" ", ""), null);
                     collectibleTypeCurrent = collectibleTypeParent;
                     continue;
                 }
 
                 int nbspCount = StringUtils.countMatches(optionName, ' ');
-                if(nbspCount > nbspCountLast){
+                if (nbspCount > nbspCountLast) {
                     collectibleTypeParent = collectibleTypeCurrent;
                 } else if (nbspCount < nbspCountLast) {
                     assert collectibleTypeParent != null;
                     assert collectibleTypeParent.getCollectibleTypeParent() != null;
                     collectibleTypeParent = collectibleTypeParent.getCollectibleTypeParent();
                 }
-                collectibleTypeCurrent = N4JUtil.getInstance().numistaService.collectibleTypeService.update(null, optionCode, optionName.replace(" ", ""), collectibleTypeParent);
+                collectibleTypeCurrent = N4JUtil.getInstance().numistaService.collectibleTypeService.update(null,
+                        optionCode, optionName.replace(" ", ""), collectibleTypeParent);
                 nbspCountLast = nbspCount;
             }
         }

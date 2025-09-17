@@ -159,12 +159,73 @@ public interface NTypeRepository extends AbstractNeo4jRepository<NType> {
             String denominationNid, String issuerCode,
             String subjectNumistaCode, String collectibleTypeCode);
 
-    @Query("MATCH (i:ISSUER {code:$code})<-[ib:ISSUED_BY]-(n:NTYPE)-[nd:DENOMINATED_IN]->(d:DENOMINATION), " +
-            "(n)-[hc:HAS_COLLECTIBLE_TYPE]->(ct:COLLECTIBLE_TYPE)<-[hctc:HAS_COLLECTIBLE_TYPE_CHILD*]-(ctc:COLLECTIBLE_TYPE) "
-            + "WHERE (($collectibleTypeCode IS NULL OR $collectibleTypeCode = '') OR " +
-            "     (EXISTS((n)-[:HAS_COLLECTIBLE_TYPE]->(:COLLECTIBLE_TYPE)<-[:HAS_COLLECTIBLE_TYPE_CHILD*]-(:COLLECTIBLE_TYPE {code:$collectibleTypeCode})))) "
+    /*
+     * Find NTypes by Country's numista code and Collectible Type's code
+     * 
+     * @param numistaCode Country's numista code
+     * 
+     * @param collectibleTypeCode Collectible Type's code
+     * 
+     * @return List of NTypes
+     */
+    @Query("MATCH (c:COUNTRY {numistaCode:$countryNumistaCode})<-[*]-(ci:ISSUER)<-[i:ISSUED_BY]-(n:NTYPE)-[nd:DENOMINATED_IN]->(d:DENOMINATION), (n)-[hc:HAS_COLLECTIBLE_TYPE]->(ct:COLLECTIBLE_TYPE)<-[hctc:HAS_COLLECTIBLE_TYPE_CHILD*]-(ctc:COLLECTIBLE_TYPE) "
+            +
+            "WHERE (($collectibleTypeCode IS NULL OR $collectibleTypeCode = '') OR (EXISTS((n)-[:HAS_COLLECTIBLE_TYPE]->(:COLLECTIBLE_TYPE)<-[:HAS_COLLECTIBLE_TYPE_CHILD*]-(:COLLECTIBLE_TYPE {code:$collectibleTypeCode})))) "
+            +
+            "AND (($currencyNid IS NULL OR $currencyNid = '') OR (EXISTS((n)-[:UNDER_CURRENCY]->(:CURRENCY {nid:$currencyNid})))) "
+            +
+            "OPTIONAL MATCH (n)-[nv:VARIANTS]->(v:VARIANT) OPTIONAL MATCH (v)<-[v_to_item:RELATED_TO_VARIANT]-(item:ITEM) "
+            +
+            "RETURN DISTINCT n,nd,d,hc,ct,hctc,ctc,c,ci,i,collect(nv),collect(v), collect(v_to_item), collect(item) ORDER BY d.numericValue")
+    List<NType> findNTypesByCountryNumistaCodeWithFilterByCollectableTypeByCurrencyNid(String countryNumistaCode,
+            String collectibleTypeCode, String currencyNid);
+
+    /*
+     * Find NTypes by Subject's numista code and Collectible Type's code
+     * 
+     * @param numistaCode Subject's numista code
+     * 
+     * @param collectibleTypeCode Collectible Type's code
+     * 
+     * @return List of NTypes
+     */
+    @Query("MATCH (s:SUBJECT {numistaCode:$subjectNumistaCode})<-[*]-(ib:ISSUER)<-[i:ISSUED_BY]-(n:NTYPE)-[nd:DENOMINATED_IN]->(d:DENOMINATION), (n)-[hc:HAS_COLLECTIBLE_TYPE]->(ct:COLLECTIBLE_TYPE)<-[hctc:HAS_COLLECTIBLE_TYPE_CHILD*]-(ctc:COLLECTIBLE_TYPE) "
+            +
+            "WHERE (($collectibleTypeCode IS NULL OR $collectibleTypeCode = '') OR (EXISTS((n)-[:HAS_COLLECTIBLE_TYPE]->(:COLLECTIBLE_TYPE)<-[:HAS_COLLECTIBLE_TYPE_CHILD*]-(:COLLECTIBLE_TYPE {code:$collectibleTypeCode})))) "
+            +
+            "AND (($currencyNid IS NULL OR $currencyNid = '') OR (EXISTS((n)-[:UNDER_CURRENCY]->(:CURRENCY {nid:$currencyNid})))) "
+            +
+            "RETURN DISTINCT n,nd,d,hc,ct,hctc,ctc,s,ib,i ORDER BY d.numericValue")
+    List<NType> findNTypesBySubjectNumistaCodeWithFilterByCollectableTypeByCurrencyNid(String subjectNumistaCode,
+            String collectibleTypeCode, String currencyNid);
+
+    /*
+     * Find NTypes by Issuer's code and Collectible Type's code
+     * 
+     * @param code Issuer's code
+     * 
+     * @param collectibleTypeCode Collectible Type's code
+     * 
+     * @return List of NTypes
+     */
+    @Query("MATCH (i:ISSUER {code:$issuerCode})<-[ib:ISSUED_BY]-(n:NTYPE)-[nd:DENOMINATED_IN]->(d:DENOMINATION), (n)-[hc:HAS_COLLECTIBLE_TYPE]->(ct:COLLECTIBLE_TYPE)<-[hctc:HAS_COLLECTIBLE_TYPE_CHILD*]-(ctc:COLLECTIBLE_TYPE) "
+            +
+            "WHERE ( ($collectibleTypeCode IS NULL OR $collectibleTypeCode = '') OR (EXISTS((n)-[:HAS_COLLECTIBLE_TYPE]->(:COLLECTIBLE_TYPE)<-[:HAS_COLLECTIBLE_TYPE_CHILD*]-(:COLLECTIBLE_TYPE {code:$collectibleTypeCode})))) "
+            +
+            "AND (($currencyNid IS NULL OR $currencyNid = '') OR (EXISTS((n)-[:UNDER_CURRENCY]->(:CURRENCY {nid:$currencyNid})))) "
             +
             "RETURN DISTINCT n,nd,d,hc,ct,hctc,ctc,ib,i ORDER BY d.numericValue")
-    List<NType> findNTypesByIssuerCodeWithFilter(String code, String collectibleTypeCode);
 
+    List<NType> findNTypesByIssuerCodeWithFilterByCollectableTypeByCurrencyNid(String issuerCode,
+            String collectibleTypeCode, String currencyNid);
+
+    // Statistics
+    @Query("MATCH (c:COUNTRY {numistaCode:$numistaCode})<-[*]-(n:NTYPE)-[:HAS_COLLECTIBLE_TYPE]->(:COLLECTIBLE_TYPE)<-[:HAS_COLLECTIBLE_TYPE_CHILD*]-(ct:COLLECTIBLE_TYPE {code:$collectibleTypeCode}) RETURN count(n)")
+    Integer countNTypesByCountryNumistaCodeAndCollectibleTypeCode(String numistaCode, String collectibleTypeCode);
+
+    @Query("MATCH (c:SUBJECT {numistaCode:$numistaCode})<-[*]-(n:NTYPE)-[:HAS_COLLECTIBLE_TYPE]->(:COLLECTIBLE_TYPE)<-[:HAS_COLLECTIBLE_TYPE_CHILD*]-(ct:COLLECTIBLE_TYPE {code:$collectibleTypeCode}) RETURN count(n)")
+    Integer countNTypesBySubjectNumistaCodeAndCollectibleTypeCode(String numistaCode, String collectibleTypeCode);
+
+    @Query("MATCH (c:ISSUER {code:$code})<-[*]-(n:NTYPE)-[:HAS_COLLECTIBLE_TYPE]->(:COLLECTIBLE_TYPE)<-[:HAS_COLLECTIBLE_TYPE_CHILD*]-(ct:COLLECTIBLE_TYPE {code:$collectibleTypeCode}) RETURN count(n)")
+    Integer countNTypesByIssuerCodeAndCollectibleTypeCode(String code, String collectibleTypeCode);
 }

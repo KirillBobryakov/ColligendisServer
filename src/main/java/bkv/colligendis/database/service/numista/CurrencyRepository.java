@@ -37,6 +37,9 @@ public interface CurrencyRepository extends AbstractNeo4jRepository<Currency> {
     @Query("MATCH (c:COUNTRY {numistaCode: $numistaCode})<-[*]-(n:NTYPE)-[*]->(cur:CURRENCY) RETURN DISTINCT cur.uuid")
     List<String> findCurrenciesUuidsByCountryNumistaCode(String numistaCode);
 
+    @Query("MATCH (c:COUNTRY)<-[*]-(:ISSUER)<-[:ISSUED_BY]-(n:NTYPE)-[:UNDER_CURRENCY]->(cur:CURRENCY) WHERE c.numistaCode=$countryNumistaCode RETURN DISTINCT cur")
+    List<Currency> findCurrenciesByCountryNumistaCode(String countryNumistaCode);
+
     /**
      * Find currencies that have a relationship to a subject with the specified
      * numistaCode, including their denominations
@@ -46,6 +49,9 @@ public interface CurrencyRepository extends AbstractNeo4jRepository<Currency> {
      */
     @Query("MATCH (s:SUBJECT {numistaCode: $numistaCode})<-[*]-(n:NTYPE)-[*]->(cur:CURRENCY) RETURN DISTINCT cur.uuid")
     List<String> findCurrenciesUuidsBySubjectNumistaCode(String numistaCode);
+
+    @Query("MATCH (s:SUBJECT)<-[*]-(:ISSUER)<-[:ISSUED_BY]-(n:NTYPE)-[:UNDER_CURRENCY]->(cur:CURRENCY) WHERE s.numistaCode=$subjectNumistaCode RETURN DISTINCT cur")
+    List<Currency> findCurrenciesBySubjectNumistaCode(String subjectNumistaCode);
 
     /**
      * Find currencies that have a relationship to an issuer with the specified
@@ -57,4 +63,6 @@ public interface CurrencyRepository extends AbstractNeo4jRepository<Currency> {
     @Query("MATCH (i:ISSUER {code: $code})<-[*]-(n:NTYPE)-[*]->(cur:CURRENCY) RETURN DISTINCT cur.uuid")
     List<String> findCurrenciesUuidsByIssuerCode(String code);
 
+    @Query("MATCH (i:ISSUER)<-[:ISSUED_BY]-(n:NTYPE)-[:UNDER_CURRENCY]->(cur:CURRENCY) WHERE i.code=$issuerCode RETURN DISTINCT cur")
+    List<Currency> findCurrenciesByIssuerCode(String issuerCode);
 }

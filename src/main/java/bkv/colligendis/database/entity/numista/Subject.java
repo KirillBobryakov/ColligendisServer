@@ -1,6 +1,5 @@
 package bkv.colligendis.database.entity.numista;
 
-
 import bkv.colligendis.database.entity.AbstractEntity;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
@@ -14,7 +13,7 @@ import java.util.List;
 
 @Node("SUBJECT")
 @Data
-@EqualsAndHashCode(callSuper=true)
+@EqualsAndHashCode(callSuper = true)
 @ToString(callSuper = true, onlyExplicitlyIncluded = true)
 public class Subject extends AbstractEntity {
 
@@ -24,22 +23,19 @@ public class Subject extends AbstractEntity {
     private String numistaCode;
     private String name;
 
-
     private List<String> ruAlternativeNames = new ArrayList<>();
-
 
     @Relationship(value = RELATE_TO_COUNTRY, direction = Relationship.Direction.OUTGOING)
     private Country country;
 
-
     @Relationship(value = PARENT_SUBJECT, direction = Relationship.Direction.OUTGOING)
     private Subject parentSubject;
 
-    // @Relationship(value = Country.CONTAINS_CHILD_SUBJECT, direction = Relationship.Direction.OUTGOING)
-    // private ArrayList<Subject> childSubjects = new ArrayList<>();
+    @Relationship(value = PARENT_SUBJECT, direction = Relationship.Direction.INCOMING)
+    private ArrayList<Subject> childSubjects = new ArrayList<>();
 
-    // @Relationship(value = Country.CONTAINS_ISSUER, direction = Relationship.Direction.OUTGOING)
-    // private ArrayList<Issuer> issuers = new ArrayList<>();
+    @Relationship(value = Issuer.PARENT_SUBJECT, direction = Relationship.Direction.INCOMING)
+    private ArrayList<Issuer> issuers = new ArrayList<>();
 
     public Subject() {
     }

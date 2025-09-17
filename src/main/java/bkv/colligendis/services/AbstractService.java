@@ -66,7 +66,7 @@ public abstract class AbstractService<E extends AbstractEntity, R extends Abstra
         }
 
         // return repository.findEntityByUuid(uuid.toString());
-        return repository.findEntityByUuid(uuid.toString());
+        return repository.findByUuid(uuid.toString());
     }
 
     public List<E> findAll() {

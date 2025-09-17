@@ -1,18 +1,112 @@
-// package bkv.colligendis.rest;
+package bkv.colligendis.rest;
 
-// import bkv.colligendis.database.entity.numista.NType;
-// import bkv.colligendis.utils.N4JUtil;
-// import org.springframework.http.ResponseEntity;
-// import org.springframework.web.bind.annotation.GetMapping;
-// import org.springframework.web.bind.annotation.PathVariable;
-// import org.springframework.web.bind.annotation.ResponseBody;
-// import org.springframework.web.bind.annotation.RestController;
+import java.util.ArrayList;
+import java.util.List;
 
-// import java.util.ArrayList;
-// import java.util.List;
+import org.modelmapper.ModelMapper;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.MediaType;
+import org.springframework.http.ResponseEntity;
+import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.RequestBody;
+import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RestController;
 
-// @RestController
-// public class NTypeRestController {
+import bkv.colligendis.database.entity.numista.CollectibleType;
+import bkv.colligendis.database.entity.numista.NType;
+import bkv.colligendis.rest.catalogue.CatalogueNTypesRequest2;
+import bkv.colligendis.rest.dto.ItemTypeDTO;
+import bkv.colligendis.rest.dto.NTypeDTO;
+import bkv.colligendis.rest.dto.NTypeVariantDTO;
+import bkv.colligendis.utils.N4JUtil;
+
+@RestController
+@RequestMapping("/database/ntype")
+public class NTypeRestController {
+
+    @Autowired
+    private ModelMapper modelMapper;
+
+    @GetMapping(value = "/filtered", consumes = MediaType.APPLICATION_JSON_VALUE, produces = MediaType.APPLICATION_JSON_VALUE)
+    public ResponseEntity<ApiResponse<List<NTypeDTO>>> getCatalogueNTypes2(
+            @RequestBody CatalogueNTypesRequest2 request) {
+
+        List<NTypeDTO> catalogueNTypes = new ArrayList<>();
+        List<NType> nTypesList = new ArrayList<>();
+
+        if (request.getIssuerCode() != null && !request.getIssuerCode().isEmpty()) {
+            if (request.getItemTypes() != null && !request.getItemTypes().isEmpty()) {
+                for (ItemTypeDTO collectableType : request.getItemTypes()) {
+                    nTypesList.addAll(N4JUtil.getInstance().numistaService.nTypeService
+                            .findNTypesByIssuerCodeWithFilterByCollectableTypeByCurrencyNid(request.getIssuerCode(),
+                                    collectableType.getCode(), request.getCurrencyNid()));
+                }
+            } else {
+                nTypesList = N4JUtil.getInstance().numistaService.nTypeService
+                        .findNTypesByIssuerCodeWithFilterByCollectableTypeByCurrencyNid(request.getIssuerCode(), null,
+                                request.getCurrencyNid());
+            }
+        } else if (request.getSubjectNumistaCode() != null && !request.getSubjectNumistaCode().isEmpty()) {
+            if (request.getItemTypes() != null && !request.getItemTypes().isEmpty()) {
+                for (ItemTypeDTO collectableType : request.getItemTypes()) {
+                    nTypesList.addAll(N4JUtil.getInstance().numistaService.nTypeService
+                            .findNTypesBySubjectNumistaCodeWithFilterByCollectableTypeByCurrencyNid(
+                                    request.getSubjectNumistaCode(),
+                                    collectableType.getCode(), request.getCurrencyNid()));
+                }
+            } else {
+                nTypesList = N4JUtil.getInstance().numistaService.nTypeService
+                        .findNTypesBySubjectNumistaCodeWithFilterByCollectableTypeByCurrencyNid(
+                                request.getSubjectNumistaCode(),
+                                null, request.getCurrencyNid());
+            }
+        } else if (request.getCountryNumistaCode() != null && !request.getCountryNumistaCode().isEmpty()) {
+            if (request.getItemTypes() != null && !request.getItemTypes().isEmpty()) {
+                for (ItemTypeDTO collectableType : request.getItemTypes()) {
+                    nTypesList.addAll(N4JUtil.getInstance().numistaService.nTypeService
+                            .findNTypesByCountryNumistaCodeWithFilterByCollectableTypeByCurrencyNid(
+                                    request.getCountryNumistaCode(),
+                                    collectableType.getCode(), request.getCurrencyNid()));
+                }
+            } else {
+                nTypesList = N4JUtil.getInstance().numistaService.nTypeService
+                        .findNTypesByCountryNumistaCodeWithFilterByCollectableTypeByCurrencyNid(
+                                request.getCountryNumistaCode(),
+                                null, request.getCurrencyNid());
+            }
+        }
+
+        nTypesList.sort((n1, n2) -> {
+            return n1.getDenomination().getNumericValue().compareTo(n2.getDenomination().getNumericValue());
+        });
+
+        for (NType nType : nTypesList) {
+            CollectibleType collectibleTypeParent = nType.getCollectibleType();
+            while (collectibleTypeParent.getCollectibleTypeParent() != null) {
+                collectibleTypeParent = collectibleTypeParent.getCollectibleTypeParent();
+            }
+            NTypeDTO catalogueNType = modelMapper.map(nType, NTypeDTO.class);
+            catalogueNType.setTopCollectibleType(collectibleTypeParent.getName());
+
+            List<NTypeVariantDTO> variants = N4JUtil.getInstance().numistaService.variantService
+                    .getVariantsByNTypeNid(nType.getNid());
+
+            variants.forEach(variant -> {
+                Integer itemsCount = N4JUtil.getInstance().numistaService.itemService
+                        .countItemsByVariantNid(variant.getNid());
+                variant.setItemsCount(itemsCount);
+            });
+
+            catalogueNType.setVariants(variants);
+
+            catalogueNTypes.add(catalogueNType);
+        }
+
+        return ResponseEntity.ok(new ApiResponse<>(catalogueNTypes, "N-types fetched successfully",
+                ApiResponse.Status.SUCCESS));
+    }
+
+}
 
 // //
 // // @GetMapping(value = "/ntype/filter/string/{filter}")

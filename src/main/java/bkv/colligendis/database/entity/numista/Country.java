@@ -15,8 +15,8 @@ import java.util.List;
 @EqualsAndHashCode(callSuper = true)
 public class Country extends AbstractEntity {
 
-    public static final String CONTAINS_CHILD_SUBJECT = "CONTAINS_CHILD_SUBJECT";
-    public static final String CONTAINS_ISSUER = "CONTAINS_ISSUER";
+    // public static final String CONTAINS_CHILD_SUBJECT = "CONTAINS_CHILD_SUBJECT";
+    // public static final String CONTAINS_ISSUER = "CONTAINS_ISSUER";
     public static final String PARENT_SUBJECT = "PARENT_SUBJECT";
     /**
      * Only English name of countries. Unique field.
@@ -27,14 +27,13 @@ public class Country extends AbstractEntity {
 
     private List<String> ruAlternativeNames = new ArrayList<>();
 
-    @JsonIgnore
-    @Relationship(type = CONTAINS_CHILD_SUBJECT, direction = Relationship.Direction.OUTGOING)
+    // @JsonIgnore
+    @Relationship(type = Subject.RELATE_TO_COUNTRY, direction = Relationship.Direction.INCOMING)
     private ArrayList<Subject> subjects = new ArrayList<>();
 
-    @JsonIgnore
-    @Relationship(type = CONTAINS_ISSUER, direction = Relationship.Direction.OUTGOING)
+    // @JsonIgnore
+    @Relationship(type = Issuer.RELATE_TO_COUNTRY, direction = Relationship.Direction.INCOMING)
     private ArrayList<Issuer> issuers = new ArrayList<>();
-
 
     @Relationship(value = PARENT_SUBJECT, direction = Relationship.Direction.OUTGOING)
     private Subject parentSubject;
@@ -49,6 +48,18 @@ public class Country extends AbstractEntity {
     public Country(String numistaCode, String name) {
         this.numistaCode = numistaCode;
         this.name = name;
+    }
+
+    public void addRuAlternativeName(String ruAlternativeName) {
+        if (!this.ruAlternativeNames.contains(ruAlternativeName)) {
+            this.ruAlternativeNames.add(ruAlternativeName);
+        }
+    }
+
+    public void removeRuAlternativeName(String ruAlternativeName) {
+        if (this.ruAlternativeNames.contains(ruAlternativeName)) {
+            this.ruAlternativeNames.remove(ruAlternativeName);
+        }
     }
 
 }

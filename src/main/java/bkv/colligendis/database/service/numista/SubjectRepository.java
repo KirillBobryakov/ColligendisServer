@@ -21,8 +21,8 @@ public interface SubjectRepository extends AbstractNeo4jRepository<Subject> {
     @Query("MATCH (s:SUBJECT) WHERE s.name =~ $searchNameRegex OPTIONAL MATCH (s)-[scs:CONTAINS_CHILD_SUBJECT]->(cs:SUBJECT) OPTIONAL MATCH (s)-[si:CONTAINS_ISSUER]->(i:ISSUER) RETURN DISTINCT s, collect(scs), collect(cs), collect(si), collect(i)")
     List<Subject> findByNameContainingIgnoreCase(String searchNameRegex);
 
-    @Query("MATCH (:COUNTRY {eid:$countryEid})-[*1..4]-(s:SUBJECT) return (s)")
-    List<Subject> findByCountryEid(String countryEid);
+    @Query("MATCH (:COUNTRY {numistaCode:$countryNumistaCode})<-[*]-(s:SUBJECT) return (s)")
+    List<Subject> findByCountryNumistaCode(String countryNumistaCode);
 
     @Query("MATCH (s:SUBJECT) WHERE s.name = $name RETURN s")
     Subject findSubjectByName(String name);
@@ -31,6 +31,9 @@ public interface SubjectRepository extends AbstractNeo4jRepository<Subject> {
     // (s)-[r2:PARENT_SUBJECT]->(ps:SUBJECT) WHERE s.numistaCode = $numistaCode
     // RETURN s,r,c,r2,ps")
     Subject findSubjectByNumistaCode(String numistaCode);
+
+    @Query("MATCH (s:SUBJECT) WHERE s.numistaCode = $numistaCode OPTIONAL MATCH (s)<-[pss:PARENT_SUBJECT]-(cs:SUBJECT) OPTIONAL MATCH (s)<-[psi:PARENT_SUBJECT]-(i:ISSUER) RETURN s, collect(pss), collect(cs), collect(psi), collect(i)")
+    Subject findByNumistaCodeWithSubjectsAndIssuers(String numistaCode);
 
     /**
      * Check if subject exists by numista code
@@ -98,5 +101,8 @@ public interface SubjectRepository extends AbstractNeo4jRepository<Subject> {
      */
     @Query("MATCH (c:COUNTRY)<-[*]-(s:SUBJECT) WHERE c.numistaCode=$countryNumistaCode RETURN DISTINCT s ORDER BY s.name")
     List<Subject> findChildrenSubjectsByCountryNumistaCode(String countryNumistaCode);
+
+    @Query("MATCH (s:SUBJECT) WHERE lower(s.name) CONTAINS $nameFilter RETURN s")
+    List<Subject> findByNameFilter(String nameFilter);
 
 }

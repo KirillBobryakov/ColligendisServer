@@ -34,6 +34,9 @@ public class User extends AbstractEntity implements UserDetails {
 
     private String profilePictureUrl;
 
+    private String refreshTokenJti;
+    private Long refreshTokenExpiredAt;
+
     private boolean is_auth;
     private boolean isExpired;
     private boolean isLocked;

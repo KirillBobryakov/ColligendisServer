@@ -12,22 +12,31 @@ public class CollectibleTypeService extends AbstractService<CollectibleType, Typ
         super(repository);
     }
 
-
-
-    public CollectibleType findByCode(String code){
+    public CollectibleType findByCode(String code) {
         return repository.findByCode(code);
     }
 
+    /**
+     * Find a CollectibleType of NType by NType's nid
+     * 
+     * @param nid NType's nid
+     * @return CollectibleType of NType if exists, or null
+     */
+    public CollectibleType findByNTypeNid(String nid) {
+        return repository.findByNTypeNid(nid);
+    }
 
-    public CollectibleType update(CollectibleType collectibleType, String code, String name, CollectibleType collectibleTypeParent){
-        if(collectibleType == null && code != null && !code.isEmpty()){
+    public CollectibleType update(CollectibleType collectibleType, String code, String name,
+            CollectibleType collectibleTypeParent) {
+        if (collectibleType == null && code != null && !code.isEmpty()) {
             collectibleType = repository.findByCode(code);
         }
 
-        if(collectibleType != null){
-            if(name != null && !name.isEmpty()){
-                if(!collectibleType.getName().equals(name)){
-                    DebugUtil.showInfo(CollectibleTypeService.class, "CollectibleType name is changing from " + collectibleType.getName() + " to " + name);
+        if (collectibleType != null) {
+            if (name != null && !name.isEmpty()) {
+                if (!collectibleType.getName().equals(name)) {
+                    DebugUtil.showInfo(CollectibleTypeService.class,
+                            "CollectibleType name is changing from " + collectibleType.getName() + " to " + name);
                 }
                 collectibleType.setName(name);
             }
@@ -36,7 +45,6 @@ public class CollectibleTypeService extends AbstractService<CollectibleType, Typ
 
             return repository.save(collectibleType);
         }
-
 
         return repository.save(new CollectibleType(code, name, collectibleTypeParent));
     }

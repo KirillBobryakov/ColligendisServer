@@ -7,6 +7,7 @@ import org.springframework.stereotype.Service;
 
 import java.util.List;
 import java.util.UUID;
+import java.util.stream.Collectors;
 
 @Service
 public class NTypeService extends AbstractService<NType, NTypeRepository> {
@@ -166,8 +167,53 @@ public class NTypeService extends AbstractService<NType, NTypeRepository> {
                 denominationNid, issuerCode, subjectNumistaCode, collectibleTypeCode);
     }
 
-    public List<NType> findNTypesByIssuerCodeWithFilter(String code, String collectibleTypeCode) {
-        return repository.findNTypesByIssuerCodeWithFilter(code, collectibleTypeCode);
+    /*
+     * Find NTypes by Country's numista code and Collectible Type's code
+     * 
+     * @param numistaCode Country's numista code
+     * 
+     * @param collectibleTypeCode Collectible Type's code
+     * 
+     * @return List of NTypes
+     */
+    public List<NType> findNTypesByCountryNumistaCodeWithFilterByCollectableTypeByCurrencyNid(String countryNumistaCode,
+            String collectibleTypeCode, String currencyNid) {
+        List<NType> nTypes = repository.findNTypesByCountryNumistaCodeWithFilterByCollectableTypeByCurrencyNid(
+                countryNumistaCode,
+                collectibleTypeCode, currencyNid);
+        nTypes = nTypes.stream().distinct().collect(Collectors.toList());
+
+        return nTypes;
+    }
+
+    /*
+     * Find NTypes by Subject's numista code and Collectible Type's code
+     * 
+     * @param numistaCode Subject's numista code
+     * 
+     * @param collectibleTypeCode Collectible Type's code
+     * 
+     * @return List of NTypes
+     */
+    public List<NType> findNTypesBySubjectNumistaCodeWithFilterByCollectableTypeByCurrencyNid(String subjectNumistaCode,
+            String collectibleTypeCode, String currencyNid) {
+        return repository.findNTypesBySubjectNumistaCodeWithFilterByCollectableTypeByCurrencyNid(subjectNumistaCode,
+                collectibleTypeCode, currencyNid);
+    }
+
+    /*
+     * Find NTypes by Issuer's code and Collectible Type's code
+     * 
+     * @param code Issuer's code
+     * 
+     * @param collectibleTypeCode Collectible Type's code
+     * 
+     * @return List of NTypes
+     */
+    public List<NType> findNTypesByIssuerCodeWithFilterByCollectableTypeByCurrencyNid(String issuerCode,
+            String collectibleTypeCode, String currencyNid) {
+        return repository.findNTypesByIssuerCodeWithFilterByCollectableTypeByCurrencyNid(issuerCode,
+                collectibleTypeCode, currencyNid);
     }
 
     /**
@@ -289,4 +335,20 @@ public class NTypeService extends AbstractService<NType, NTypeRepository> {
         return repository.compareTitle(nTypeUuid.toString(), title);
     }
 
+    // Statistics
+    public Integer countNTypesByCountryNumistaCodeAndCollectibleTypeCode(String countryNumistaCode,
+            String collectibleTypeCode) {
+        return repository.countNTypesByCountryNumistaCodeAndCollectibleTypeCode(countryNumistaCode,
+                collectibleTypeCode);
+    }
+
+    public Integer countNTypesBySubjectNumistaCodeAndCollectibleTypeCode(String subjectNumistaCode,
+            String collectibleTypeCode) {
+        return repository.countNTypesBySubjectNumistaCodeAndCollectibleTypeCode(subjectNumistaCode,
+                collectibleTypeCode);
+    }
+
+    public Integer countNTypesByIssuerCodeAndCollectibleTypeCode(String issuerCode, String collectibleTypeCode) {
+        return repository.countNTypesByIssuerCodeAndCollectibleTypeCode(issuerCode, collectibleTypeCode);
+    }
 }

@@ -8,9 +8,7 @@ import bkv.colligendis.utils.numista.PART_TYPE;
 
 import java.util.ArrayList;
 import java.util.List;
-import java.util.stream.Stream;
 
-import org.apache.commons.lang3.stream.Streams;
 import org.jsoup.nodes.Document;
 import org.jsoup.nodes.Element;
 import org.springframework.stereotype.Service;
@@ -34,6 +32,8 @@ public class NumistaAllItemsParser {
             String url = String.format("%s?e=%s&r=&st=%s&cat=y&p=%d", BASE_URL, issuerNumistaCode,
                     collectibleType,
                     page);
+
+            System.err.println(url);
 
             Document document = NumistaPartParser.loadPageByURL(url, false);
 

@@ -2,7 +2,10 @@ package bkv.colligendis.database.service.numista;
 
 import bkv.colligendis.database.entity.numista.Currency;
 import bkv.colligendis.database.entity.numista.Issuer;
+import bkv.colligendis.rest.dto.CurrencyDTO;
 import bkv.colligendis.services.AbstractService;
+
+import org.modelmapper.ModelMapper;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
@@ -11,8 +14,12 @@ import java.util.UUID;
 
 @Service
 public class CurrencyService extends AbstractService<Currency, CurrencyRepository> {
-    public CurrencyService(CurrencyRepository repository) {
+
+    private final ModelMapper modelMapper;
+
+    public CurrencyService(CurrencyRepository repository, ModelMapper modelMapper) {
         super(repository);
+        this.modelMapper = modelMapper;
     }
 
     public void deleteAll() {
@@ -84,13 +91,35 @@ public class CurrencyService extends AbstractService<Currency, CurrencyRepositor
         return currencyUuids.stream().map(uuid -> repository.findByUuid(uuid)).collect(Collectors.toList());
     }
 
+    public List<CurrencyDTO> findCurrenciesDTOByCountryNumistaCode(String countryNumistaCode) {
+        List<Currency> currencies = repository.findCurrenciesByCountryNumistaCode(countryNumistaCode);
+        return currencies.stream()
+                .map(currency -> modelMapper.map(currency, CurrencyDTO.class))
+                .collect(Collectors.toList());
+    }
+
     public List<Currency> findCurrenciesBySubjectNumistaCode(String numistaCode) {
         List<String> currencyUuids = repository.findCurrenciesUuidsBySubjectNumistaCode(numistaCode);
         return currencyUuids.stream().map(uuid -> repository.findByUuid(uuid)).collect(Collectors.toList());
+    }
+
+    public List<CurrencyDTO> findCurrenciesDTOBySubjectNumistaCode(String subjectNumistaCode) {
+        List<Currency> currencies = repository.findCurrenciesBySubjectNumistaCode(subjectNumistaCode);
+        return currencies.stream()
+                .map(currency -> modelMapper.map(currency, CurrencyDTO.class))
+                .collect(Collectors.toList());
     }
 
     public List<Currency> findCurrenciesByIssuerCode(String code) {
         List<String> currencyUuids = repository.findCurrenciesUuidsByIssuerCode(code);
         return currencyUuids.stream().map(uuid -> repository.findByUuid(uuid)).collect(Collectors.toList());
     }
+
+    public List<CurrencyDTO> findCurrenciesDTOByIssuerCode(String code) {
+        List<Currency> currencies = repository.findCurrenciesByIssuerCode(code);
+        return currencies.stream()
+                .map(currency -> modelMapper.map(currency, CurrencyDTO.class))
+                .collect(Collectors.toList());
+    }
+
 }

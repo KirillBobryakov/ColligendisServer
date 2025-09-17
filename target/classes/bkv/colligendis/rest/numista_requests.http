@@ -1,1 +1,48 @@
 http://localhost:8080/catalogue/image/209567/obverse
+###
+http://localhost:8080/market/countries/all
+
+HTTP/1.1 403  - Forbidden
+vary: Origin, Access-Control-Request-Method, Access-Control-Request-Headers
+x-content-type-options: nosniff
+x-xss-protection: 0
+cache-control: no-cache, no-store, max-age=0, must-revalidate
+pragma: no-cache
+expires: 0
+x-frame-options: DENY
+content-length: 0
+date: Thu, 17 Jul 2025 15:11:32 GMT
+connection: close
+###
+http://localhost:8080/market/meshok/lots/bycategory/12851
+
+HTTP/1.1 200  - OK
+x-content-type-options: nosniff
+x-xss-protection: 0
+cache-control: no-cache, no-store, max-age=0, must-revalidate
+pragma: no-cache
+expires: 0
+x-frame-options: DENY
+content-type: application/json
+transfer-encoding: chunked
+date: Thu, 17 Jul 2025 23:36:04 GMT
+connection: close
+###
+http://localhost:8080/market/subjects?countryNumistaCode=germany
+
+
+###
+http://localhost:8080/catalogue/image/6484/obverse
+
+HTTP/1.1 200  - OK
+accept-ranges: bytes
+x-content-type-options: nosniff
+x-xss-protection: 0
+cache-control: no-cache, no-store, max-age=0, must-revalidate
+pragma: no-cache
+expires: 0
+x-frame-options: DENY
+content-type: image/jpeg
+content-length: 243878
+date: Wed, 20 Aug 2025 16:03:44 GMT
+connection: close

@@ -12,6 +12,9 @@ public interface IssuerRepository extends AbstractNeo4jRepository<Issuer> {
 
     List<Issuer> findByCodeOrName(String code, String name);
 
+    @Query("MATCH (n:NTYPE)-[:ISSUED_BY]->(i:ISSUER) WHERE n.nid = $nTypeNid RETURN i")
+    Issuer findByNTypeNid(String nTypeNid);
+
     /**
      * Find issuer's {@code uuid} by {@code  name}.
      * 
@@ -93,8 +96,31 @@ public interface IssuerRepository extends AbstractNeo4jRepository<Issuer> {
     @Query("match (n:ISSUER) WHERE toLower(n.name) =~ $filter OR ANY (altName in n.ruAlternativeNames WHERE toLower(altName) =~ $filter)  RETURN n.code as code, n.name as name LIMIT 5")
     List<CSIItem> findCSItemsByName(String filter);
 
+    @Query("match (n:ISSUER) WHERE toLower(n.name) =~ $filter OR ANY (altName in n.ruAlternativeNames WHERE toLower(altName) =~ $filter) RETURN DISTINCT n LIMIT 50")
+    List<Issuer> findIssuersByName(String filter);
+
     @Query("MATCH (i:ISSUER)<-[*]-(n:NTYPE) WHERE i.code=$numistaCode return count(n)")
     Integer countChildrenNTypes(String numistaCode);
+
+    /**
+     * Find children issuers of a country
+     * 
+     * @param countryNumistaCode Country's numistaCode
+     * @return List of children issuers
+     */
+    @Query("MATCH (c:COUNTRY)<-[*]-(i:ISSUER) WHERE c.numistaCode=$countryNumistaCode RETURN DISTINCT i ORDER BY i.name")
+    List<Issuer> findChildrenIssuersByCountryNumistaCode(String countryNumistaCode);
+
+    /**
+     * Find children issuers of a country
+     * 
+     * @param countryNumistaCode Country's numistaCode
+     * @param filterName         Filter by issuer's name
+     * @return List of children issuers
+     */
+    @Query("MATCH (c:COUNTRY)<-[*]-(i:ISSUER) WHERE c.numistaCode=$countryNumistaCode AND (lower(i.name) CONTAINS $filterName OR ANY (altName in i.ruAlternativeNames WHERE lower(altName) CONTAINS $filterName)) RETURN DISTINCT i ORDER BY i.name")
+    List<Issuer> findChildrenIssuersByCountryNumistaCodeWithFilterByIssuerName(String countryNumistaCode,
+            String filterName);
 
     /**
      * Find children issuers of a country
@@ -106,12 +132,16 @@ public interface IssuerRepository extends AbstractNeo4jRepository<Issuer> {
     List<Issuer> findChildrenIssuersBySubjectNumistaCode(String subjectNumistaCode);
 
     /**
-     * Find children issuers of a country
+     * Find children issuers of a subject
      * 
-     * @param countryNumistaCode Country's numistaCode
+     * @param subjectNumistaCode Subjects's numistaCode
+     * @param filterName         Filter by issuer's name
      * @return List of children issuers
      */
-    @Query("MATCH (c:COUNTRY)<-[*]-(i:ISSUER) WHERE c.numistaCode=$countryNumistaCode RETURN DISTINCT i ORDER BY i.name")
-    List<Issuer> findChildrenIssuersByCountryNumistaCode(String countryNumistaCode);
+    @Query("MATCH (s:SUBJECT)<-[*]-(i:ISSUER) WHERE s.numistaCode=$subjectNumistaCode AND (lower(i.name) CONTAINS $filterName OR ANY (altName in i.ruAlternativeNames WHERE lower(altName) CONTAINS $filterName)) RETURN DISTINCT i ORDER BY i.name")
+    List<Issuer> findChildrenIssuersBySubjectNumistaCodeWithFilterByIssuerName(String subjectNumistaCode,
+            String filterName);
 
+    @Query("MATCH (i:ISSUER) WHERE lower(i.name) CONTAINS $nameFilter RETURN i")
+    List<Issuer> findByNameFilter(String nameFilter);
 }
