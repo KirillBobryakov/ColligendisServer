@@ -6,11 +6,8 @@ import bkv.colligendis.database.entity.numista.CollectibleType;
 import bkv.colligendis.database.entity.numista.Issuer;
 import bkv.colligendis.database.entity.numista.NType;
 import bkv.colligendis.database.entity.numista.NTypePart;
-import bkv.colligendis.utils.meshok.data.Thumbnail;
 import bkv.colligendis.utils.numista.PART_TYPE;
-import net.coobird.thumbnailator.Thumbnailator;
 import net.coobird.thumbnailator.Thumbnails;
-import net.coobird.thumbnailator.resizers.configurations.ScalingMode;
 
 import org.apache.commons.io.FileUtils;
 import org.springframework.core.io.FileSystemResource;
@@ -23,8 +20,6 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.Random;
-
-import javax.imageio.ImageIO;
 
 public class ImageUtil {
 

@@ -1,18 +1,12 @@
 package bkv.colligendis;
 
-import bkv.colligendis.database.service.numista.init_services.CalendarInitializationService;
 import bkv.colligendis.services.MeshokServices;
 import bkv.colligendis.services.NumistaServices;
 import bkv.colligendis.utils.N4JUtil;
-import bkv.colligendis.utils.numista.EditPageParser;
-import bkv.colligendis.utils.numista.parser.NumistaParser;
 import bkv.colligendis.utils.numista.parser.PageParser;
-import bkv.colligendis.utils.DebugUtil;
 
 import java.util.stream.Stream;
 
-import org.apache.logging.log4j.LogManager;
-import org.apache.logging.log4j.Logger;
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
 import org.springframework.security.config.annotation.method.configuration.EnableMethodSecurity;
@@ -21,8 +15,6 @@ import org.springframework.security.config.annotation.method.configuration.Enabl
 @EnableMethodSecurity(prePostEnabled = true)
 // @EnableTransactionManagement
 public class Application {
-
-    private static final Logger logger = LogManager.getLogger(Application.class);
 
     public final NumistaServices numistaServices;
     public final MeshokServices meshokServices;

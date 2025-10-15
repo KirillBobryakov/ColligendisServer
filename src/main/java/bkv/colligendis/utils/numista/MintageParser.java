@@ -4,12 +4,10 @@ import bkv.colligendis.database.entity.features.Year;
 import bkv.colligendis.database.entity.numista.*;
 import bkv.colligendis.utils.DebugUtil;
 import bkv.colligendis.utils.N4JUtil;
-import lombok.Data;
 import org.apache.commons.lang3.StringUtils;
 import org.jsoup.nodes.Element;
 import org.jsoup.select.Elements;
 
-import java.lang.reflect.Array;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;

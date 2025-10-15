@@ -3,7 +3,6 @@ package bkv.colligendis.database.service.numista;
 import bkv.colligendis.database.entity.numista.Mint;
 import bkv.colligendis.services.AbstractService;
 import bkv.colligendis.utils.DebugUtil;
-import bkv.colligendis.utils.numista.parser.init_parsers.NumistaAllMintsParser;
 
 import org.springframework.stereotype.Service;
 

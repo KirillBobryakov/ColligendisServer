@@ -149,7 +149,6 @@ public class RulerParsing extends PartParser {
                 // String testName = " Ferdinand I (1887)";
                 // String testName = " Ferdinand I (1887-date)";
 
-                // TODO: refactor this method with UUIDs
                 Pair<List<UUID>, List<UUID>> periods = parseYearPeriods(fullName);
 
                 rulerService.detachRulesFromYears(rulerUuid);

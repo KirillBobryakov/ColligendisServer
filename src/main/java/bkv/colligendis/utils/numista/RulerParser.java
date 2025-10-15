@@ -1,6 +1,5 @@
 package bkv.colligendis.utils.numista;
 
-import bkv.colligendis.database.entity.features.Year;
 import bkv.colligendis.database.entity.numista.Issuer;
 import bkv.colligendis.database.entity.numista.Ruler;
 import bkv.colligendis.database.entity.numista.RulerGroup;

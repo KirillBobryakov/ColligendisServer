@@ -11,9 +11,6 @@ import org.jsoup.nodes.Element;
 import org.jsoup.select.Elements;
 
 import bkv.colligendis.database.entity.numista.IssuingEntity;
-import bkv.colligendis.database.service.numista.IssuerService;
-import bkv.colligendis.database.service.numista.IssuingEntityService;
-import bkv.colligendis.utils.N4JUtil;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 

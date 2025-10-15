@@ -4,7 +4,6 @@ import java.util.List;
 
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
-import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.web.bind.annotation.DeleteMapping;
@@ -16,21 +15,12 @@ import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
 import bkv.colligendis.database.entity.User;
-import bkv.colligendis.database.service.users.UserService;
 import bkv.colligendis.rest.dto.ItemDAO;
 import bkv.colligendis.utils.N4JUtil;
 
 @RestController
 @RequestMapping("/database/item")
 public class ItemRestController {
-
-    private final AuthenticationManager authenticationManager;
-    private final UserService userService;
-
-    public ItemRestController(AuthenticationManager authenticationManager, UserService userService) {
-        this.authenticationManager = authenticationManager;
-        this.userService = userService;
-    }
 
     /**
      * Get the current authenticated user from Spring Security context

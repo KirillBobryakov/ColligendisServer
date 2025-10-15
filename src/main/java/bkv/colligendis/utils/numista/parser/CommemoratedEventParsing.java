@@ -2,12 +2,7 @@ package bkv.colligendis.utils.numista.parser;
 
 import java.util.UUID;
 
-import org.jsoup.nodes.Document;
-
 import bkv.colligendis.database.entity.numista.CommemoratedEvent;
-import bkv.colligendis.database.service.numista.CommemoratedEventService;
-import bkv.colligendis.database.service.numista.NTypeService;
-import bkv.colligendis.utils.N4JUtil;
 import bkv.colligendis.utils.numista.NumistaPartParser;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
