@@ -3,6 +3,9 @@ package bkv.colligendis.database.service.numista;
 import bkv.colligendis.database.entity.numista.Catalogue;
 import bkv.colligendis.services.AbstractService;
 import bkv.colligendis.utils.DebugUtil;
+
+import java.util.UUID;
+
 import org.springframework.stereotype.Service;
 
 @Service
@@ -11,12 +14,20 @@ public class CatalogueService extends AbstractService<Catalogue, CatalogueReposi
         super(repository);
     }
 
-    public Catalogue findByNid(String nid, String code){
+    // Start: Methods for Numista parsing
+    public UUID findUuidByNid(String nid) {
+        return findUuidByPropertyStringValue(Catalogue.LABEL, "nid", nid);
+    }
+
+    // End: Methods for Numista parsing
+
+    public Catalogue findByNid(String nid, String code) {
         Catalogue catalogue = repository.findByNid(nid);
         if (catalogue != null) {
-            if(!catalogue.getCode().equals(code)){
+            if (!catalogue.getCode().equals(code)) {
                 DebugUtil.showServiceMessage(this, "Trying to find Catalogue with nid=" + nid + " and code=" + code
-                        + ". But there is a Catalogue with the same nid and other code = " + catalogue.getCode() + " in DB already.", DebugUtil.MESSAGE_LEVEL.WARNING);
+                        + ". But there is a Catalogue with the same nid and other code = " + catalogue.getCode()
+                        + " in DB already.", DebugUtil.MESSAGE_LEVEL.WARNING);
 
                 DebugUtil.showWarning(this, "Catalogue.code was updated.");
                 return repository.save(catalogue);
@@ -28,9 +39,9 @@ public class CatalogueService extends AbstractService<Catalogue, CatalogueReposi
         return catalogue;
     }
 
-    public Catalogue create(String nid, String code, String bibliography){
+    public Catalogue create(String nid, String code, String bibliography) {
         Catalogue catalogue = findByNid(nid, code);
-        if(catalogue != null) {
+        if (catalogue != null) {
             catalogue.setBibliography(bibliography);
             return repository.save(catalogue);
         }

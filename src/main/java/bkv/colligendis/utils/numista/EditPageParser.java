@@ -12,6 +12,7 @@ import java.util.function.Consumer;
 import java.util.function.Function;
 import java.util.function.Predicate;
 import java.util.function.UnaryOperator;
+import java.util.stream.Stream;
 
 @Data
 public class EditPageParser {
@@ -29,14 +30,39 @@ public class EditPageParser {
         this.nid = nid;
     }
 
+    public static Consumer<Stream<String>> parse = nids -> {
+        nids.map(nid -> EditPageParser.create.andThen(EditPageParser.loadNumistaPage).apply(nid))
+                .filter(EditPageParser.isEditPageLoaded)
+                .map(editPageParser -> EditPageParser.loadNType
+                        .andThen(EditPageParser.showMetrics)
+                        .andThen(EditPageParser.titleParser)
+                        .andThen(EditPageParser.collectibleTypeParser)
+                        .andThen(EditPageParser.issuerParser)
+                        .andThen(EditPageParser.rulerParser)
+                        .andThen(EditPageParser.issuingEntityParser)
+                        .andThen(EditPageParser.currencyParser)
+                        .andThen(EditPageParser.denominationParser)
+                        .andThen(EditPageParser.commemoratedEventParser)
+                        .andThen(EditPageParser.seriesParser)
+                        .andThen(EditPageParser.demonetizedParser)
+                        .andThen(EditPageParser.referenceNumberParser)
+                        .andThen(EditPageParser.mintageParser)
+                        .andThen(EditPageParser.technicalDataParser)
+                        .andThen(EditPageParser.obverseParser)
+                        .andThen(EditPageParser.reverseParser)
+                        .andThen(EditPageParser.edgeParser)
+                        .andThen(EditPageParser.watermarkParser)
+                        .andThen(EditPageParser.mintsParser)
+                        .andThen(EditPageParser.saveNType)
+                        .apply(editPageParser))
+                .forEach(EditPageParser.finalyInfo);
+    };
+
     public static Function<String, EditPageParser> create = EditPageParser::new;
 
     public static UnaryOperator<EditPageParser> loadNumistaPage = editPageParser -> {
-        // long startParsingTime = System.currentTimeMillis();
         editPageParser.editPage = NumistaPartParser
                 .loadPageByURL(NumistaPartParser.TYPE_PAGE_PREFIX + editPageParser.nid, true);
-        // DebugUtil.showInfo(EditPageParser.class, calcAndShowSpentTimeInfo("Page
-        // loading", startParsingTime));
         return editPageParser;
     };
 
@@ -49,7 +75,6 @@ public class EditPageParser {
     };
 
     public static UnaryOperator<EditPageParser> loadNType = editPageParser -> {
-        long startParsingTime = System.currentTimeMillis();
 
         final NTypeService nTypeService = N4JUtil.getInstance().numistaService.nTypeService;
         final String nid = editPageParser.getNid();
@@ -65,8 +90,6 @@ public class EditPageParser {
             editPageParser.setNType(nTypeService.save(new NType(nid, title)));
         }
 
-        // DebugUtil.showInfo(EditPageParser.class,
-        // calcAndShowSpentTimeInfo("NType loading from database", startParsingTime));
         return editPageParser;
     };
 

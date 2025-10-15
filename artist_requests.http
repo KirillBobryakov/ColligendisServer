@@ -1,0 +1,12 @@
+### Initialize Artists from Numista
+GET http://localhost:8080/database/artist/init
+Content-Type: application/json
+
+###
+
+### Get All Artists
+GET http://localhost:8080/database/artist/all
+Content-Type: application/json
+
+###
+

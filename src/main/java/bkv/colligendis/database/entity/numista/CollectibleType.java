@@ -24,6 +24,8 @@ import org.springframework.data.neo4j.core.schema.Relationship;
 @EqualsAndHashCode(callSuper = true)
 public class CollectibleType extends AbstractEntity {
 
+    public static final String LABEL = "COLLECTIBLE_TYPE";
+
     public static final String COINS_CODE = "147";
     public static final String BANKNOTES_CODE = "148";
     public static final String MEDALS_CODE = "149";

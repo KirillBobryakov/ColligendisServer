@@ -1,8 +1,21 @@
 package bkv.colligendis.database.service.numista;
 
+import bkv.colligendis.database.entity.numista.CatalogueReference;
+import bkv.colligendis.database.entity.numista.CollectibleType;
+import bkv.colligendis.database.entity.numista.CommemoratedEvent;
+import bkv.colligendis.database.entity.numista.Composition;
+import bkv.colligendis.database.entity.numista.Currency;
+import bkv.colligendis.database.entity.numista.Denomination;
+import bkv.colligendis.database.entity.numista.Issuer;
+import bkv.colligendis.database.entity.numista.IssuingEntity;
 import bkv.colligendis.database.entity.numista.NType;
+import bkv.colligendis.database.entity.numista.NTypePart;
+import bkv.colligendis.database.entity.numista.Ruler;
+import bkv.colligendis.database.entity.numista.Series;
+import bkv.colligendis.database.entity.numista.Shape;
+import bkv.colligendis.database.entity.numista.Technique;
 import bkv.colligendis.services.AbstractService;
-import bkv.colligendis.utils.DebugUtil;
+
 import org.springframework.stereotype.Service;
 
 import java.util.List;
@@ -20,6 +33,344 @@ public class NTypeService extends AbstractService<NType, NTypeRepository> {
 
         return repository.findByNid(nid);
     }
+
+    public void setDemonetization(UUID nTypeUuid, String demonetized, String demonetizationYear,
+            String demonetizationMonth, String demonetizationDay) {
+        repository.setDemonetization(nTypeUuid.toString(), demonetized, demonetizationYear, demonetizationMonth,
+                demonetizationDay);
+    }
+
+    // Start: Methods for Numista parsing
+
+    public boolean compareTitle(UUID nTypeUuid, String title) {
+        return comparePropertyValue(nTypeUuid, "title", title, String.class);
+    }
+
+    public boolean setTitle(UUID nTypeUuid, String title) {
+        return setPropertyStringValue(nTypeUuid, "title", title);
+    }
+
+    public void setCollectibleType(UUID nTypeUuid, UUID collectibleTypeUuid) {
+        setSingleOutgoingRelationshipToNode(nTypeUuid, collectibleTypeUuid, NType.HAS_COLLECTIBLE_TYPE,
+                CollectibleType.LABEL);
+    }
+
+    public boolean hasRelationshipToCollectibleType(UUID nTypeUuid, UUID collectibleTypeUuid) {
+        return hasSingleRelationshipToNode(nTypeUuid, collectibleTypeUuid, NType.HAS_COLLECTIBLE_TYPE);
+    }
+
+    public UUID getCollectibleTypeUuid(UUID nTypeUuid) {
+        return getSingleRelatedNodeUUID(nTypeUuid, NType.HAS_COLLECTIBLE_TYPE, CollectibleType.LABEL);
+    }
+
+    public boolean hasRelationshipToIssuer(UUID nTypeUuid, UUID issuerUuid) {
+        return hasSingleRelationshipToNode(nTypeUuid, issuerUuid, NType.ISSUED_BY);
+    }
+
+    public UUID getIssuerUuid(UUID nTypeUuid) {
+        return getSingleRelatedNodeUUID(nTypeUuid, NType.ISSUED_BY, Issuer.LABEL);
+    }
+
+    public void setIssuer(UUID nTypeUuid, UUID issuerUuid) {
+        setSingleOutgoingRelationshipToNode(nTypeUuid, issuerUuid, NType.ISSUED_BY, Issuer.LABEL);
+    }
+
+    public List<UUID> getRulers(UUID nTypeUuid) {
+        return getAllOutgoingRelatedNodesUUIDs(nTypeUuid, NType.DURING_OF_RULER, Ruler.LABEL);
+    }
+
+    public boolean detachRuler(UUID nTypeUuid, UUID rulerUuid) {
+        detachEntityFromAnotherEntityWithRelationshipType(nTypeUuid, rulerUuid, NType.DURING_OF_RULER);
+        return true;
+    }
+
+    public boolean addRuler(UUID nTypeUuid, UUID rulerUuid) {
+        addSingleOutgoingRelationshipToNode(nTypeUuid, rulerUuid, NType.DURING_OF_RULER);
+        return true;
+    }
+
+    public boolean equateRulers(UUID nTypeUuid, List<UUID> matchingRulersUUIDs) {
+        return equateFistListToSecondList(getRulers(nTypeUuid), matchingRulersUUIDs, this::detachRuler, this::addRuler,
+                nTypeUuid);
+    }
+
+    public List<UUID> getIssuingEntities(UUID nTypeUuid) {
+        return getAllOutgoingRelatedNodesUUIDs(nTypeUuid, NType.ISSUED_BY_ISSUING_ENTITY, IssuingEntity.LABEL);
+    }
+
+    public boolean detachIssuingEntity(UUID nTypeUuid, UUID issuingEntityUuid) {
+        detachEntityFromAnotherEntityWithRelationshipType(nTypeUuid, issuingEntityUuid,
+                NType.ISSUED_BY_ISSUING_ENTITY);
+        return true;
+    }
+
+    public boolean addIssuingEntity(UUID nTypeUuid, UUID issuingEntityUuid) {
+        addSingleOutgoingRelationshipToNode(nTypeUuid, issuingEntityUuid, NType.ISSUED_BY_ISSUING_ENTITY);
+        return true;
+    }
+
+    public boolean equateIssuingEntities(UUID nTypeUuid, List<UUID> matchingIssuingEntitiesUUIDs) {
+        return equateFistListToSecondList(getIssuingEntities(nTypeUuid), matchingIssuingEntitiesUUIDs,
+                this::detachIssuingEntity, this::addIssuingEntity, nTypeUuid);
+    }
+
+    public boolean hasRelationshipToCurrency(UUID nTypeUuid, UUID currencyUuid) {
+        return hasSingleRelationshipToNode(nTypeUuid, currencyUuid, NType.REFERS_TO_CURRENCY);
+    }
+
+    public UUID getCurrencyUuid(UUID nTypeUuid) {
+        return getSingleRelatedNodeUUID(nTypeUuid, NType.REFERS_TO_CURRENCY, Currency.LABEL);
+    }
+
+    public void setCurrency(UUID nTypeUuid, UUID currencyUuid) {
+        setSingleOutgoingRelationshipToNode(nTypeUuid, currencyUuid, NType.REFERS_TO_CURRENCY, Currency.LABEL);
+    }
+
+    public boolean hasRelationshipToDenomination(UUID nTypeUuid, UUID denominationUuid) {
+        return hasSingleRelationshipToNode(nTypeUuid, denominationUuid, NType.DENOMINATED_IN);
+    }
+
+    public void setDenomination(UUID nTypeUuid, UUID denominationUuid) {
+        setSingleOutgoingRelationshipToNode(nTypeUuid, denominationUuid, NType.DENOMINATED_IN, Denomination.LABEL);
+    }
+
+    public UUID getDenominationUuid(UUID nTypeUuid) {
+        return getSingleRelatedNodeUUID(nTypeUuid, NType.DENOMINATED_IN, Denomination.LABEL);
+    }
+
+    public boolean hasRelationshipToCommemoratedEvent(UUID nTypeUuid, UUID commemoratedEventUuid) {
+        return hasSingleRelationshipToNode(nTypeUuid, commemoratedEventUuid, NType.COMMEMORATE_FOR);
+    }
+
+    public UUID getCommemoratedEventUuid(UUID nTypeUuid) {
+        return getSingleRelatedNodeUUID(nTypeUuid, NType.COMMEMORATE_FOR, CommemoratedEvent.LABEL);
+    }
+
+    public void detachCommemoratedEvent(UUID nTypeUuid, UUID commemoratedEventUuid) {
+        detachEntityFromAnotherEntityWithRelationshipType(nTypeUuid, commemoratedEventUuid,
+                NType.COMMEMORATE_FOR);
+    }
+
+    public void setCommemoratedEvent(UUID nTypeUuid, UUID commemoratedEventUuid) {
+        setSingleOutgoingRelationshipToNode(nTypeUuid, commemoratedEventUuid, NType.COMMEMORATE_FOR,
+                CommemoratedEvent.LABEL);
+    }
+
+    public boolean hasRelationshipToSeries(UUID nTypeUuid, UUID seriesUuid) {
+        return hasSingleRelationshipToNode(nTypeUuid, seriesUuid, NType.HAS_SERIES);
+    }
+
+    public void setSeries(UUID nTypeUuid, UUID seriesUuid) {
+        setSingleOutgoingRelationshipToNode(nTypeUuid, seriesUuid, NType.HAS_SERIES, Series.LABEL);
+    }
+
+    public UUID getSeriesUuid(UUID nTypeUuid) {
+        return getSingleRelatedNodeUUID(nTypeUuid, NType.HAS_SERIES, Series.LABEL);
+    }
+
+    public boolean compareDemonetized(UUID nTypeUuid, String demonetizedValue) {
+        return comparePropertyValue(nTypeUuid, "demonetized", demonetizedValue, String.class);
+    }
+
+    public void setDemonetized(UUID nTypeUuid, String demonetized) {
+        setPropertyStringValue(nTypeUuid, "demonetized", demonetized);
+    }
+
+    public boolean compareDemonetizationYear(UUID nTypeUuid, String demonetizationYear) {
+        return comparePropertyValue(nTypeUuid, "demonetizationYear", demonetizationYear, String.class);
+    }
+
+    public void setDemonetizationYear(UUID nTypeUuid, String demonetizationYear) {
+        setPropertyStringValue(nTypeUuid, "demonetizationYear", demonetizationYear);
+    }
+
+    public boolean compareDemonetizationMonth(UUID nTypeUuid, String demonetizationMonth) {
+        return comparePropertyValue(nTypeUuid, "demonetizationMonth", demonetizationMonth, String.class);
+    }
+
+    public void setDemonetizationMonth(UUID nTypeUuid, String demonetizationMonth) {
+        setPropertyStringValue(nTypeUuid, "demonetizationMonth", demonetizationMonth);
+    }
+
+    public boolean compareDemonetizationDay(UUID nTypeUuid, String demonetizationDay) {
+        return comparePropertyValue(nTypeUuid, "demonetizationDay", demonetizationDay, String.class);
+    }
+
+    public void setDemonetizationDay(UUID nTypeUuid, String demonetizationDay) {
+        setPropertyStringValue(nTypeUuid, "demonetizationDay", demonetizationDay);
+    }
+
+    public boolean compareYearIssueDate(UUID nTypeUuid, String yearIssueDate) {
+        return comparePropertyValue(nTypeUuid, "yearIssueDate", yearIssueDate, String.class);
+    }
+
+    public void setYearIssueDate(UUID nTypeUuid, String yearIssueDate) {
+        setPropertyStringValue(nTypeUuid, "yearIssueDate", yearIssueDate);
+    }
+
+    public boolean compareMonthIssueDate(UUID nTypeUuid, String monthIssueDate) {
+        return comparePropertyValue(nTypeUuid, "monthIssueDate", monthIssueDate, String.class);
+    }
+
+    public void setMonthIssueDate(UUID nTypeUuid, String monthIssueDate) {
+        setPropertyStringValue(nTypeUuid, "monthIssueDate", monthIssueDate);
+    }
+
+    public boolean compareDayIssueDate(UUID nTypeUuid, String dayIssueDate) {
+        return comparePropertyValue(nTypeUuid, "dayIssueDate", dayIssueDate, String.class);
+    }
+
+    public void setDayIssueDate(UUID nTypeUuid, String dayIssueDate) {
+        setPropertyStringValue(nTypeUuid, "dayIssueDate", dayIssueDate);
+    }
+
+    public boolean equateCatalogueReferences(UUID nTypeUuid, List<UUID> matchingCatalogueReferencesUUIDs) {
+        return equateFistListToSecondList(getCatalogueReferences(nTypeUuid), matchingCatalogueReferencesUUIDs,
+                this::detachCatalogueReference, this::addCatalogueReference, nTypeUuid);
+    }
+
+    public List<UUID> getCatalogueReferences(UUID nTypeUuid) {
+        return getAllOutgoingRelatedNodesUUIDs(nTypeUuid, NType.HAS_REFERENCE, CatalogueReference.LABEL);
+    }
+
+    public boolean detachCatalogueReference(UUID nTypeUuid, UUID catalogueReferenceUuid) {
+        detachEntityFromAnotherEntityWithRelationshipType(nTypeUuid, catalogueReferenceUuid, NType.HAS_REFERENCE);
+        return true;
+    }
+
+    public boolean addCatalogueReference(UUID nTypeUuid, UUID catalogueReferenceUuid) {
+        addSingleOutgoingRelationshipToNode(nTypeUuid, catalogueReferenceUuid, NType.HAS_REFERENCE);
+        return true;
+    }
+
+    public void addVariant(UUID nTypeUuid, UUID variantUuid) {
+        addSingleOutgoingRelationshipToNode(nTypeUuid, variantUuid, NType.VARIANTS);
+    }
+
+    public UUID getCompositionUuid(UUID nTypeUuid) {
+        return getSingleRelatedNodeUUID(nTypeUuid, NType.HAS_COMPOSITION, Composition.LABEL);
+    }
+
+    public void setComposition(UUID nTypeUuid, UUID compositionUuid) {
+        setSingleOutgoingRelationshipToNode(nTypeUuid, compositionUuid, NType.HAS_COMPOSITION, Composition.LABEL);
+    }
+
+    public UUID getShapeUuid(UUID nTypeUuid) {
+        return getSingleRelatedNodeUUID(nTypeUuid, NType.HAS_SHAPE, Shape.LABEL);
+    }
+
+    public void setShape(UUID nTypeUuid, UUID shapeUuid) {
+        setSingleOutgoingRelationshipToNode(nTypeUuid, shapeUuid, NType.HAS_SHAPE, Shape.LABEL);
+    }
+
+    public boolean compareShapeAdditionalDetails(UUID nTypeUuid, String shapeAdditionalDetails) {
+        return comparePropertyValue(nTypeUuid, "shapeAdditionalDetails", shapeAdditionalDetails, String.class);
+    }
+
+    public boolean setShapeAdditionalDetails(UUID nTypeUuid, String shapeAdditionalDetails) {
+        return setPropertyStringValue(nTypeUuid, "shapeAdditionalDetails", shapeAdditionalDetails);
+    }
+
+    public boolean compareWeight(UUID nTypeUuid, Float weight) {
+        return comparePropertyValue(nTypeUuid, "weight", weight, Float.class);
+    }
+
+    public boolean setWeight(UUID nTypeUuid, Float weight) {
+        return setPropertyFloatValue(nTypeUuid, "weight", weight);
+    }
+
+    public boolean compareSize(UUID nTypeUuid, Float size) {
+        return comparePropertyValue(nTypeUuid, "size", size, Float.class);
+    }
+
+    public boolean setSize(UUID nTypeUuid, Float size) {
+        return setPropertyFloatValue(nTypeUuid, "size", size);
+    }
+
+    public boolean compareSize2(UUID nTypeUuid, Float size2) {
+        return comparePropertyValue(nTypeUuid, "size2", size2, Float.class);
+    }
+
+    public boolean setSize2(UUID nTypeUuid, Float size2) {
+        return setPropertyFloatValue(nTypeUuid, "size2", size2);
+    }
+
+    public boolean compareThickness(UUID nTypeUuid, Float thickness) {
+        return comparePropertyValue(nTypeUuid, "thickness", thickness, Float.class);
+    }
+
+    public boolean setThickness(UUID nTypeUuid, Float thickness) {
+        return setPropertyFloatValue(nTypeUuid, "thickness", thickness);
+    }
+
+    public List<UUID> getTechniques(UUID nTypeUuid) {
+        return getAllOutgoingRelatedNodesUUIDs(nTypeUuid, NType.WITH_TECHNIQUE, Technique.LABEL);
+    }
+
+    public boolean detachTechnique(UUID nTypeUuid, UUID techniqueUuid) {
+        detachEntityFromAnotherEntityWithRelationshipType(nTypeUuid, techniqueUuid, NType.WITH_TECHNIQUE);
+        return true;
+    }
+
+    public boolean addTechnique(UUID nTypeUuid, UUID techniqueUuid) {
+        addSingleOutgoingRelationshipToNode(nTypeUuid, techniqueUuid, NType.WITH_TECHNIQUE);
+        return true;
+    }
+
+    public void equateTechniques(UUID nTypeUuid, List<UUID> matchingTechniqueUuids) {
+        equateFistListToSecondList(getTechniques(nTypeUuid), matchingTechniqueUuids, this::detachTechnique,
+                this::addTechnique, nTypeUuid);
+    }
+
+    public boolean compareTechniqueAdditionalDetails(UUID nTypeUuid, String techniqueAdditionalDetails) {
+        return comparePropertyValue(nTypeUuid, "techniqueAdditionalDetails", techniqueAdditionalDetails, String.class);
+    }
+
+    public boolean setTechniqueAdditionalDetails(UUID nTypeUuid, String techniqueAdditionalDetails) {
+        return setPropertyStringValue(nTypeUuid, "techniqueAdditionalDetails", techniqueAdditionalDetails);
+    }
+
+    public boolean compareAlignment(UUID nTypeUuid, String alignment) {
+        return comparePropertyValue(nTypeUuid, "alignment", alignment, String.class);
+    }
+
+    public boolean setAlignment(UUID nTypeUuid, String alignment) {
+        return setPropertyStringValue(nTypeUuid, "alignment", alignment);
+    }
+
+    public UUID getObverseUuid(UUID nTypeUuid) {
+        return getSingleRelatedNodeUUID(nTypeUuid, NType.HAS_OBVERSE, NTypePart.LABEL);
+    }
+
+    public void setObverse(UUID nTypeUuid, UUID obverseUuid) {
+        setSingleOutgoingRelationshipToNode(nTypeUuid, obverseUuid, NType.HAS_OBVERSE, NTypePart.LABEL);
+    }
+
+    public UUID getReverseUuid(UUID nTypeUuid) {
+        return getSingleRelatedNodeUUID(nTypeUuid, NType.HAS_REVERSE, NTypePart.LABEL);
+    }
+
+    public void setReverse(UUID nTypeUuid, UUID reverseUuid) {
+        setSingleOutgoingRelationshipToNode(nTypeUuid, reverseUuid, NType.HAS_REVERSE, NTypePart.LABEL);
+    }
+
+    public UUID getEdgeUuid(UUID nTypeUuid) {
+        return getSingleRelatedNodeUUID(nTypeUuid, NType.HAS_EDGE, NTypePart.LABEL);
+    }
+
+    public void setEdge(UUID nTypeUuid, UUID edgeUuid) {
+        setSingleOutgoingRelationshipToNode(nTypeUuid, edgeUuid, NType.HAS_EDGE, NTypePart.LABEL);
+    }
+
+    public UUID getWatermarkUuid(UUID nTypeUuid) {
+        return getSingleRelatedNodeUUID(nTypeUuid, NType.HAS_WATERMARK, NTypePart.LABEL);
+    }
+
+    public void setWatermark(UUID nTypeUuid, UUID watermarkUuid) {
+        setSingleOutgoingRelationshipToNode(nTypeUuid, watermarkUuid, NType.HAS_WATERMARK, NTypePart.LABEL);
+    }
+
+    // End: Methods for Numista parsing
 
     /**
      * Find a NType's uuid by {@code nid}
@@ -40,58 +391,6 @@ public class NTypeService extends AbstractService<NType, NTypeRepository> {
 
     public boolean existsByNid(String nid) {
         return Boolean.TRUE.equals(repository.existsByNid(nid));
-    }
-
-    /**
-     * Try to find NType by unique field {@code nid}.
-     * After find a NType, update a title and connected Issuer on {@code title} and
-     * {@code issuerUuid}
-     * Can't find NType by nid in database, create new one with {@code title} and
-     * relationship (:NTYPE)-[:ISSUED_BY]->(:ISSUER)
-     *
-     * @param nid        NType's nid
-     * @param title      new field NType's title
-     * @param issuerUuid related Issuer's uuid
-     * @return
-     */
-    public UUID findNTypeUuidByTitleOrCreate(String nid, String title, UUID issuerUuid) {
-        UUID nTypeUuid = findNTypeUuidByNid(nid);
-        if (nTypeUuid == null) { // There is no NType with nid in Database. Create new.
-            nTypeUuid = repository.save(new NType(nid, title)).getUuid();
-            if (nTypeUuid == null) {
-                DebugUtil.showError(this, "Can't create new NType with title= " + title + ".");
-                return null;
-            }
-            DebugUtil.showInfo(this, "New NType with title= " + title + " was created.");
-            setIssuedBy(nTypeUuid, issuerUuid);
-        } else { // Has NType in the database
-
-            if (!compareTitle(nTypeUuid, title)) { // set new title
-                DebugUtil.showError(this, "NType with nid: " + nid + " has title: "
-                        + getPropertyStringValue(nTypeUuid, "title") + " then new title: " + title);
-                setPropertyStringValue(nTypeUuid, "title", title);
-            }
-
-            if (repository.hasAnyRelationshipWithType(nTypeUuid.toString(), NType.ISSUED_BY)) { // has a relationship to
-                                                                                                // any Issuer
-                if (!hasIssuedBy(nTypeUuid, issuerUuid)) { // connect with new Issuer with issuerUuid
-                    DebugUtil.showWarning(this,
-                            "NType with nid " + nid + " has issue "
-                                    + getPropertyStringValue(getNTypeIssuerUuid(nTypeUuid), "name") + ". " +
-                                    "New Issuer is " + getPropertyStringValue(issuerUuid, "name"));
-                    detachIssuer(nTypeUuid);
-                    setIssuedBy(nTypeUuid, issuerUuid);
-                }
-            } else { // create relationship to Issuer with issuerUuid
-                DebugUtil.showWarning(this,
-                        "NType with nid " + nid + " new Issuer is " + getPropertyStringValue(issuerUuid, "name"));
-                setIssuedBy(nTypeUuid, issuerUuid);
-            }
-        }
-
-        setActual(nTypeUuid);
-
-        return nTypeUuid;
     }
 
     /**
@@ -119,22 +418,6 @@ public class NTypeService extends AbstractService<NType, NTypeRepository> {
      */
     public List<String> findNotActualNTypeNidList() {
         return repository.findNTypeNidListByIsActual(false);
-    }
-
-    /**
-     * Find an Issuer's uuid with relationship to NType
-     * (n:NTYPE)-[:ISSUED_BY]->(i:ISSUER)
-     *
-     * @param nTypeUuid NType's uuid
-     * @return Issuer's uuid
-     */
-    public UUID getNTypeIssuerUuid(UUID nTypeUuid) {
-        String uuid = repository.getNTypeIssuerUuid(nTypeUuid.toString());
-        return uuid != null ? UUID.fromString(uuid) : null;
-    }
-
-    public void detachIssuer(UUID nTypeUuid) {
-        detachEntityFromAnotherEntityWithRelationshipType(nTypeUuid, getNTypeIssuerUuid(nTypeUuid), NType.ISSUED_BY);
     }
 
     // public List<NType> findByTitleFilter(String filter){
@@ -236,103 +519,6 @@ public class NTypeService extends AbstractService<NType, NTypeRepository> {
 
     public List<NType> findByTitleFilterAndIssuerEidAndYear(String filter, String issuerEid, int year) {
         return repository.findByTitleFilterAndIssuerEidAndYear("(?i).*" + filter + ".*", issuerEid, year);
-    }
-
-    /**
-     * If there is no a relationship between NTYPE (with UUID $nTypeUuid) and
-     * CATEGORY (with UUID $categoryUuid), then create one with a label -
-     * UNDER_CATEGORY.
-     *
-     * @param nTypeUuid    NTYPE's UUID
-     * @param categoryUuid CATEGORY's UUID
-     * @return {@code true} If a relationship was presented, or was created;
-     *         {@code false} There was not a relationship, and it was not created
-     */
-    public Boolean setUnderCategory(UUID nTypeUuid, UUID categoryUuid) {
-        return repository.createSingleRelationshipToNode(nTypeUuid.toString(), categoryUuid.toString(),
-                NType.UNDER_CATEGORY);
-    }
-
-    /**
-     * This method can be use for creating relationship to an Issuer and to an
-     * IssuingEntity.
-     * <p>
-     * For Issuer: (:NTYPE)-[:ISSUED_BY]->(:ISSUER)
-     * If there is no a relationship between NTYPE (with UUID $nTypeUuid) and ISSUER
-     * (with UUID $issuerUuid), then create one with a label - ISSUED_BY.
-     * For IssuingEntity: (:NTYPE)-[:ISSUED_BY]->(:ISSUING_ENTITY)
-     * If there is no a relationship between NTYPE (with UUID $nTypeUuid) and
-     * ISSUING_ENTITY (with UUID $issuerUuid), then create one with a label -
-     * ISSUED_BY.
-     *
-     * @param nTypeUuid  NTYPE's UUID
-     * @param issuerUuid ISSUER's UUID, or ISSUING_ENTITY's UUID
-     * @return {@code true} If a relationship was presented, or was created;
-     *         {@code false} There was not a relationship, and it was not created
-     */
-    public Boolean setIssuedBy(UUID nTypeUuid, UUID issuerUuid) {
-        return repository.createSingleRelationshipToNode(nTypeUuid.toString(), issuerUuid.toString(), NType.ISSUED_BY);
-    }
-
-    /**
-     * Check is the relationship to an Issuer and to an IssuingEntity exists.
-     * <p>
-     * For Issuer: (:NTYPE)-[:ISSUED_BY]->(:ISSUER)
-     * Is there a relationship between NTYPE (with UUID $nTypeUuid) and ISSUER (with
-     * UUID $issuerUuid).
-     * For IssuingEntity: (:NTYPE)-[:ISSUED_BY]->(:ISSUING_ENTITY)
-     * Is there a relationship between NTYPE (with UUID $nTypeUuid) and
-     * ISSUING_ENTITY (with UUID $issuerUuid).
-     *
-     * @param nTypeUuid  NTYPE's UUID
-     * @param issuerUuid ISSUER's UUID, or ISSUING_ENTITY's UUID
-     * @return {@code true} If a relationship is exists, or false is doesn't.
-     */
-    public Boolean hasIssuedBy(UUID nTypeUuid, UUID issuerUuid) {
-        return repository.hasSingleRelationshipToNode(nTypeUuid.toString(), issuerUuid.toString(), NType.ISSUED_BY);
-    }
-
-    /**
-     * This method can be use for creating relationship to an Denomination.
-     * <p>
-     * If there is no a relationship between NTYPE (with UUID nTypeUuid) and
-     * DENOMINATION (with UUID denominationUuid), then create one with a label -
-     * DENOMINATED_IN.
-     *
-     * @param nTypeUuid        NTYPE's UUID
-     * @param denominationUuid DENOMINATION's UUID
-     * @return {@code true} If a relationship was presented, or was created;
-     *         {@code false} There was not a relationship, and it was not created
-     */
-    public Boolean setDenominatedIn(UUID nTypeUuid, UUID denominationUuid) {
-        return repository.createSingleRelationshipToNode(nTypeUuid.toString(), denominationUuid.toString(),
-                NType.DENOMINATED_IN);
-    }
-
-    /**
-     * If there is no a relationship between NTYPE (with UUID $nTypeUuid) and RULER
-     * (with UUID $rulerUuid), then create one with a label - DURING_OF_RULER.
-     *
-     * @param nTypeUuid NTYPE's UUID
-     * @param rulerUuid RULER's UUID
-     * @return {@code true} If a relationship was presented, or was created;
-     *         {@code false} There was not a relationship, and it was not created
-     */
-    public Boolean setDuringOfRuler(UUID nTypeUuid, UUID rulerUuid) {
-        return repository.createSingleRelationshipToNode(nTypeUuid.toString(), rulerUuid.toString(),
-                NType.DURING_OF_RULER);
-    }
-
-    /**
-     * Because of nType's title field is a unique field, this method helps to check
-     * some {@code title} with nType's title filed.
-     *
-     * @param nTypeUuid NTYPE's UUID
-     * @param title     comparing with
-     * @return {@code true} equals, and {@code false} if not equal
-     */
-    public Boolean compareTitle(UUID nTypeUuid, String title) {
-        return repository.compareTitle(nTypeUuid.toString(), title);
     }
 
     // Statistics

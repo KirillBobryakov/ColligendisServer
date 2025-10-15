@@ -3,6 +3,9 @@ package bkv.colligendis.database.service.numista;
 import bkv.colligendis.database.entity.numista.CommemoratedEvent;
 import bkv.colligendis.services.AbstractService;
 import bkv.colligendis.utils.DebugUtil;
+
+import java.util.UUID;
+
 import org.springframework.stereotype.Service;
 
 @Service
@@ -12,18 +15,23 @@ public class CommemoratedEventService extends AbstractService<CommemoratedEvent,
         super(repository);
     }
 
+    // Start: Methods for Numista parsing
+    public UUID findUuidByName(String name) {
+        return findUuidByPropertyStringValue(CommemoratedEvent.LABEL, "name", name);
+    }
 
-    public CommemoratedEvent findByNameOrCreate(String name){
+    // End: Methods for Numista parsing
+
+    public CommemoratedEvent findByNameOrCreate(String name) {
         CommemoratedEvent commemoratedEvent = repository.findByName(name);
-        if(commemoratedEvent == null){
+        if (commemoratedEvent == null) {
             return repository.save(new CommemoratedEvent(name));
         }
         return commemoratedEvent;
     }
 
-
-    public CommemoratedEvent update(CommemoratedEvent commemoratedEvent, String name){
-        if(commemoratedEvent == null || !commemoratedEvent.getName().equals(name)) {
+    public CommemoratedEvent update(CommemoratedEvent commemoratedEvent, String name) {
+        if (commemoratedEvent == null || !commemoratedEvent.getName().equals(name)) {
             commemoratedEvent = repository.findByName(name);
         }
         if (commemoratedEvent == null) {
@@ -32,6 +40,5 @@ public class CommemoratedEventService extends AbstractService<CommemoratedEvent,
         }
         return commemoratedEvent;
     }
-
 
 }

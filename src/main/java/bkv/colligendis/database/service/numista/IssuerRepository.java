@@ -10,10 +10,17 @@ import java.util.List;
 
 public interface IssuerRepository extends AbstractNeo4jRepository<Issuer> {
 
+    // Start: Methods for Numista parsing
+
+    // End: Methods for Numista parsing
+
     List<Issuer> findByCodeOrName(String code, String name);
 
     @Query("MATCH (n:NTYPE)-[:ISSUED_BY]->(i:ISSUER) WHERE n.nid = $nTypeNid RETURN i")
     Issuer findByNTypeNid(String nTypeNid);
+
+    @Query("MATCH (n:NTYPE {uuid:$nTypeUuid})-[:ISSUED_BY]->(i:ISSUER) RETURN i.name AS name, i.code AS code")
+    IssuerNameAndCodeProjection getIssuerNameAndCode(String nTypeUuid);
 
     /**
      * Find issuer's {@code uuid} by {@code  name}.

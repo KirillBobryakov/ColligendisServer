@@ -3,6 +3,9 @@ package bkv.colligendis.database.service.numista;
 import bkv.colligendis.database.entity.numista.CollectibleType;
 import bkv.colligendis.services.AbstractService;
 import bkv.colligendis.utils.DebugUtil;
+
+import java.util.UUID;
+
 import org.springframework.stereotype.Service;
 
 @Service
@@ -11,6 +14,23 @@ public class CollectibleTypeService extends AbstractService<CollectibleType, Typ
     public CollectibleTypeService(TypeRepository repository) {
         super(repository);
     }
+
+    // Start: Methods for Numista parsing
+
+    public UUID findUuidByCode(String code) {
+        return findUuidByPropertyStringValue(CollectibleType.LABEL, "code", code);
+    }
+
+    public String getCode(UUID uuid) {
+        return getPropertyValue(uuid, "code", String.class);
+    }
+
+    public UUID findTopCollectibleTypeUuid(UUID uuid) {
+        String topCollectibleTypeUuid = repository.findTopCollectibleTypeUuid(uuid.toString());
+        return topCollectibleTypeUuid != null ? UUID.fromString(topCollectibleTypeUuid) : null;
+    }
+
+    // End: Methods for Numista parsing
 
     public CollectibleType findByCode(String code) {
         return repository.findByCode(code);

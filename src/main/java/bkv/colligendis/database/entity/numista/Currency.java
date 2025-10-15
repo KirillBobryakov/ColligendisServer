@@ -44,9 +44,9 @@ import java.util.ArrayList;
 @Data
 @EqualsAndHashCode(callSuper = true)
 public class Currency extends AbstractEntity {
+    public static final String LABEL = "CURRENCY";
 
-    // public static final String HAS_DENOMINATION = "HAS_DENOMINATION";
-    public static final String CIRCULATE_DURING = "CIRCULATE_DURING";
+    public static final String CIRCULATE_WHEN_BEEN = "CIRCULATE_WHEN_BEEN";
 
     public static final String CIRCULATED_FROM = "CIRCULATED_FROM";
     public static final String CIRCULATED_TILL = "CIRCULATED_TILL";
@@ -63,7 +63,7 @@ public class Currency extends AbstractEntity {
      */
     private String kind;
 
-    @Relationship(type = Issuer.CONTAINS_CURRENCY, direction = Relationship.Direction.INCOMING)
+    @Relationship(type = CIRCULATE_WHEN_BEEN, direction = Relationship.Direction.OUTGOING)
     private Issuer issuer;
 
     @Relationship(type = CIRCULATED_FROM, direction = Relationship.Direction.OUTGOING)
@@ -82,8 +82,8 @@ public class Currency extends AbstractEntity {
     public Currency() {
     }
 
-    public Currency(String name) {
-        this.name = name;
+    public Currency(String nid) {
+        this.nid = nid;
     }
 
     public Currency(String nid, String fullName) {

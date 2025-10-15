@@ -1,6 +1,5 @@
 package bkv.colligendis.database.entity.numista;
 
-
 import bkv.colligendis.database.entity.AbstractEntity;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
@@ -40,12 +39,13 @@ import java.util.List;
  */
 @Node("ISSUER")
 @Data
-@EqualsAndHashCode(callSuper=true)
+@EqualsAndHashCode(callSuper = true)
 @ToString(callSuper = true, onlyExplicitlyIncluded = true)
 public class Issuer extends AbstractEntity {
 
+    public static final String LABEL = "ISSUER";
+
     public static final String CONTAINS_ISSUING_ENTITY = "CONTAINS_ISSUING_ENTITY";
-    public static final String CONTAINS_RULER = "CONTAINS_RULER";
     public static final String CONTAINS_CURRENCY = "CONTAINS_CURRENCY";
 
     public static final String PARENT_SUBJECT = "PARENT_SUBJECT";
@@ -70,25 +70,12 @@ public class Issuer extends AbstractEntity {
     @Relationship(value = RELATE_TO_COUNTRY, direction = Relationship.Direction.OUTGOING)
     private Country country;
 
-//    @Relationship(type = NType.ISSUED_BY, direction = Relationship.Direction.INCOMING)
-//    private List<NType> nTypes = new ArrayList<>();
-
-//    @Relationship(type = CONTAINS_ISSUING_ENTITY, direction = Relationship.Direction.OUTGOING)
-//    private List<IssuingEntity> issuingEntities = new ArrayList<>();
-
-//    @Relationship(type = CONTAINS_CURRENCY, direction = Relationship.Direction.OUTGOING)
-//    private List<Currency> currencies = new ArrayList<>();
-
-//    @Relationship(type = CONTAINS_RULER, direction = Relationship.Direction.OUTGOING)
-//    private List<Ruler> rulers = new ArrayList<>();
-
     public Issuer() {
     }
 
     public Issuer(String name) {
         this.name = name;
     }
-
 
     public Issuer(String code, String name) {
         this.code = code;

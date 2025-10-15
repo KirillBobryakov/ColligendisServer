@@ -8,11 +8,19 @@ import java.util.List;
 
 public interface RulerRepository extends AbstractNeo4jRepository<Ruler> {
 
+    // Start: Methods for Numista parsing
+
+    @Query("MATCH (n:RULER {nid:$nid}) RETURN n.uuid")
+    String findRulerUuidByNid(String nid);
+
+    // End: Methods for Numista parsing
+
     /**
      * Find ruler's {@code eid} by {@code  name}.
      *
      * @param name Ruler's name
-     * @return If Ruler with {@code name} exists, then return ruler's eid like String, or return NULL
+     * @return If Ruler with {@code name} exists, then return ruler's eid like
+     *         String, or return NULL
      */
     @Query("MATCH (n:RULER) WHERE n.name = $name RETURN n.eid")
     String findByName(String name);
@@ -25,9 +33,9 @@ public interface RulerRepository extends AbstractNeo4jRepository<Ruler> {
      */
     Ruler findByNid(String nid);
 
-
     /**
-     * Check is a Ruler is actual. Status Actual can be used for update Rulers from Numista and keep them up to date.
+     * Check is a Ruler is actual. Status Actual can be used for update Rulers from
+     * Numista and keep them up to date.
      *
      * @param uuid Ruler's UUID
      * @return actual status
@@ -55,7 +63,6 @@ public interface RulerRepository extends AbstractNeo4jRepository<Ruler> {
     @Query("MATCH (r:RULER)-[rel:DURING_PERIOD]->(:PERIOD)-[:TILL]->(y:YEAR) WHERE r.uuid = $rulerUuid AND y.uuid = $yearUuid RETURN count(rel) > 0")
     Boolean hasRulerPeriodEndsTillYear(String rulerUuid, String yearUuid);
 
-
     /**
      * Get Ruler's Name by UUID
      *
@@ -64,7 +71,6 @@ public interface RulerRepository extends AbstractNeo4jRepository<Ruler> {
      */
     @Query("MATCH (r:RULER) WHERE r.uuid = $rulerUuid RETURN r.name")
     String getRulerNameByUuid(String rulerUuid);
-
 
     /**
      * Create relationship [:DURING_PERIOD] from Ruler to the Period
@@ -75,7 +81,6 @@ public interface RulerRepository extends AbstractNeo4jRepository<Ruler> {
      */
     @Query("MATCH (r:RULER), (p:PERIOD) WHERE r.uuid = $rulerUuid AND p.uuid = $periodUuid CREATE (r)-[rel:DURING_PERIOD]->(p) RETURN count(rel) > 0")
     public Boolean setRulerDuringPeriod(String rulerUuid, String periodUuid);
-
 
     public List<Ruler> findByIssuerCode(String issuerCode);
 

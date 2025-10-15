@@ -1,0 +1,12 @@
+### Initialize all mints from Numista
+GET http://localhost:8080/database/mint/init
+Accept: application/json
+
+###
+
+### Get all mints
+GET http://localhost:8080/database/mint/all
+Accept: application/json
+
+###
+

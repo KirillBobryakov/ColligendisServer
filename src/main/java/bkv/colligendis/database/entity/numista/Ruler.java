@@ -11,7 +11,6 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 
-
 /*
  * Definition
  *
@@ -58,28 +57,29 @@ import java.util.List;
  */
 @Node("RULER")
 @Data
-@EqualsAndHashCode(callSuper=false)
+@EqualsAndHashCode(callSuper = false)
 public class Ruler extends AbstractEntity {
+    public static final String LABEL = "RULER";
 
     public static final List<String> RULERS = Arrays.asList(
-            "Period", "Archduke", "Ban", "Bishop", "Caesar", "Camerlengo", "Doge", "Duchess", "Duke", "Emir", "Emperor", "Empress",
+            "Period", "Archduke", "Ban", "Bishop", "Caesar", "Camerlengo", "Doge", "Duchess", "Duke", "Emir", "Emperor",
+            "Empress",
             "Grandmaster", "Grand duchess", "Grand duke", "Grand Prince",
             "Khan", "King", "Landgrave", "Lord", "Margrave", "Margravine", "Master",
             "Pope", "President", "Prime minister", "Prince", "Prince-archbishop", "Prince elector", "Prince-bishop",
-            "Queen" , "Regent", "Ruling authority", "Shah", "Sultan", "Tsar", "Voivode");
-
+            "Queen", "Regent", "Ruling authority", "Shah", "Sultan", "Tsar", "Voivode");
 
     public static final String GROUP_BY = "GROUP_BY";
-//    public static final String DURING_PERIOD = "DURING_PERIOD";
+    // public static final String DURING_PERIOD = "DURING_PERIOD";
     public static final String RULES_FROM = "RULES_FROM";
     public static final String RULES_TILL = "RULES_TILL";
-
+    public static final String RULES_WHEN_BEEN = "RULES_WHEN_BEEN";
 
     private String nid;
     private String name;
     private String rulerType;
 
-    @Relationship(type = Issuer.CONTAINS_RULER, direction = Relationship.Direction.INCOMING)
+    @Relationship(type = RULES_WHEN_BEEN, direction = Relationship.Direction.OUTGOING)
     private Issuer issuer;
 
     @Relationship(type = GROUP_BY, direction = Relationship.Direction.OUTGOING)
@@ -91,15 +91,15 @@ public class Ruler extends AbstractEntity {
     @Relationship(type = RULES_TILL, direction = Relationship.Direction.OUTGOING)
     private ArrayList<Year> rulesTillYears = new ArrayList<>();
 
-    //todo Ruling period and
-    //catalogue/get_rulers.php?country=yemen_nord&e=1
+    // todo Ruling period and
+    // catalogue/get_rulers.php?country=yemen_nord&e=1
     /*
-    <optgroup label="Mutawakkilite Kingdom">
-        <option value="5487">Yahya Muhammad Hamid ed-Din (1918-1948)</option>
-        <option value="5488">Ahmad bin Yahya (1948-1962)</option>
-        <option value="5502">Muhammad al-Badr (1962-1970)</option>
-    </optgroup>
-        <option value="5476">Yemen Arab Republic (1962-1990)</option>
+     * <optgroup label="Mutawakkilite Kingdom">
+     * <option value="5487">Yahya Muhammad Hamid ed-Din (1918-1948)</option>
+     * <option value="5488">Ahmad bin Yahya (1948-1962)</option>
+     * <option value="5502">Muhammad al-Badr (1962-1970)</option>
+     * </optgroup>
+     * <option value="5476">Yemen Arab Republic (1962-1990)</option>
      */
 
     private Boolean isActual;
@@ -108,6 +108,5 @@ public class Ruler extends AbstractEntity {
         this.nid = nid;
         this.name = name;
     }
-
 
 }

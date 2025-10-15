@@ -3,69 +3,28 @@ package bkv.colligendis.services;
 import bkv.colligendis.database.entity.AbstractEntity;
 import bkv.colligendis.database.service.AbstractNeo4jRepository;
 
+import java.util.HashSet;
 import java.util.List;
+import java.util.Set;
 import java.util.UUID;
+import java.util.concurrent.atomic.AtomicBoolean;
+import java.util.function.BiFunction;
+import java.util.stream.Collectors;
 
 public abstract class AbstractService<E extends AbstractEntity, R extends AbstractNeo4jRepository<E>> {
 
     protected final R repository;
 
-    protected List<E> cash;
-    protected boolean isCashed = false;
-
     protected AbstractService(R repository) {
         this.repository = repository;
     }
 
-    private void initCash() {
-        if (isCashed) {
-            cash = findAll();
-        }
-    };
-
-    public void setCashed() {
-        this.isCashed = true;
-        initCash();
-    }
-
     public E save(E entity) {
         final E saved = repository.save(entity);
-        // if(isCashed){
-        // cash.stream().filter(e -> e.getUuid() ==
-        // saved.getUuid()).findFirst().ifPresent(cashed -> cash.remove(cashed));
-        // cash.add(saved);
-        // }
         return saved;
     }
 
-    /**
-     * Find all Nids of NTypes
-     * 
-     * @return List of Nids
-     */
-    public List<String> findAllNidsOfNTypes() {
-        return repository.findAllNidsOfNTypes();
-    }
-
-    /**
-     * Find an Entity by unique field {@code uuid}
-     * Try to avoid this method
-     * 
-     * @param uuid Entity's uuid
-     * @return Entity
-     */
     public E findEntityByUuid(UUID uuid) {
-        if (isCashed) {
-            E cashed = cash.stream().filter(e -> e.getUuid().equals(uuid)).findFirst().orElse(null);
-            if (cashed != null) {
-                return cashed;
-            } else {
-                initCash();
-                return findEntityByUuid(uuid);
-            }
-        }
-
-        // return repository.findEntityByUuid(uuid.toString());
         return repository.findByUuid(uuid.toString());
     }
 
@@ -73,10 +32,12 @@ public abstract class AbstractService<E extends AbstractEntity, R extends Abstra
         return repository.findAll();
     }
 
+    public UUID findUuidByPropertyStringValue(String entityLabel, String propertyName, String propertyValue) {
+        String uuid = repository.findUuidByPropertyStringValue(entityLabel, propertyName, propertyValue);
+        return uuid != null ? UUID.fromString(uuid) : null;
+    }
+
     public void deleteEntityByUuidWithDetach(UUID uuid) {
-        if (isCashed) {
-            cash.stream().filter(e -> e.getUuid().equals(uuid)).findFirst().ifPresent(cashed -> cash.remove(cashed));
-        }
         repository.deleteEntityByUuidWithDetach(uuid.toString());
     }
 
@@ -84,52 +45,96 @@ public abstract class AbstractService<E extends AbstractEntity, R extends Abstra
         return repository.countRelationships(eid);
     }
 
-    /**
-     * Set a property String {@code value} with a name = {@code propertyName} of the
-     * Entity with the uuid = {@code uuid}
-     * 
-     * @param uuid          Entity's uuid
-     * @param propertyName  property's name
-     * @param propertyValue property's String value
-     */
-    public void setPropertyStringValue(UUID uuid, String propertyName, String propertyValue) {
+    public <T> T getPropertyValue(UUID uuid, String propertyName, Class<T> type) {
+        return switch (type.getSimpleName()) {
+            case "String" -> type.cast(repository.getStringValue(uuid.toString(), propertyName));
+            case "Boolean" -> type.cast(repository.getBooleanValue(uuid.toString(), propertyName));
+            case "Integer" -> type.cast(repository.getIntValue(uuid.toString(), propertyName));
+            case "Float" -> type.cast(repository.getFloatValue(uuid.toString(), propertyName));
+            default -> null;
+        };
+    }
+
+    protected boolean hasSingleRelationshipToNode(UUID fromEntityUuid, UUID toEntityUuid, String relationshipType) {
+        return repository.hasSingleRelationshipToNode(fromEntityUuid.toString(), toEntityUuid.toString(),
+                relationshipType);
+    }
+
+    protected <T> boolean comparePropertyValue(UUID uuid, String propertyName, Object propertyValue, Class<T> type) {
+        return switch (propertyValue) {
+            case String s -> {
+                String existingValue = repository.getStringValue(uuid.toString(), propertyName);
+                yield existingValue != null && existingValue.equals(s);
+            }
+            case Boolean b -> {
+                Boolean existingValue = repository.getBooleanValue(uuid.toString(), propertyName);
+                yield existingValue != null && existingValue.equals(b);
+            }
+            case Integer i -> {
+                Integer existingValue = repository.getIntValue(uuid.toString(), propertyName);
+                yield existingValue != null && existingValue.equals(i);
+            }
+            case Float f -> {
+                Double existingValue = repository.getFloatValue(uuid.toString(), propertyName);
+                yield existingValue != null && Math.abs(existingValue - f) < 0.0001;
+            }
+            case null, default -> false;
+        };
+    }
+
+    protected boolean setPropertyStringValue(UUID uuid, String propertyName, String propertyValue) {
         repository.setStringValue(uuid.toString(), propertyName, propertyValue);
+        return true;
     }
 
-    /**
-     * Get a property String value with a name = {@code propertyName} of the Entity
-     * with the uuid = {@code uuid}
-     * 
-     * @param uuid         Entity's uuid
-     * @param propertyName property's name
-     * @return property's String value
-     */
-    public String getPropertyStringValue(UUID uuid, String propertyName) {
-        return repository.getStringValue(uuid.toString(), propertyName);
-    }
-
-    /**
-     * Set a property Boolean {@code value} with a name = {@code propertyName} of
-     * the Entity with the uuid = {@code uuid}
-     * 
-     * @param uuid          Entity's uuid
-     * @param propertyName  property's name
-     * @param propertyValue property's Boolean value
-     */
-    public void setPropertyBooleanValue(UUID uuid, String propertyName, Boolean propertyValue) {
+    public boolean setPropertyBooleanValue(UUID uuid, String propertyName, Boolean propertyValue) {
         repository.setBooleanValue(uuid.toString(), propertyName, propertyValue);
+        return true;
     }
 
-    /**
-     * Get a property Boolean value with a name = {@code propertyName} of the Entity
-     * with the uuid = {@code uuid}
-     * 
-     * @param uuid         Entity's uuid
-     * @param propertyName property's name
-     * @return property's Boolean value
-     */
-    public Boolean getPropertyBooleanValue(UUID uuid, String propertyName) {
-        return repository.getBooleanValue(uuid.toString(), propertyName);
+    public boolean setPropertyIntValue(UUID uuid, String propertyName, Integer propertyValue) {
+        repository.setIntValue(uuid.toString(), propertyName, propertyValue);
+        return true;
+    }
+
+    public boolean setPropertyFloatValue(UUID uuid, String propertyName, Float propertyValue) {
+        repository.setFloatValue(uuid.toString(), propertyName, propertyValue.doubleValue());
+        return true;
+    }
+
+    public UUID getSingleRelatedNodeUUID(UUID fromNodeUuid, String relationshipType, String secondEntityLabel) {
+        String uuid = repository.getSingleRelatedNodeUUID(fromNodeUuid.toString(), relationshipType, secondEntityLabel);
+        return uuid != null ? UUID.fromString(uuid) : null;
+    }
+
+    public List<UUID> getAllOutgoingRelatedNodesUUIDs(UUID fromNodeUuid, String relationshipType,
+            String secondEntityLabel) {
+        return repository.getAllOutgoingRelatedNodesUUIDs(fromNodeUuid.toString(), relationshipType, secondEntityLabel)
+                .stream()
+                .map(UUID::fromString)
+                .collect(Collectors.toList());
+    }
+
+    public List<UUID> getAllIncomingRelatedNodesUUIDs(UUID fromNodeUuid, String relationshipType,
+            String secondEntityLabel) {
+        return repository.getAllIncomingRelatedNodesUUIDs(fromNodeUuid.toString(), relationshipType, secondEntityLabel)
+                .stream()
+                .map(UUID::fromString)
+                .collect(Collectors.toList());
+    }
+
+    public void setSingleOutgoingRelationshipToNode(UUID fromNodeUuid, UUID toNodeUuid, String relationshipType,
+            String secondEntityLabel) {
+        if (repository.hasAnyRelationshipWithType(fromNodeUuid.toString(), relationshipType, secondEntityLabel)) {
+            repository.detachAllOutgoingRelationshipsWithRelationshipTypeAndSecondEntityLabel(fromNodeUuid.toString(),
+                    relationshipType, secondEntityLabel);
+        }
+
+        repository.createSingleRelationshipToNode(fromNodeUuid.toString(), toNodeUuid.toString(), relationshipType);
+    }
+
+    public void addSingleOutgoingRelationshipToNode(UUID fromNodeUuid, UUID toNodeUuid, String relationshipType) {
+        repository.createSingleRelationshipToNode(fromNodeUuid.toString(), toNodeUuid.toString(), relationshipType);
     }
 
     /**
@@ -141,26 +146,45 @@ public abstract class AbstractService<E extends AbstractEntity, R extends Abstra
      */
     public void detachEntityFromAnotherEntityWithRelationshipType(UUID firstEntityUuid, UUID secondEntityUuid,
             String relationshipType) {
+
         repository.detachEntityFromAnotherEntityWithRelationshipType(firstEntityUuid.toString(),
                 secondEntityUuid.toString(), relationshipType);
     }
 
-    // /**
-    // * Find an Entity's UUID by nid
-    // * @param nid Entity's nid
-    // * @return Entity's Eid in UUID value, or null
-    // */
-    // public abstract UUID findUuidByNid(String nid);
-    // String eid = repository.findUuidByNid(nid);
-    // return eid != null ? UUID.fromString(eid) : null;
+    /**
+     * Delete all relationships with {@code  relationshipType} from an Entity with
+     * {@code entityUuid} to any Entity
+     * 
+     * @param entityUuid       Entity's uuid
+     * @param relationshipType Relationship's type
+     */
+    public void detachAllEntityWithRelationshipType(UUID entityUuid, String relationshipType) {
+        repository.detachAllEntityWithRelationshipType(entityUuid.toString(), relationshipType);
+    }
 
-    // /**
-    // * Find an Entity's Nid (Numista id) by UUID (Eid field)
-    // * @param uuid Entity's UUID (Eid field)
-    // * @return Entity's Nid, or null
-    // */
-    // public abstract String findNidByUuid(UUID uuid);
-    // return repository.findNidByEid(uuid.toString());
-    // }
+    protected boolean equateFistListToSecondList(List<UUID> first, List<UUID> second,
+            BiFunction<UUID, UUID, Boolean> detachFunction, BiFunction<UUID, UUID, Boolean> addFunction,
+            UUID mainNodeUuid) {
 
+        Set<UUID> firstSet = new HashSet<>(first);
+        Set<UUID> secondSet = new HashSet<>(second);
+
+        AtomicBoolean wasChanged = new AtomicBoolean(false);
+
+        firstSet.stream()
+                .filter(firstUuid -> !secondSet.contains(firstUuid))
+                .forEach(firstUuid -> {
+                    wasChanged.set(true);
+                    detachFunction.apply(mainNodeUuid, firstUuid);
+                });
+        secondSet.stream()
+                .filter(secondUuid -> !firstSet.contains(secondUuid))
+                .forEach(secondUuid -> {
+                    wasChanged.set(true);
+                    addFunction.apply(mainNodeUuid, secondUuid);
+                });
+
+        return wasChanged.get();
+
+    }
 }

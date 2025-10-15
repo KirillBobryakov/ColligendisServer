@@ -1,0 +1,94 @@
+### Получить все календари
+GET http://localhost:8080/api/calendars
+Content-Type: application/json
+
+###
+
+### Получить статус календарей
+GET http://localhost:8080/api/calendars/status
+Content-Type: application/json
+
+###
+
+### Инициализировать основные календари
+POST http://localhost:8080/api/calendars/initialize/basic
+Content-Type: application/json
+
+###
+
+### Инициализировать все календари
+POST http://localhost:8080/api/calendars/initialize/all
+Content-Type: application/json
+
+###
+
+### Получить календарь по коду (Gregorian)
+GET http://localhost:8080/api/calendars/by-code/gregorien
+Content-Type: application/json
+
+###
+
+### Получить календарь по коду (Islamic)
+GET http://localhost:8080/api/calendars/by-code/musulman
+Content-Type: application/json
+
+###
+
+### Получить календарь по коду (Persian)
+GET http://localhost:8080/api/calendars/by-code/persan
+Content-Type: application/json
+
+###
+
+### Создать новый календарь с сдвигом
+POST http://localhost:8080/api/calendars
+Content-Type: application/json
+
+{
+  "code": "custom-calendar",
+  "name": "Custom Calendar",
+  "toGregorianShift": 100
+}
+
+###
+
+### Обновить календарь (замените UUID на реальный)
+PUT http://localhost:8080/api/calendars/{{calendar-uuid}}
+Content-Type: application/json
+
+{
+  "name": "Updated Calendar Name",
+  "toGregorianShift": 100
+}
+
+###
+
+### Удалить календарь (замените UUID на реальный)
+DELETE http://localhost:8080/api/calendars/{{calendar-uuid}}
+Content-Type: application/json
+
+###
+
+### Примеры календарей со сдвигами:
+
+### Получить календарь по коду (Hebrew - сдвиг -3761)
+GET http://localhost:8080/api/calendars/by-code/hebreu
+Content-Type: application/json
+
+###
+
+### Получить календарь по коду (Buddhist - сдвиг -543)
+GET http://localhost:8080/api/calendars/by-code/chulasakarat
+Content-Type: application/json
+
+###
+
+### Получить календарь по коду (Japanese Reiwa - сдвиг 2019)
+GET http://localhost:8080/api/calendars/by-code/japonais_reiwa
+Content-Type: application/json
+
+###
+
+### Получить календарь по коду (Korean Joseon - сдвиг 1392)
+GET http://localhost:8080/api/calendars/by-code/coreen_joseon
+Content-Type: application/json

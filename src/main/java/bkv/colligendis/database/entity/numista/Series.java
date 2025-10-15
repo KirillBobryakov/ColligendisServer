@@ -1,7 +1,6 @@
 package bkv.colligendis.database.entity.numista;
 
 import bkv.colligendis.database.entity.AbstractEntity;
-import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
 import org.springframework.data.neo4j.core.schema.Node;
@@ -24,10 +23,23 @@ import org.springframework.data.neo4j.core.schema.Node;
  */
 @Node("SERIES")
 @Data
-@AllArgsConstructor
-@EqualsAndHashCode(callSuper=false)
+@EqualsAndHashCode(callSuper = false)
 public class Series extends AbstractEntity {
+    public static final String LABEL = "SERIES";
 
+    private String nid;
     private String name;
+
+    public Series() {
+    }
+
+    public Series(String name) {
+        this.name = name;
+    }
+
+    public Series(String nid, String name) {
+        this.nid = nid;
+        this.name = name;
+    }
 
 }

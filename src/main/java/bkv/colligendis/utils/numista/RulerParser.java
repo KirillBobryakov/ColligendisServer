@@ -14,6 +14,7 @@ import org.jsoup.select.Elements;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
+import java.util.UUID;
 
 public class RulerParser extends NumistaPartParser {
 
@@ -166,20 +167,20 @@ public class RulerParser extends NumistaPartParser {
                 // String testName = " Ferdinand I (1887)";
                 // String testName = " Ferdinand I (1887-date)";
 
-                Pair<List<Year>, List<Year>> periods = parseYearPeriods(fullName);
+                Pair<List<UUID>, List<UUID>> periods = parseYearPeriods(fullName);
 
                 if (periods != null) {
-                    for (Year fromYear : periods.getLeft()) {
-                        if (!ruler.getRulesFromYears().contains(fromYear)) {
-                            ruler.getRulesFromYears().add(fromYear);
-                        }
-                    }
+                    // for (Year fromYear : periods.getLeft()) {
+                    // if (!ruler.getRulesFromYears().contains(fromYear)) {
+                    // ruler.getRulesFromYears().add(fromYear);
+                    // }
+                    // }
 
-                    for (Year tillYear : periods.getRight()) {
-                        if (!ruler.getRulesTillYears().contains(tillYear)) {
-                            ruler.getRulesTillYears().add(tillYear);
-                        }
-                    }
+                    // for (Year tillYear : periods.getRight()) {
+                    // if (!ruler.getRulesTillYears().contains(tillYear)) {
+                    // ruler.getRulesTillYears().add(tillYear);
+                    // }
+                    // }
                 }
 
                 ruler.setIsActual(true);

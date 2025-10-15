@@ -54,7 +54,7 @@ public class ObverseParser extends NumistaPartParser {
 
                     assert nType.getObverse().getEngravers() != null;
 
-                    nType.getObverse().getEngravers().add(engraver);
+                    // nType.getObverse().getEngravers().add(engraver);
                     result = ParseEvent.CHANGED;
                 }
             }
@@ -78,7 +78,7 @@ public class ObverseParser extends NumistaPartParser {
 
                     assert nType.getObverse().getDesigners() != null;
 
-                    nType.getObverse().getDesigners().add(designer);
+                    // nType.getObverse().getDesigners().add(designer);
                     result = ParseEvent.CHANGED;
                 }
             }

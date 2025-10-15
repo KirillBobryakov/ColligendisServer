@@ -5,6 +5,7 @@ import org.springframework.data.neo4j.core.schema.Node;
 
 @Node("COMMEMORATED_EVENT")
 public class CommemoratedEvent extends AbstractEntity {
+    public static final String LABEL = "COMMEMORATED_EVENT";
 
     private String name;
 

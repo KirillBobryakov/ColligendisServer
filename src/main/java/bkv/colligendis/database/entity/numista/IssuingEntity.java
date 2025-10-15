@@ -44,25 +44,27 @@ import org.springframework.data.neo4j.core.schema.Relationship;
  */
 @Node("ISSUING_ENTITY")
 @Data
-@EqualsAndHashCode(callSuper=true)
+@EqualsAndHashCode(callSuper = true)
 public class IssuingEntity extends AbstractEntity {
 
+    public static final String LABEL = "ISSUING_ENTITY";
+
+    public static final String ISSUES_WHEN_BEEN = "ISSUES_WHEN_BEEN";
 
     private String code;
     private String name;
 
-    @Relationship(type = Issuer.CONTAINS_ISSUING_ENTITY, direction = Relationship.Direction.INCOMING)
+    @Relationship(type = ISSUES_WHEN_BEEN, direction = Relationship.Direction.OUTGOING)
     private Issuer issuer;
 
     private Boolean isActual;
-
 
     public IssuingEntity(String code, String name) {
         this.code = code;
         this.name = name;
     }
 
-// /catalogue/get_issuing_entities.php?country=freiburg-im-breisgau_notgeld&prefill=
+    // /catalogue/get_issuing_entities.php?country=freiburg-im-breisgau_notgeld&prefill=
     // <option value="2271">City of Rastatt</option>
     // <option value="4561">Stroebeck</option>
     // <option value="4866">Vorschuss Verein Soldau</option>

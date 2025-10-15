@@ -1,5 +1,23 @@
 http://localhost:8080/catalogue/image/209567/obverse
 ###
+GET http://localhost:8080/auth/users/john.doe@example.com
+Authorization: Bearer eyJhbGciOiJIUzI1NiJ9.eyJyb2xlIjpbXSwiZW1haWwiOiJqb2huLmRvZUBleGFtcGxlLmNvbSIsImlhdCI6MTc1OTU4NjcwMiwiZXhwIjoxNzU5NTg3OTAyfQ.GuT9nx2CGDt6F_QS4WXT8aFSE2gAxiwcZ9BJLq_j1pY
+
+
+
+HTTP/1.1 200  - OK
+content-disposition: inline;filename=f.txt
+x-content-type-options: nosniff
+x-xss-protection: 0
+cache-control: no-cache, no-store, max-age=0, must-revalidate
+pragma: no-cache
+expires: 0
+x-frame-options: DENY
+content-type: application/json
+transfer-encoding: chunked
+date: Sat, 04 Oct 2025 14:14:25 GMT
+connection: close
+###
 http://localhost:8080/market/countries/all
 
 HTTP/1.1 403  - Forbidden
@@ -29,8 +47,6 @@ date: Thu, 17 Jul 2025 23:36:04 GMT
 connection: close
 ###
 http://localhost:8080/market/subjects?countryNumistaCode=germany
-
-
 ###
 http://localhost:8080/catalogue/image/6484/obverse
 

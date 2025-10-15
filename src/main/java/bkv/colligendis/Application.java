@@ -1,30 +1,48 @@
 package bkv.colligendis;
 
+import bkv.colligendis.database.service.numista.init_services.CalendarInitializationService;
 import bkv.colligendis.services.MeshokServices;
 import bkv.colligendis.services.NumistaServices;
 import bkv.colligendis.utils.N4JUtil;
+import bkv.colligendis.utils.numista.EditPageParser;
+import bkv.colligendis.utils.numista.parser.NumistaParser;
+import bkv.colligendis.utils.numista.parser.PageParser;
+import bkv.colligendis.utils.DebugUtil;
 
+import java.util.stream.Stream;
+
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
+import org.springframework.security.config.annotation.method.configuration.EnableMethodSecurity;
 
 @SpringBootApplication
+@EnableMethodSecurity(prePostEnabled = true)
 // @EnableTransactionManagement
 public class Application {
+
+    private static final Logger logger = LogManager.getLogger(Application.class);
 
     public final NumistaServices numistaServices;
     public final MeshokServices meshokServices;
 
     public Application(NumistaServices numistaServices, MeshokServices meshokServices) {
+
         this.numistaServices = numistaServices;
         this.meshokServices = meshokServices;
         N4JUtil.InitInstance(numistaServices, meshokServices);
 
-        // Stream.of("336784").map(nid -> EditPageParser.create
+        // PageParser.parse.accept(Stream.of("209129"));
+
+        // EditPageParser.parse.accept(Stream.of("209129"));
+
+        // Stream.of("209129").map(nid -> EditPageParser.create
         // .andThen(EditPageParser.loadNumistaPage)
         // .apply(nid))
         // .filter(EditPageParser.isEditPageLoaded)
         // .map(editPageParser -> EditPageParser.loadNType
-        // .andThen(EditPageParser.hideMetrics)
+        // .andThen(EditPageParser.showMetrics)
         // .andThen(EditPageParser.titleParser)
         // .andThen(EditPageParser.collectibleTypeParser)
         // .andThen(EditPageParser.issuerParser)
@@ -46,6 +64,13 @@ public class Application {
         // .andThen(EditPageParser.saveNType)
         // .apply(editPageParser))
         // .forEach(EditPageParser.finalyInfo);
+
+        PageParser.parse.accept(Stream.of("209130", "20930"));
+        // PageParser.parse.accept(Stream.of("20930"));
+        // NumistaParser numistaParser1 = new NumistaParser("209130", true);
+        // NumistaParser numistaParser2 = new NumistaParser("268884", true);
+        // NumistaParser numistaParser3 = new NumistaParser("14640", true);
+        // NumistaParser numistaParser4 = new NumistaParser("210635", true);
 
         // NumistaIssuersResponse numistaIssuer = NumistaPartParser.fetchAndParseJson(
         // "https://en.numista.com/catalogue/search_issuers.php?ct=coin&q=German%20Democratic%20Republic",
@@ -80,6 +105,10 @@ public class Application {
     }
 
     public static void main(String[] args) {
+        // Clear console on application start
+        System.out.print("\033[H\033[2J");
+        System.out.flush();
+
         SpringApplication.run(Application.class, args);
     }
 

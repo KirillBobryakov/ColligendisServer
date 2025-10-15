@@ -13,23 +13,30 @@ public class RulerGroupService extends AbstractService<RulerGroup, RulerGroupRep
         super(repository);
     }
 
+    // Start: Methods for Numista parsing
+    public UUID findUuidByName(String name) {
+        return findUuidByPropertyStringValue(RulerGroup.LABEL, "name", name);
+    }
+
+    // End: Methods for Numista parsing
+
     /**
-     *  Find RulerGroup by {@code nid}.
+     * Find RulerGroup by {@code nid}.
      *
      * @param nid RulerGroup's nid (Numista RulerGroup id)
      * @return If RulerGroup with {@code nid} exists, then return RulerGroup
      */
-    public RulerGroup findRulerGroupByNid(String nid){
+    public RulerGroup findRulerGroupByNid(String nid) {
         return repository.findRulerGroupByNid(nid);
     }
 
     /**
-     *  Find RulerGroup's {@code eid} UUID by {@code name}.
+     * Find RulerGroup's {@code eid} UUID by {@code name}.
      *
      * @param name RulerGroup's name (Numista RulerGroup name)
      * @return If RulerGroup with {@code name} exists, then return RulerGroup's UUID
      */
-    public UUID findRulerGroupUuidByName(String name){
+    public UUID findRulerGroupUuidByName(String name) {
         String rulerGroupUuid = repository.findUuidByName(name);
         return rulerGroupUuid != null ? UUID.fromString(rulerGroupUuid) : null;
     }

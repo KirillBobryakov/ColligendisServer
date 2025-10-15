@@ -2,6 +2,7 @@ package bkv.colligendis.database.service.numista;
 
 import bkv.colligendis.database.entity.numista.NType;
 import bkv.colligendis.database.service.AbstractNeo4jRepository;
+
 import org.springframework.data.neo4j.repository.query.Query;
 
 import java.util.List;
@@ -10,26 +11,13 @@ public interface NTypeRepository extends AbstractNeo4jRepository<NType> {
 
     NType findByNid(String nid);
 
-    /**
-     * Find an NTYPE by NTYPE's UUID and compare unique field NTYPE's {@code title}
-     * with parameter {@code title}.
-     * 
-     * @param nTypeUuid NTYPE's UUID
-     * @param title     compared with parameter
-     * @return result of comparing
-     */
-    @Query("MATCH (n) WHERE n.uuid=$nTypeUuid RETURN n.title = $title")
-    Boolean compareTitle(String nTypeUuid, String title);
-    //
-    //
-    // /**
-    // * Find related ISSUER's code by NTYPE's UUID
-    // * @param uuid NTYPE's UUID
-    // * @return UUID in String value
-    // */
-    // @Query("MATCH (n:NTYPE)-[:ISSUED_BY]->(i:ISSUER) WHERE n.uuid=$uuid RETURN
-    // i.code")
-    // String getNTypeIssuerCode(String uuid);
+    // Start: Methods for Numista parsing
+
+    @Query("MATCH (n:NTYPE {uuid:$uuid}) SET n.demonetized = $demonetized, n.demonetizationYear = $demonetizationYear, n.demonetizationMonth = $demonetizationMonth, n.demonetizationDay = $demonetizationDay")
+    void setDemonetization(String uuid, String demonetized, String demonetizationYear, String demonetizationMonth,
+            String demonetizationDay);
+
+    // End: Methods for Numista parsing
 
     Boolean existsByNid(String nid);
 
@@ -49,16 +37,6 @@ public interface NTypeRepository extends AbstractNeo4jRepository<NType> {
      */
     @Query("MATCH (n:NTYPE {uuid:$uuid}) SET n.isActual = toBoolean(true)")
     void setActual(String uuid);
-
-    /**
-     * Find an Issuer's uuid with relationship to NType
-     * (n:NTYPE)-[:ISSUED_BY]->(i:ISSUER)
-     * 
-     * @param nTypeUuid NType's uuid
-     * @return String value of Issuer's uuid
-     */
-    @Query("MATCH (n:NTYPE)-[:ISSUED_BY]->(i:ISSUER) WHERE n.uuid = $nTypeUuid RETURN i.uuid")
-    String getNTypeIssuerUuid(String nTypeUuid);
 
     /**
      * Find all NTYPE's nid where NTYPE's isActual property is {@code isActual}

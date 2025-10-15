@@ -14,6 +14,7 @@ import java.util.List;
 @Node("VARIANT")
 @Data
 public class Variant extends AbstractEntity {
+    public static final String LABEL = "VARIANT";
 
     public static final String WITH_MARK = "WITH_MARK";
     public static final String WITH_SPECIFIED_MINT = "WITH_SPECIFIED_MINT";

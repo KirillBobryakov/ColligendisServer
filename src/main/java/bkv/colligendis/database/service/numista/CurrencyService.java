@@ -1,6 +1,8 @@
 package bkv.colligendis.database.service.numista;
 
+import bkv.colligendis.database.entity.features.Year;
 import bkv.colligendis.database.entity.numista.Currency;
+import bkv.colligendis.database.entity.numista.Denomination;
 import bkv.colligendis.database.entity.numista.Issuer;
 import bkv.colligendis.rest.dto.CurrencyDTO;
 import bkv.colligendis.services.AbstractService;
@@ -22,9 +24,64 @@ public class CurrencyService extends AbstractService<Currency, CurrencyRepositor
         this.modelMapper = modelMapper;
     }
 
-    public void deleteAll() {
-        repository.deleteAll();
+    // Start: Methods for Numista parsing
+
+    public UUID findUuidByNid(String nid) {
+        return findUuidByPropertyStringValue(Currency.LABEL, "nid", nid);
     }
+
+    public void detachIssuer(UUID currencyUuid, UUID issuerUuid) {
+        detachEntityFromAnotherEntityWithRelationshipType(currencyUuid, issuerUuid,
+                Currency.CIRCULATE_WHEN_BEEN);
+    }
+
+    public boolean setFullName(UUID currencyUuid, String fullName) {
+        return setPropertyStringValue(currencyUuid, "fullName", fullName);
+    }
+
+    public boolean setKind(UUID currencyUuid, String kind) {
+        return setPropertyStringValue(currencyUuid, "kind", kind);
+    }
+
+    public boolean setName(UUID currencyUuid, String name) {
+        return setPropertyStringValue(currencyUuid, "name", name);
+    }
+
+    public String getNid(UUID currencyUuid) {
+        return getPropertyValue(currencyUuid, "nid", String.class);
+    }
+
+    public void detachRulesFromYears(UUID rulerUuid) {
+        repository.detachAllOutgoingRelationshipsWithRelationshipTypeAndSecondEntityLabel(rulerUuid.toString(),
+                Currency.CIRCULATED_FROM, Year.LABEL);
+    }
+
+    public void detachRulesTillYears(UUID rulerUuid) {
+        repository.detachAllOutgoingRelationshipsWithRelationshipTypeAndSecondEntityLabel(rulerUuid.toString(),
+                Currency.CIRCULATED_TILL, Year.LABEL);
+    }
+
+    public void addRuleFromYear(UUID rulerUuid, UUID yearUuid) {
+        addSingleOutgoingRelationshipToNode(rulerUuid, yearUuid, Currency.CIRCULATED_FROM);
+    }
+
+    public void addRuleTillYear(UUID rulerUuid, UUID yearUuid) {
+        addSingleOutgoingRelationshipToNode(rulerUuid, yearUuid, Currency.CIRCULATED_TILL);
+    }
+
+    public void setIssuer(UUID currencyUuid, UUID issuerUuid) {
+        setSingleOutgoingRelationshipToNode(currencyUuid, issuerUuid, Currency.CIRCULATE_WHEN_BEEN, Issuer.LABEL);
+    }
+
+    public boolean setIsActual(UUID currencyUuid, Boolean isActual) {
+        return setPropertyBooleanValue(currencyUuid, "isActual", isActual);
+    }
+
+    public List<UUID> getDenominations(UUID currencyUuid) {
+        return getAllIncomingRelatedNodesUUIDs(currencyUuid, Denomination.UNDER_CURRENCY, Denomination.LABEL);
+    }
+
+    // End: Methods for Numista parsing
 
     public Currency findByName(String name) {
         return repository.findByName(name);

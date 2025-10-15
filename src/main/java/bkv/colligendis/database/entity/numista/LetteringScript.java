@@ -3,9 +3,9 @@ package bkv.colligendis.database.entity.numista;
 import bkv.colligendis.database.entity.AbstractEntity;
 import org.springframework.data.neo4j.core.schema.Node;
 
-
 @Node("LETTERING_SCRIPT")
 public class LetteringScript extends AbstractEntity {
+    public static final String LABEL = "LETTERING_SCRIPT";
 
     private String nid;
     private String name;

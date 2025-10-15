@@ -10,6 +10,7 @@ import org.springframework.data.neo4j.core.schema.Relationship;
 @Data
 @EqualsAndHashCode(callSuper = true)
 public class Denomination extends AbstractEntity {
+    public static final String LABEL = "DENOMINATION";
 
     public static final String UNDER_CURRENCY = "UNDER_CURRENCY";
 
@@ -17,11 +18,18 @@ public class Denomination extends AbstractEntity {
     private String fullName;
     private String name;
 
-    private Float numericValue;
+    private Double numericValue;
 
     private Boolean isActual;
 
     @Relationship(type = UNDER_CURRENCY, direction = Relationship.Direction.OUTGOING)
     private Currency currency;
+
+    public Denomination() {
+    }
+
+    public Denomination(String nid) {
+        this.nid = nid;
+    }
 
 }

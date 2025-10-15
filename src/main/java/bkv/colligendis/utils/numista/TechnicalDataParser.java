@@ -460,8 +460,8 @@ public class TechnicalDataParser extends NumistaPartParser {
         HashMap<String, String> shape = getAttributeWithTextSelectedOption(page, "#shape");
         if (shape != null && isValueAndTextNotNullAndNotEmpty(shape)) {
             if (nType.getShape() == null || !nType.getShape().getNid().equals(shape.get("value"))) {
-                nType.setShape(N4JUtil.getInstance().numistaService.shapeService.findByNid(shape.get("value"),
-                        shape.get("text")));
+                // nType.setShape(N4JUtil.getInstance().numistaService.shapeService.findByNid(shape.get("value"),
+                // shape.get("text")));
                 result = ParseEvent.CHANGED;
             }
         }
@@ -484,7 +484,7 @@ public class TechnicalDataParser extends NumistaPartParser {
         String poids = getAttribute(page.selectFirst("#poids"), "value");
         if (poids != null && !poids.isEmpty()) {
             if (nType.getWeight() == null || !nType.getWeight().equals(poids)) {
-                nType.setWeight(poids);
+                // nType.setWeight(poids);
                 result = ParseEvent.CHANGED;
             }
         }
@@ -497,7 +497,7 @@ public class TechnicalDataParser extends NumistaPartParser {
         String dimension = getAttribute(page.selectFirst("#dimension"), "value");
         if (dimension != null && !dimension.isEmpty()) {
             if (nType.getSize() == null || !nType.getSize().equals(dimension)) {
-                nType.setSize(dimension);
+                // nType.setSize(dimension);
                 result = ParseEvent.CHANGED;
             }
         }
@@ -523,7 +523,7 @@ public class TechnicalDataParser extends NumistaPartParser {
                 String dimension2 = getAttribute(page.selectFirst("input[name=dimension2]"), "value");
                 if (dimension2 != null && !dimension2.isEmpty()) {
                     if (nType.getSize2() == null || !nType.getSize2().equals(dimension2)) {
-                        nType.setSize2(dimension2);
+                        // nType.setSize2(dimension2);
                         result = ParseEvent.CHANGED;
                     }
                 }
@@ -538,7 +538,7 @@ public class TechnicalDataParser extends NumistaPartParser {
         String epaisseur = getAttribute(page.selectFirst("#epaisseur"), "value");
         if (epaisseur != null && !epaisseur.isEmpty()) {
             if (nType.getThickness() == null || !nType.getThickness().equals(epaisseur)) {
-                nType.setThickness(epaisseur);
+                // nType.setThickness(epaisseur);
                 result = ParseEvent.CHANGED;
             }
         }

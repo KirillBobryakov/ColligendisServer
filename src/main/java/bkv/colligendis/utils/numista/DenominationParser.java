@@ -21,34 +21,39 @@ public class DenominationParser extends NumistaPartParser {
             Map<String, String> denominationAttr = getAttributeWithTextSingleOption(page, "#denomination", "value");
 
             if (denominationAttr == null) {
-                DebugUtil.showWarning(DenominationParser.class, "Can't find Denomination while parsing page with nid: " + nType.getNid());
+                DebugUtil.showWarning(DenominationParser.class,
+                        "Can't find Denomination while parsing page with nid: " + nType.getNid());
                 return ParseEvent.NOT_CHANGED;
             }
 
             String denominationNid = denominationAttr.get("value");
-            if (nType.getDenomination() != null && nType.getDenomination().getIsActual() != null && nType.getDenomination().getIsActual() && nType.getDenomination().getNid().equals(denominationNid)) {
+            if (nType.getDenomination() != null && nType.getDenomination().getIsActual() != null
+                    && nType.getDenomination().getIsActual()
+                    && nType.getDenomination().getNid().equals(denominationNid)) {
                 return ParseEvent.NOT_CHANGED;
             }
 
-            Denomination denomination = N4JUtil.getInstance().numistaService.denominationService.findDenominationByNid(denominationNid);
+            Denomination denomination = N4JUtil.getInstance().numistaService.denominationService
+                    .findDenominationByNid(denominationNid);
             if (denomination != null && denomination.getIsActual() != null && denomination.getIsActual()) {
                 nType.setDenomination(denomination);
                 return ParseEvent.CHANGED;
             }
 
-
-
             if (!parseDenominationsByCurrencyCodeFromPHPRequest(nType.getCurrency(), denominationNid)) {
-                DebugUtil.showError(DenominationParser.class, "Can't parse PHP Denominations while parsing page with nid: " + nType.getNid() + " URI: " + DENOMINATIONS_BY_CURRENCY_PREFIX + nType.getCurrency());
+                DebugUtil.showError(DenominationParser.class,
+                        "Can't parse PHP Denominations while parsing page with nid: " + nType.getNid() + " URI: "
+                                + DENOMINATIONS_BY_CURRENCY_PREFIX + nType.getCurrency());
                 return ParseEvent.ERROR;
             }
 
-
-            denomination = N4JUtil.getInstance().numistaService.denominationService.findDenominationByNid(denominationNid);
-
+            denomination = N4JUtil.getInstance().numistaService.denominationService
+                    .findDenominationByNid(denominationNid);
 
             if (denomination == null) {
-                DebugUtil.showError(DenominationParser.class, "Find a Denomination's Nid but can't find Denomination in database or create new one while parsing page with nid: " + nType.getNid());
+                DebugUtil.showError(DenominationParser.class,
+                        "Find a Denomination's Nid but can't find Denomination in database or create new one while parsing page with nid: "
+                                + nType.getNid());
                 return ParseEvent.ERROR;
             }
 
@@ -60,29 +65,28 @@ public class DenominationParser extends NumistaPartParser {
         this.partName = "Denomination";
     }
 
-
-
     private static boolean parseDenominationsByCurrencyCodeFromPHPRequest(Currency currency, String prefill) {
 
         final String currencyCode = currency != null ? currency.getNid() : "";
 
-        Document denominationsPHPDocument = loadPageByURL(DENOMINATIONS_BY_CURRENCY_PREFIX + "currency=" + currencyCode + "&prefill=" + prefill, false);
+        Document denominationsPHPDocument = loadPageByURL(
+                DENOMINATIONS_BY_CURRENCY_PREFIX + "currency=" + currencyCode + "&prefill=" + prefill, false);
 
         if (denominationsPHPDocument == null) {
             DebugUtil.showError(DenominationParser.class, "Can't load PHP request");
             return false;
         }
 
-
         Elements optgroups = denominationsPHPDocument.select("optgroup");
 
-        if (!optgroups.isEmpty()) {  //need to understand what to do with OPTGROUP in IssuingEntities
+        if (!optgroups.isEmpty()) { // need to understand what to do with OPTGROUP in IssuingEntities
             DebugUtil.showError(DenominationParser.class, "Find OPTGROUP while parsing Denominations.");
             return false;
         }
 
-        if(currency != null){
-            List<Denomination> denominations = N4JUtil.getInstance().numistaService.denominationService.findDenominationsByCurrency(currency);
+        if (currency != null) {
+            List<Denomination> denominations = N4JUtil.getInstance().numistaService.denominationService
+                    .findDenominationsByCurrency(currency);
             denominations.forEach(denomination -> denomination.setCurrency(null));
         }
 
@@ -91,7 +95,6 @@ public class DenominationParser extends NumistaPartParser {
             String denNid = element.attributes().get("value");
             String denFullName = element.text();
 
-
             Denomination den = N4JUtil.getInstance().numistaService.denominationService.findDenominationByNid(denNid);
 
             if (den != null && den.getIsActual() != null && den.getIsActual()) {
@@ -99,19 +102,18 @@ public class DenominationParser extends NumistaPartParser {
                 continue;
             }
 
-
             den = den != null ? den : new Denomination();
 
             den.setNid(denNid);
             den.setFullName(denFullName);
-            String denName = denFullName.contains("(") ? denFullName.substring(0, denFullName.lastIndexOf('(') - 1) : denFullName;
+            String denName = denFullName.contains("(") ? denFullName.substring(0, denFullName.lastIndexOf('(') - 1)
+                    : denFullName;
             den.setName(denName);
 
-            if(denFullName.contains("(")){
-                String denNumericValueStr = denFullName.substring(denFullName.lastIndexOf('(') + 1, denFullName.lastIndexOf(')')).replace(" ", "").replace(" ", "");
-
-
-
+            if (denFullName.contains("(")) {
+                String denNumericValueStr = denFullName
+                        .substring(denFullName.lastIndexOf('(') + 1, denFullName.lastIndexOf(')')).replace(" ", "")
+                        .replace(" ", "");
 
                 denNumericValueStr = denNumericValueStr.replace("¾", "0.75");
                 denNumericValueStr = denNumericValueStr.replace("⅔", "0.666");
@@ -128,8 +130,6 @@ public class DenominationParser extends NumistaPartParser {
                 denNumericValueStr = denNumericValueStr.replace("⅛", "0.125");
                 denNumericValueStr = denNumericValueStr.replace("⅒", "0.1");
 
-
-
                 Float denNumericValue = null;
 
                 if (denNumericValueStr.contains("⁄")) {
@@ -140,16 +140,16 @@ public class DenominationParser extends NumistaPartParser {
                     try {
                         denNumericValue = Float.valueOf(denNumericValueStr);
                     } catch (NumberFormatException e) {
-                        DebugUtil.showError(DenominationParser.class, "Can't parse Denomination numericValue from '" + denFullName + "'");
-                        if(denNumericValueStr.matches("[a-zA-Z]+")){
+                        DebugUtil.showError(DenominationParser.class,
+                                "Can't parse Denomination numericValue from '" + denFullName + "'");
+                        if (denNumericValueStr.matches("[a-zA-Z]+")) {
                             den.setNumericValue(null);
                         }
                         return false;
                     }
                 }
 
-
-                den.setNumericValue(denNumericValue);
+                den.setNumericValue(Double.valueOf(denNumericValue));
             }
 
             den.setIsActual(true);

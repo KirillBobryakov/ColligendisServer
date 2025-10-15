@@ -14,9 +14,39 @@ public class DenominationService extends AbstractService<Denomination, Denominat
         super(repository);
     }
 
-    public void deleteAll() {
-        repository.deleteAll();
+    // Start: Methods for Numista parsing
+
+    public UUID findUuidByNid(String nid) {
+        return findUuidByPropertyStringValue(Denomination.LABEL, "nid", nid);
     }
+
+    public void detachCurrency(UUID denominationUuid, UUID currencyUuid) {
+        detachEntityFromAnotherEntityWithRelationshipType(denominationUuid, currencyUuid,
+                Denomination.UNDER_CURRENCY);
+    }
+
+    public void setCurrency(UUID denominationUuid, UUID currencyUuid) {
+        setSingleOutgoingRelationshipToNode(denominationUuid, currencyUuid, Denomination.UNDER_CURRENCY,
+                Currency.LABEL);
+    }
+
+    public boolean setFullName(UUID denominationUuid, String fullName) {
+        return setPropertyStringValue(denominationUuid, "fullName", fullName);
+    }
+
+    public boolean setName(UUID denominationUuid, String name) {
+        return setPropertyStringValue(denominationUuid, "name", name);
+    }
+
+    public boolean setNumericValue(UUID denominationUuid, Float numericValue) {
+        return setPropertyFloatValue(denominationUuid, "numericValue", numericValue);
+    }
+
+    public boolean setIsActual(UUID denominationUuid, Boolean isActual) {
+        return setPropertyBooleanValue(denominationUuid, "isActual", isActual);
+    }
+
+    // End: Methods for Numista parsing
 
     /**
      * Find a Denomination's UUID by nid

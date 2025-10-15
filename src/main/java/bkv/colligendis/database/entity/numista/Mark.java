@@ -5,6 +5,7 @@ import org.springframework.data.neo4j.core.schema.Node;
 
 @Node("MARK")
 public class Mark extends AbstractEntity {
+    public static final String LABEL = "MARK";
 
     private String nid;
 

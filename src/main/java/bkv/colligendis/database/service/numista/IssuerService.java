@@ -1,7 +1,10 @@
 package bkv.colligendis.database.service.numista;
 
 import bkv.colligendis.database.entity.numista.Country;
+import bkv.colligendis.database.entity.numista.Currency;
 import bkv.colligendis.database.entity.numista.Issuer;
+import bkv.colligendis.database.entity.numista.IssuingEntity;
+import bkv.colligendis.database.entity.numista.Ruler;
 import bkv.colligendis.database.entity.numista.Subject;
 import bkv.colligendis.database.service.UniqueEntityException;
 import bkv.colligendis.rest.catalogue.CSIItem;
@@ -13,6 +16,7 @@ import org.modelmapper.ModelMapper;
 import org.springframework.stereotype.Service;
 
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.UUID;
@@ -27,6 +31,49 @@ public class IssuerService extends AbstractService<Issuer, IssuerRepository> {
         super(repository);
         this.modelMapper = modelMapper;
     }
+
+    // Start: Methods for Numista parsing
+
+    public Map<String, Object> getIssuerNameAndCode(UUID nTypeUuid) {
+        IssuerNameAndCodeProjection projection = repository.getIssuerNameAndCode(nTypeUuid.toString());
+        if (projection == null) {
+            return null;
+        }
+        Map<String, Object> result = new HashMap<>();
+        result.put("name", projection.getName());
+        result.put("code", projection.getCode());
+        return result;
+    }
+
+    public UUID findUuidByCode(String code) {
+        return findUuidByPropertyStringValue(Issuer.LABEL, "code", code);
+    }
+
+    public boolean compareName(UUID issuerUuid, String name) {
+        return comparePropertyValue(issuerUuid, "name", name, String.class);
+    }
+
+    public boolean setName(UUID issuerUuid, String name) {
+        return setPropertyStringValue(issuerUuid, "name", name);
+    }
+
+    public String getCode(UUID issuerUuid) {
+        return getPropertyValue(issuerUuid, "code", String.class);
+    }
+
+    public List<UUID> getRulers(UUID issuerUuid) {
+        return getAllIncomingRelatedNodesUUIDs(issuerUuid, Ruler.RULES_WHEN_BEEN, Ruler.LABEL);
+    }
+
+    public List<UUID> getIssuingEntities(UUID issuerUuid) {
+        return getAllIncomingRelatedNodesUUIDs(issuerUuid, IssuingEntity.ISSUES_WHEN_BEEN, IssuingEntity.LABEL);
+    }
+
+    public List<UUID> getCurrencies(UUID issuerUuid) {
+        return getAllIncomingRelatedNodesUUIDs(issuerUuid, Currency.CIRCULATE_WHEN_BEEN, Currency.LABEL);
+    }
+
+    // End: Methods for Numista parsing
 
     /**
      * Find an Issuer of NType by NType's nid
@@ -67,17 +114,6 @@ public class IssuerService extends AbstractService<Issuer, IssuerRepository> {
     }
 
     /**
-     * Find Issuer's UUID by Issuer's code
-     * 
-     * @param code Issuer's code
-     * @return Issuer's UUID, or return null
-     */
-    public UUID findIssuerUuidByCode(String code) {
-        String eid = repository.findUuidByCode(code);
-        return eid != null ? UUID.fromString(eid) : null;
-    }
-
-    /**
      * Find Issuer's Code by Issuer's Eid
      * 
      * @param eid Issuer's eid in UUID value
@@ -97,7 +133,7 @@ public class IssuerService extends AbstractService<Issuer, IssuerRepository> {
      *         issuer's eid like UUID
      */
     public UUID findIssuerUuidByCodeThenName(String code, String name) {
-        UUID issuerUuid = findIssuerUuidByCode(code);
+        UUID issuerUuid = findUuidByCode(code);
         if (issuerUuid == null) {
             issuerUuid = findIssuerUuidByName(name);
             DebugUtil.showInfo(this, "Find Issuer by name=" + name + ". Can't find by code: " + code);
@@ -121,35 +157,6 @@ public class IssuerService extends AbstractService<Issuer, IssuerRepository> {
             throw new UniqueEntityException(Map.of("code", code, "name", name));
         }
         return issuers.stream().findFirst().orElse(null);
-    }
-
-    /**
-     * If there is no a relationship between ISSUER (with UUID issuerUuid) and
-     * ISSUING_ENTITY (with UUID issuingEntityUuid), then create one with a label -
-     * CONTAINS_ISSUING_ENTITY.
-     * 
-     * @param issuerUuid        ISSUER's UUID
-     * @param issuingEntityUuid ISSUING_ENTITY's UUID
-     * 
-     * @return {@code true} If a relationship was presented, or was created;
-     *         {@code false} There was not a relationship, and it was not created
-     */
-    public Boolean setContainsIssuingEntity(UUID issuerUuid, UUID issuingEntityUuid) {
-        return repository.createSingleRelationshipToNode(issuerUuid.toString(), issuingEntityUuid.toString(),
-                Issuer.CONTAINS_ISSUING_ENTITY);
-    }
-
-    /**
-     * Check a Relationship between Issuer and IssuingEntity
-     * 
-     * @param issuerUuid        ISSUER's UUID
-     * @param issuingEntityUuid ISSUING_ENTITY's UUID
-     * @return {@code true} If a relationship was presented, return {@code false} if
-     *         there isn't a relationship
-     */
-    public Boolean hasContainsIssuingEntityRelationshipToIssuingEntity(UUID issuerUuid, UUID issuingEntityUuid) {
-        return repository.hasSingleRelationshipToNode(issuerUuid.toString(), issuingEntityUuid.toString(),
-                Issuer.CONTAINS_ISSUING_ENTITY);
     }
 
     public List<Issuer> findByNameContainingIgnoreCase(String nameFilter) {

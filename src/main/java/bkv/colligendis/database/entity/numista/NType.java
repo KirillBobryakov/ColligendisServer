@@ -4,6 +4,7 @@ import bkv.colligendis.database.entity.AbstractEntity;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
 import lombok.ToString;
+
 import org.springframework.data.neo4j.core.schema.Node;
 import org.springframework.data.neo4j.core.schema.Relationship;
 
@@ -16,13 +17,16 @@ import java.util.List;
 @ToString(callSuper = true, onlyExplicitlyIncluded = true)
 public class NType extends AbstractEntity {
 
+    public static final String LABEL = "NTYPE";
+
     public static final String UNDER_CATEGORY = "UNDER_CATEGORY";
     public static final String ISSUED_BY = "ISSUED_BY";
     public static final String DURING_OF_RULER = "DURING_OF_RULER";
+    public static final String ISSUED_BY_ISSUING_ENTITY = "ISSUED_BY_ISSUING_ENTITY";
     public static final String PROVIDED_BY = "PROVIDED_BY";
 
     public static final String DENOMINATED_IN = "DENOMINATED_IN";
-    public static final String UNDER_CURRENCY = "UNDER_CURRENCY";
+    public static final String REFERS_TO_CURRENCY = "REFERS_TO_CURRENCY";
     public static final String HAS_COLLECTIBLE_TYPE = "HAS_COLLECTIBLE_TYPE";
     public static final String COMMEMORATE_FOR = "COMMEMORATE_FOR";
     public static final String HAS_SERIES = "HAS_SERIES";
@@ -67,7 +71,7 @@ public class NType extends AbstractEntity {
     @Relationship(type = DURING_OF_RULER, direction = Relationship.Direction.OUTGOING)
     private List<Ruler> rulers = new ArrayList<>();
 
-    @Relationship(type = ISSUED_BY, direction = Relationship.Direction.OUTGOING)
+    @Relationship(type = ISSUED_BY_ISSUING_ENTITY, direction = Relationship.Direction.OUTGOING)
     private List<IssuingEntity> issuingEntities = new ArrayList<>();
 
     private String valueText;
@@ -76,7 +80,7 @@ public class NType extends AbstractEntity {
     @Relationship(type = DENOMINATED_IN, direction = Relationship.Direction.OUTGOING)
     private Denomination denomination;
 
-    @Relationship(type = UNDER_CURRENCY, direction = Relationship.Direction.OUTGOING)
+    @Relationship(type = REFERS_TO_CURRENCY, direction = Relationship.Direction.OUTGOING)
     private Currency currency;
 
     @Relationship(type = HAS_COLLECTIBLE_TYPE, direction = Relationship.Direction.OUTGOING)
@@ -87,6 +91,29 @@ public class NType extends AbstractEntity {
 
     @Relationship(type = HAS_SERIES, direction = Relationship.Direction.OUTGOING)
     private Series series;
+
+    /*
+     * Enter the date when the banknote was issued. The date of issue can be the
+     * date when a banknote started to enter circulation or the date when a
+     * commemorative banknote started to be available for sale. Use the official
+     * date when it exists. If different varieties of the banknote were issued at
+     * different date, enter the first date; you can specify the other dates in the
+     * comments.
+     * 
+     * The date should be entered in yyyy-mm-dd format. Should the precise day or
+     * the precise day and month not be known, “00” can be used:
+     * 2001-12-31
+     * 1875-00-00
+     * 
+     * If the banknote was never issued, for example in case of change of currency
+     * before the banknote was released, check “Never issued”.
+     * 
+     * For items that are not intended to be issued, the field should be blank.
+     */
+
+    private String yearIssueDate;
+    private String monthIssueDate;
+    private String dayIssueDate;
 
     /*
      * Select the appropriate option:
@@ -128,11 +155,11 @@ public class NType extends AbstractEntity {
 
     private String shapeAdditionalDetails;
 
-    private String weight;
+    private Double weight;
 
-    private String size;
-    private String size2;
-    private String thickness;
+    private Double size;
+    private Double size2;
+    private Double thickness;
 
     @Relationship(type = WITH_TECHNIQUE, direction = Relationship.Direction.OUTGOING)
     private List<Technique> techniques = new ArrayList<>();
@@ -179,6 +206,13 @@ public class NType extends AbstractEntity {
     public NType(String nid, String title) {
         this.nid = nid;
         this.title = title;
+    }
+
+    public NType(String nid) {
+        this.nid = nid;
+    }
+
+    public NType() {
     }
 
 }

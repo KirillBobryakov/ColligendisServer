@@ -1,6 +1,5 @@
 package bkv.colligendis.database.entity.numista;
 
-
 import bkv.colligendis.database.entity.AbstractEntity;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
@@ -10,24 +9,25 @@ import org.springframework.data.neo4j.core.schema.Node;
 
 @Node("CATALOGUE")
 @Data
-@EqualsAndHashCode(callSuper=true)
+@EqualsAndHashCode(callSuper = true)
 @ToString(callSuper = true, onlyExplicitlyIncluded = true)
 public class Catalogue extends AbstractEntity {
+
+    public static final String LABEL = "CATALOGUE";
 
     private String nid;
     private String code;
     private String bibliography;
 
-//    private String code;
-//    private String authors;
-//    private String title;
-//    private String edition;
-//    private String publisher;
-//    private String publicationLocation;
-//    private String publicationYear;
-//    private String ISBN10;
-//    private String ISBN13;
-
+    // private String code;
+    // private String authors;
+    // private String title;
+    // private String edition;
+    // private String publisher;
+    // private String publicationLocation;
+    // private String publicationYear;
+    // private String ISBN10;
+    // private String ISBN13;
 
     public Catalogue() {
     }

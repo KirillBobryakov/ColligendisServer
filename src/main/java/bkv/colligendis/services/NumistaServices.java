@@ -1,11 +1,21 @@
 package bkv.colligendis.services;
 
 import bkv.colligendis.database.service.numista.*;
+import bkv.colligendis.database.service.numista.init_services.CalendarInitializationService;
+import bkv.colligendis.database.service.numista.init_services.LetteringScriptInitializationService;
+import bkv.colligendis.database.service.numista.init_services.MetalInitializationService;
+import bkv.colligendis.database.service.numista.init_services.ShapeInitializationService;
+import bkv.colligendis.utils.numista.parser.init_parsers.NumistaAllArtistsParser;
+import bkv.colligendis.utils.numista.parser.init_parsers.NumistaAllMintsParser;
 import bkv.colligendis.database.service.features.YearService;
 import org.springframework.stereotype.Service;
 
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
+
 @Service
 public class NumistaServices {
+    private static final Logger logger = LogManager.getLogger(NumistaServices.class);
 
     public final CountryService countryService;
 
@@ -52,6 +62,8 @@ public class NumistaServices {
 
     public final MarkService markService;
 
+    public final ArtistService artistService;
+
     public NumistaServices(CountryService countryService, SubjectService subjectService, NTypeService nTypeService,
             CategoryService categoryService, IssuerService issuerService, RulerService rulerService,
             RulerGroupService rulerGroupService, IssuingEntityService issuingEntityService,
@@ -65,7 +77,7 @@ public class NumistaServices {
             LetteringScriptService letteringScriptService, MintService mintService, MintmarkService mintmarkService,
             SpecifiedMintService specifiedMintService, PrinterService printerService, NTagService nTagService,
             CalendarService calendarService, YearService yearService, VariantService variantService,
-            MarkService markService, ItemService itemService) {
+            MarkService markService, ItemService itemService, ArtistService artistService) {
         this.countryService = countryService;
         this.subjectService = subjectService;
         this.nTypeService = nTypeService;
@@ -99,6 +111,37 @@ public class NumistaServices {
         this.variantService = variantService;
         this.itemService = itemService;
         this.markService = markService;
+        this.artistService = artistService;
+    }
+
+    public void initData() {
+
+        // Shapes
+        ShapeInitializationService shapeInitializationService = new ShapeInitializationService(this.shapeService);
+        shapeInitializationService.initializeAllShapes();
+
+        // Artists (Designers and Engravers)
+
+        NumistaAllArtistsParser artistParser = new NumistaAllArtistsParser();
+        artistParser.parseAndSaveAllArtists();
+
+        // Calendars
+        CalendarInitializationService calendarInitializationService = new CalendarInitializationService(
+                this.calendarService);
+        calendarInitializationService.initializeAllCalendars();
+
+        // Lettering Scripts
+        LetteringScriptInitializationService letteringScriptInitializationService = new LetteringScriptInitializationService(
+                this.letteringScriptService);
+        letteringScriptInitializationService.initializeAllLetteringScripts();
+
+        // Metals
+        MetalInitializationService metalInitializationService = new MetalInitializationService(this.metalService);
+        metalInitializationService.initializeAllMetals();
+
+        // Mints
+        NumistaAllMintsParser mintParser = new NumistaAllMintsParser();
+        mintParser.parseAndSaveAllMints();
     }
 
 }

@@ -18,7 +18,6 @@ public class NumistaAllItemsParser {
     private static final String BASE_URL = "https://en.numista.com/catalogue/index.php";
 
     public NumistaAllItemsParser() {
-
     }
 
     public void fetchAndProcessCatalog(String issuerNumistaCode, String collectibleType) {
@@ -27,6 +26,7 @@ public class NumistaAllItemsParser {
         List<TypeForParsing> typesForParsing = new ArrayList<>();
         boolean stop = true;
         int number = 0;
+
         do {
             System.out.println("Reading page: " + page);
             String url = String.format("%s?e=%s&r=&st=%s&cat=y&p=%d", BASE_URL, issuerNumistaCode,
@@ -45,7 +45,12 @@ public class NumistaAllItemsParser {
             }
 
             for (Element element : elements) {
-                Element a = element.selectFirst("a[href^=/catalogue/]");
+
+                Element strong = element.selectFirst("strong");
+                if (strong == null)
+                    continue;
+
+                Element a = strong.selectFirst("a[href^=/]");
                 if (a == null)
                     continue;
 
@@ -56,8 +61,9 @@ public class NumistaAllItemsParser {
                     nid = nid.replace("/catalogue/exonumia", "").replace(".html", "");
                 } else if (nid.contains("note")) {
                     nid = nid.replace("/catalogue/note", "").replace(".html", "");
+                } else if (nid.contains("/")) {
+                    nid = nid.replace("/", "");
                 }
-
                 final String finalNid = nid;
 
                 if (typesForParsing.stream().anyMatch(t -> t.nid.equals(finalNid))) {
@@ -82,7 +88,7 @@ public class NumistaAllItemsParser {
                 })
                 .filter(EditPageParser.isEditPageLoaded)
                 .map(editPageParser -> EditPageParser.loadNType
-                        .andThen(EditPageParser.hideMetrics)
+                        .andThen(EditPageParser.showMetrics)
                         .andThen(EditPageParser.titleParser)
                         .andThen(EditPageParser.collectibleTypeParser)
                         .andThen(EditPageParser.issuerParser)

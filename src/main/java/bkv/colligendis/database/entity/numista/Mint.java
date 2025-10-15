@@ -1,7 +1,9 @@
 package bkv.colligendis.database.entity.numista;
 
-
 import bkv.colligendis.database.entity.AbstractEntity;
+import lombok.Data;
+import lombok.EqualsAndHashCode;
+
 import org.springframework.data.neo4j.core.schema.Node;
 import org.springframework.data.neo4j.core.schema.Relationship;
 
@@ -9,19 +11,22 @@ import java.util.ArrayList;
 import java.util.List;
 
 @Node("MINT")
+@Data
+@EqualsAndHashCode(callSuper = true)
 public class Mint extends AbstractEntity {
 
     public static final String HAS_MINTMARK = "HAS_MINTMARK";
 
-
     private String nid;
     private String fullName;
+
+    private String latitude;
+    private String longitude;
 
     @Relationship(type = HAS_MINTMARK, direction = Relationship.Direction.OUTGOING)
     private List<Mintmark> mintmarks = new ArrayList<>();
 
-
-    //old properties start
+    // old properties start
     private String name;
     private String place;
     private int operationStartYear;
@@ -29,8 +34,7 @@ public class Mint extends AbstractEntity {
     private String website;
     private String photoSymbol;
     private String numistaURL;
-    //old properties end
-
+    // old properties end
 
     public Mint() {
     }
@@ -40,83 +44,22 @@ public class Mint extends AbstractEntity {
         this.numistaURL = numistaURL;
     }
 
-    public String getName() {
-        return name;
+    // Explicit getters/setters for latitude and longitude (Lombok may not generate
+    // them properly)
+    public String getLatitude() {
+        return latitude;
     }
 
-    public void setName(String name) {
-        this.name = name;
+    public void setLatitude(String latitude) {
+        this.latitude = latitude;
     }
 
-    public String getPlace() {
-        return place;
+    public String getLongitude() {
+        return longitude;
     }
 
-    public void setPlace(String place) {
-        this.place = place;
+    public void setLongitude(String longitude) {
+        this.longitude = longitude;
     }
 
-    public int getOperationStartYear() {
-        return operationStartYear;
-    }
-
-    public void setOperationStartYear(int operationStartYear) {
-        this.operationStartYear = operationStartYear;
-    }
-
-    public int getOperationEndYear() {
-        return operationEndYear;
-    }
-
-    public void setOperationEndYear(int operationEndYear) {
-        this.operationEndYear = operationEndYear;
-    }
-
-    public String getWebsite() {
-        return website;
-    }
-
-    public void setWebsite(String website) {
-        this.website = website;
-    }
-
-    public String getPhotoSymbol() {
-        return photoSymbol;
-    }
-
-    public void setPhotoSymbol(String photoSymbol) {
-        this.photoSymbol = photoSymbol;
-    }
-
-    public String getNumistaURL() {
-        return numistaURL;
-    }
-
-    public void setNumistaURL(String numistaURL) {
-        this.numistaURL = numistaURL;
-    }
-
-    public String getNid() {
-        return nid;
-    }
-
-    public void setNid(String nid) {
-        this.nid = nid;
-    }
-
-    public String getFullName() {
-        return fullName;
-    }
-
-    public void setFullName(String fullName) {
-        this.fullName = fullName;
-    }
-
-    public List<Mintmark> getMintmarks() {
-        return mintmarks;
-    }
-
-    public void setMintmarks(List<Mintmark> mintmarks) {
-        this.mintmarks = mintmarks;
-    }
 }

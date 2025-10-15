@@ -79,28 +79,29 @@ public class UserController {
     @PostMapping(value = "login")
     public ResponseEntity<String> login(@RequestBody LoginUser loginUser) {
 
-        if (loginUser.getEmail() == null)
-            return new ResponseEntity<>(HttpStatus.INTERNAL_SERVER_ERROR);
+        // if (loginUser.getEmail() == null)
+        // return new ResponseEntity<>(HttpStatus.INTERNAL_SERVER_ERROR);
 
-        User user = userService.findByEmail(loginUser.getEmail());
-        if (user == null) {
-            return new ResponseEntity<>(HttpStatus.NOT_FOUND);
-        }
+        // User user = userService.findByEmail(loginUser.getEmail());
+        // if (user == null) {
+        // return new ResponseEntity<>(HttpStatus.NOT_FOUND);
+        // }
 
-        if (user.getPassword().equals(DigestUtils.sha256Hex(loginUser.getPassword()))) {
-            // user.setIsExpired(System.currentTimeMillis() + 1000 * 60 * 60 * 24);
-            String token = "";
-            // Algorithm algorithm = Algorithm.HMAC256("qwerty");
-            // String token = JWT.create()
-            // .withClaim("authorized", true)
-            // .withClaim("userId", user.getId())
-            // .withClaim("userName", user.getName())
-            // .withClaim("email", user.getEmail())
-            //// .withClaim("exp", user.getAuth_expired())
-            // .withExpiresAt(new Date(user.getAuth_expired()))
-            // .sign(algorithm);
-            return new ResponseEntity<>(token, HttpStatus.OK);
-        }
+        // if
+        // (user.getPassword().equals(DigestUtils.sha256Hex(loginUser.getPassword()))) {
+        // // user.setIsExpired(System.currentTimeMillis() + 1000 * 60 * 60 * 24);
+        // String token = "";
+        // // Algorithm algorithm = Algorithm.HMAC256("qwerty");
+        // // String token = JWT.create()
+        // // .withClaim("authorized", true)
+        // // .withClaim("userId", user.getId())
+        // // .withClaim("userName", user.getName())
+        // // .withClaim("email", user.getEmail())
+        // //// .withClaim("exp", user.getAuth_expired())
+        // // .withExpiresAt(new Date(user.getAuth_expired()))
+        // // .sign(algorithm);
+        // return new ResponseEntity<>(token, HttpStatus.OK);
+        // }
 
         return new ResponseEntity<>(HttpStatus.INTERNAL_SERVER_ERROR);
     }

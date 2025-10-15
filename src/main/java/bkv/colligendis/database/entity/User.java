@@ -6,6 +6,7 @@ import lombok.Data;
 import lombok.EqualsAndHashCode;
 import lombok.NoArgsConstructor;
 import org.springframework.data.neo4j.core.schema.Node;
+import org.springframework.data.neo4j.core.schema.Relationship;
 import org.springframework.security.core.GrantedAuthority;
 import org.springframework.security.core.authority.SimpleGrantedAuthority;
 import org.springframework.security.core.userdetails.UserDetails;
@@ -23,6 +24,8 @@ import java.util.stream.Collectors;
 @Builder
 public class User extends AbstractEntity implements UserDetails {
 
+    public static final String HAS_TOKEN = "HAS_TOKEN";
+
     private String username;
 
     private String email;
@@ -34,17 +37,22 @@ public class User extends AbstractEntity implements UserDetails {
 
     private String profilePictureUrl;
 
-    private String refreshTokenJti;
-    private Long refreshTokenExpiredAt;
+    // private String refreshTokenJti;
+    // private Long refreshTokenExpiredAt;
 
     private boolean is_auth;
     private boolean isExpired;
     private boolean isLocked;
     private boolean isCredentialsExpired;
 
+    @Relationship(type = HAS_TOKEN, direction = Relationship.Direction.OUTGOING)
+    private UserToken userToken;
+
     @Override
     public Collection<? extends GrantedAuthority> getAuthorities() {
-        return this.roles != null ? this.roles.stream().map(SimpleGrantedAuthority::new).collect(Collectors.toList())
+        return this.roles != null ? this.roles.stream()
+                .map(role -> new SimpleGrantedAuthority(role.startsWith("ROLE_") ? role : "ROLE_" + role))
+                .collect(Collectors.toList())
                 : null;
     }
 

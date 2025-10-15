@@ -32,8 +32,7 @@ public class SecurityConfiguration {
 
     @Bean
     public AuthenticationManager authenticationManager() {
-        DaoAuthenticationProvider authProvider = new DaoAuthenticationProvider();
-        authProvider.setUserDetailsService(email -> userService.findByEmail(email));
+        DaoAuthenticationProvider authProvider = new DaoAuthenticationProvider(userService::findByEmail);
         authProvider.setPasswordEncoder(passwordEncoder());
         return new ProviderManager(authProvider);
     }
@@ -47,15 +46,9 @@ public class SecurityConfiguration {
                     httpSecuritySessionManagementConfigurer.sessionCreationPolicy(SessionCreationPolicy.STATELESS);
                 })
                 .authorizeHttpRequests(authorizeHttpRequests -> authorizeHttpRequests
-                        .requestMatchers("/auth/**").permitAll()
-                        .requestMatchers("/catalogue/issuer/hierarchical").permitAll()
-                        // .requestMatchers("/market/**").permitAll()
-                        // .requestMatchers("/countries/all/names").permitAll()
-                        // .requestMatchers("/catalogue/image/**").permitAll()
-                        // .requestMatchers("/market/**").permitAll()
-                        // .requestMatchers("/database/**").permitAll()
-                        // .requestMatchers("/statistics/**").permitAll()
-                        // .requestMatchers("/").permitAll()
+                        .requestMatchers("/auth/signin").permitAll()
+                        .requestMatchers("/auth/register").permitAll()
+                        .requestMatchers("/auth/refresh").permitAll()
                         .anyRequest().authenticated())
                 .with(new JwtConfigurer(jwtTokenProvider), jwtConfigurer -> {
                 });

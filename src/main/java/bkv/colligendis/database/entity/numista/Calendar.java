@@ -1,10 +1,16 @@
 package bkv.colligendis.database.entity.numista;
 
 import bkv.colligendis.database.entity.AbstractEntity;
+import lombok.Data;
+import lombok.EqualsAndHashCode;
+
 import org.springframework.data.neo4j.core.schema.Node;
 
 @Node("CALENDAR")
+@Data
+@EqualsAndHashCode(callSuper = true)
 public class Calendar extends AbstractEntity {
+    public static final String LABEL = "CALENDAR";
 
     public static final String GREGORIAN_CODE = "gregorien";
     public static final String ISLAMI_HIJRI = "musulman";
@@ -20,27 +26,4 @@ public class Calendar extends AbstractEntity {
         this.name = name;
     }
 
-    public String getCode() {
-        return code;
-    }
-
-    public void setCode(String code) {
-        this.code = code;
-    }
-
-    public String getName() {
-        return name;
-    }
-
-    public void setName(String name) {
-        this.name = name;
-    }
-
-    public Integer getToGregorianShift() {
-        return toGregorianShift;
-    }
-
-    public void setToGregorianShift(Integer toGregorianShift) {
-        this.toGregorianShift = toGregorianShift;
-    }
 }

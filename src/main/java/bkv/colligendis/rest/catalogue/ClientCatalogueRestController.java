@@ -36,6 +36,9 @@ import bkv.colligendis.rest.catalogue.csi_statistics.CatalogueIssuerRequest;
 import bkv.colligendis.rest.catalogue.csi_statistics.CatalogueItem;
 import bkv.colligendis.rest.catalogue.csi_statistics.CatalogueSubjectRequest;
 import bkv.colligendis.rest.catalogue.csi_statistics.CsiStatisticsRequest;
+import bkv.colligendis.rest.exceptions.ForbiddenException;
+import bkv.colligendis.rest.exceptions.InvalidRefreshTokenException;
+import bkv.colligendis.rest.exceptions.InvalidTokenException;
 import bkv.colligendis.utils.N4JUtil;
 import bkv.colligendis.utils.numista.PART_TYPE;
 import bkv.colligendis.utils.IMAGE_SIZE;
@@ -478,6 +481,8 @@ public class ClientCatalogueRestController {
                     .headers(headers)
                     .body(resource);
 
+        } catch (InvalidTokenException | ForbiddenException | InvalidRefreshTokenException ex) {
+            throw ex;
         } catch (IOException e) {
             return ResponseEntity.internalServerError().build();
         }

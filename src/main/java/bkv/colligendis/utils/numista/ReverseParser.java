@@ -57,7 +57,7 @@ public class ReverseParser extends NumistaPartParser {
 
                     assert nType.getReverse().getEngravers() != null;
 
-                    nType.getReverse().getEngravers().add(engraver);
+                    // nType.getReverse().getEngravers().add(engraver);
                     result = ParseEvent.CHANGED;
                 }
             }
@@ -80,7 +80,7 @@ public class ReverseParser extends NumistaPartParser {
 
                     assert nType.getObverse().getDesigners() != null;
 
-                    nType.getObverse().getDesigners().add(designer);
+                    // nType.getObverse().getDesigners().add(designer);
                     result = ParseEvent.CHANGED;
                 }
             }

@@ -1,9 +1,14 @@
 package bkv.colligendis.security;
 
+import bkv.colligendis.rest.exceptions.InvalidTokenException;
+import bkv.colligendis.rest.exceptions.UserNotFoundException;
 import io.jsonwebtoken.*;
 import jakarta.annotation.PostConstruct;
-import jakarta.servlet.http.HttpServletRequest;
+
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.Authentication;
 import org.springframework.stereotype.Component;
@@ -19,14 +24,16 @@ import java.util.List;
 
 @Component
 public class JwtTokenProvider {
-    // @Value("${security.jwt.token.secret-key:secret}")
-    private String secretKey = "7ZHg-nUf-fIJBr1viBd-ojwuL0BIcXZC_rUmPwLOn_Y=";
+    private static final Logger logger = LoggerFactory.getLogger(JwtTokenProvider.class);
 
-    // @Value("${security.jwt.token.expire-length:3600000}")
-    private long validityInMilliseconds = 1000L * 60; // 1m
+    @Value("${security.jwt.token.secret-key:secret}")
+    private String secretKey;
 
-    // @Value("${security.jwt.refresh-token.expire-length:2592000000}")
-    public long refreshValidityInMilliseconds = 1000L * 60 * 5; // 5m
+    @Value("${security.jwt.token.expire-length}")
+    private long validityInMilliseconds;
+
+    @Value("${security.jwt.refresh-token.expire-length}")
+    public long refreshValidityInMilliseconds;
 
     private SecretKey key;
 
@@ -41,35 +48,30 @@ public class JwtTokenProvider {
         this.key = new SecretKeySpec(keyBytes, "HmacSHA256");
     }
 
-    public String createToken(String email, List<String> roles) {
-        Date now = new Date();
-        Date validity = new Date(now.getTime() + validityInMilliseconds);
-
+    public String createAccessToken(Authentication authentication) {
+        User user = (User) authentication.getPrincipal();
         return Jwts.builder()
                 .claims()
-                .add("role", roles)
-                .add("email", email)
-                .issuedAt(now)
-                .expiration(validity)
+                .add("role", user.getRoles())
+                .add("email", user.getEmail())
+                .issuedAt(new Date())
+                .expiration(new Date(System.currentTimeMillis() + validityInMilliseconds))
                 .and()
                 .signWith(key)//
                 .compact();
     }
 
-    public String createRefreshToken(String email, List<String> roles) {
-        System.out.println("Create refresh token...");
-        Date now = new Date();
-        Date validity = new Date(now.getTime() + refreshValidityInMilliseconds);
-        System.out.println("Current time: " + now.getTime());
-        System.out.println("refreshValidityInMilliseconds: " + validity.getTime());
+    public String createRefreshToken(Authentication authentication) {
+        User user = (User) authentication.getPrincipal();
+
         return Jwts.builder()
                 .claims()
                 .add("type", "refresh")
                 .add("jti", java.util.UUID.randomUUID().toString())
-                .add("role", roles)
-                .add("email", email)
-                .issuedAt(now)
-                .expiration(validity)
+                .add("role", user.getRoles())
+                .add("email", user.getEmail())
+                .issuedAt(new Date())
+                .expiration(new Date(System.currentTimeMillis() + refreshValidityInMilliseconds))
                 .and()
                 .signWith(key)
                 .compact();
@@ -89,46 +91,45 @@ public class JwtTokenProvider {
         return parseClaims(token).getExpiration();
     }
 
-    public Authentication getAuthentication(String token) {
+    public String getEmailFromToken(String token) {
         Claims claims = parseClaims(token);
-        String email = claims.get("email", String.class);
+        Object email = claims.get("email");
+        return email != null ? email.toString() : null;
+    }
+
+    public List<String> getRolesFromToken(String token) {
+        Claims claims = parseClaims(token);
+        @SuppressWarnings("unchecked")
+        List<String> role = (List<String>) claims.get("role");
+        return role != null ? role : null;
+    }
+
+    public Authentication getAuthentication(String token) {
+        String email = getEmailFromToken(token);
 
         // Get user from database
         User user = userDetailsService.findByEmail(email);
         if (user == null) {
-            throw new RuntimeException("User not found");
+            throw new UserNotFoundException("User not found for email: " + email);
+        }
+
+        if (user.getUserToken() == null) {
+            throw new InvalidTokenException("No token found for user");
+        }
+
+        if (!user.getUserToken().getAccessToken().equals(token)) {
+            throw new InvalidTokenException("Token mismatch - token does not belong to user");
         }
 
         return new UsernamePasswordAuthenticationToken(user, "", user.getAuthorities());
     }
 
-    public String resolveToken(HttpServletRequest req) {
-        String bearerToken = req.getHeader("Authorization");
-        if (bearerToken != null && bearerToken.startsWith("Bearer ")) {
-            return bearerToken.substring(7);
-        }
-        return null;
+    public Authentication createAuthenticationFromUser(User user) {
+        return new UsernamePasswordAuthenticationToken(user, "", user.getAuthorities());
     }
 
     public boolean validateToken(String token) {
-        try {
-            Jws<Claims> claims = Jwts.parser().verifyWith(key).build().parseSignedClaims(token);
-            return !claims.getPayload().getExpiration().before(new Date());
-        } catch (SignatureException e) {
-            System.out.println(e.getMessage());
-            return false;
-        } catch (MalformedJwtException e) {
-            System.out.println(e.getMessage());
-            return false;
-        } catch (ExpiredJwtException e) {
-            System.out.println(e.getMessage());
-            return false;
-        } catch (UnsupportedJwtException e) {
-            System.out.println(e.getMessage());
-            return false;
-        } catch (IllegalArgumentException e) {
-            System.out.println(e.getMessage());
-            return false;
-        }
+        Jws<Claims> claims = Jwts.parser().verifyWith(key).build().parseSignedClaims(token);
+        return !claims.getPayload().getExpiration().before(new Date());
     }
 }

@@ -13,6 +13,8 @@ import lombok.ToString;
 @ToString(callSuper = true, onlyExplicitlyIncluded = true)
 public class CompositionType extends AbstractEntity {
 
+    public static final String LABEL = "COMPOSITION_TYPE";
+
     private String code;
     private String name;
 
@@ -35,5 +37,13 @@ public class CompositionType extends AbstractEntity {
     // bimetallic_clad("Bimetallic with clad metal centre"),
     // trimetallic("Trimetallic"),
     // other("Other");
+
+    // gold_deposited_polymer("Gold‑deposited polymer"),
+    // hybrid_substrate("Hybrid substrate"),
+    // other("Other"),
+    // paper("Paper"),
+    // polymer("Polymer"),
+    // silk("Silk"),
+    // silver_deposited_polymer("Silver‑deposited polymer");
 
 }

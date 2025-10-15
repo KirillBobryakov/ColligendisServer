@@ -7,6 +7,7 @@ import org.modelmapper.ModelMapper;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
@@ -27,6 +28,7 @@ public class NTypeRestController {
     @Autowired
     private ModelMapper modelMapper;
 
+    @PreAuthorize("hasRole('USER')")
     @GetMapping(value = "/filtered", consumes = MediaType.APPLICATION_JSON_VALUE, produces = MediaType.APPLICATION_JSON_VALUE)
     public ResponseEntity<ApiResponse<List<NTypeDTO>>> getCatalogueNTypes2(
             @RequestBody CatalogueNTypesRequest2 request) {
@@ -104,6 +106,7 @@ public class NTypeRestController {
 
         return ResponseEntity.ok(new ApiResponse<>(catalogueNTypes, "N-types fetched successfully",
                 ApiResponse.Status.SUCCESS));
+
     }
 
 }

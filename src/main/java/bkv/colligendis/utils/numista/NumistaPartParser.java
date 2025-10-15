@@ -1,7 +1,8 @@
 package bkv.colligendis.utils.numista;
 
-import bkv.colligendis.database.entity.features.Year;
 import bkv.colligendis.database.entity.numista.NType;
+import bkv.colligendis.database.service.features.YearService;
+import bkv.colligendis.database.service.numista.CalendarService;
 import bkv.colligendis.utils.DebugUtil;
 import bkv.colligendis.utils.N4JUtil;
 import com.fasterxml.jackson.databind.ObjectMapper;
@@ -46,8 +47,6 @@ public abstract class NumistaPartParser {
         DebugUtil.showInfo(this, composeTimeInfo("parsing: ", time));
         return result;
     }
-
-    ;
 
     private String composeTimeInfo(String message, long time) {
         return message + " takes " + (System.currentTimeMillis() - time) / 1000 + " sec "
@@ -116,19 +115,23 @@ public abstract class NumistaPartParser {
      * Parse string {@code fullName} to find year periods.
      * Example: (1887-1918), (1887), (1990-date)
      *
-     * @return Pair with left = "fromYears" and right = "tillYears"
+     * @return Pair with left = "fromYears UUIDs" and right = "tillYears UUIDs"
      */
-    protected static Pair<List<Year>, List<Year>> parseYearPeriods(String fullName) {
+    public static Pair<List<UUID>, List<UUID>> parseYearPeriods(String fullName) {
+        YearService yearService = N4JUtil.getInstance().numistaService.yearService;
+        CalendarService calendarService = N4JUtil.getInstance().numistaService.calendarService;
 
-        Pair<List<Year>, List<Year>> result = MutablePair.of(new ArrayList<>(), new ArrayList<>());
+        Pair<List<UUID>, List<UUID>> result = MutablePair.of(new ArrayList<>(), new ArrayList<>());
 
         Pattern pattern = Pattern.compile("[(]\\S+[)]");
         Matcher matcher = pattern.matcher(fullName);
 
         while (matcher.find()) {
             String periodStr = matcher.group(0);
-            final Year yearFrom;
-            final Year yearTill;
+            UUID yearFromUuid = null;
+            UUID yearTillUuid = null;
+            // final Year yearFrom;
+            // final Year yearTill;
 
             String[] years = periodStr.replace("(", "").replace(")", "").split("-");
 
@@ -141,9 +144,11 @@ public abstract class NumistaPartParser {
                 return null;
             } else if (years.length == 1) { // we have a period during one year, example "(1936)"
                 if (StringUtils.isNumeric(years[0])) {
-                    yearFrom = N4JUtil.getInstance().numistaService.calendarService
-                            .findGregorianYearByValueOrCreate(Integer.parseInt(years[0]));
-                    yearTill = yearFrom;
+
+                    yearFromUuid = yearService.findGregorianYearUuidByValue(Integer.parseInt(years[0]));
+                    assert yearFromUuid != null;
+
+                    yearTillUuid = yearFromUuid;
                 } else { // Try to catch another variants for ruler's period with one year which is not
                          // numeric
                     DebugUtil.showError(NumistaPartParser.class, "Can't parse PHP request (period for = " + fullName
@@ -153,8 +158,10 @@ public abstract class NumistaPartParser {
             } else { // Ruler's Period has two years (1887-1918) or (1990-date)
 
                 if (StringUtils.isNumeric(years[0])) { // Now I only know that the start year is only number
-                    yearFrom = N4JUtil.getInstance().numistaService.calendarService
-                            .findGregorianYearByValueOrCreate(Integer.parseInt(years[0]));
+
+                    yearFromUuid = yearService.findGregorianYearUuidByValue(Integer.parseInt(years[0]));
+                    assert yearFromUuid != null;
+
                 } else { // Try to catch another variants for ruler's period with two year which start
                          // year is not numeric
                     DebugUtil.showError(NumistaPartParser.class,
@@ -162,14 +169,13 @@ public abstract class NumistaPartParser {
                     return null;
                 }
 
-                assert yearFrom != null;
-
                 if (years[1].equals("date")) { // End year can be Numeric or "date". The "date" means that the ruling is
                                                // not finished.
-                    yearTill = null;
+                    yearTillUuid = null;
                 } else if (StringUtils.isNumeric(years[1])) {
-                    yearTill = N4JUtil.getInstance().numistaService.calendarService
-                            .findGregorianYearByValueOrCreate(Integer.parseInt(years[1]));
+                    yearTillUuid = yearService.findGregorianYearUuidByValue(Integer.parseInt(years[1]));
+                    assert yearTillUuid != null;
+
                 } else { // Try to catch another variants for ruler's period with two year which end year
                          // is not numeric and not "date"
                     DebugUtil.showError(NumistaPartParser.class,
@@ -178,18 +184,17 @@ public abstract class NumistaPartParser {
                 }
             }
 
-            assert yearFrom != null;
-
-            if (!result.getLeft().contains(yearFrom)) {
-                result.getLeft().add(yearFrom);
+            if (!result.getLeft().contains(yearFromUuid)) {
+                result.getLeft().add(yearFromUuid);
             }
 
-            if (yearTill != null && !result.getRight().contains(yearTill)) {
-                result.getRight().add(yearTill);
+            if (yearTillUuid != null && !result.getRight().contains(yearTillUuid)) {
+                result.getRight().add(yearTillUuid);
             }
         }
 
         return result;
+
     }
 
     /**
@@ -253,7 +258,8 @@ public abstract class NumistaPartParser {
             HttpURLConnection con = (HttpURLConnection) url.openConnection();
 
             con.setRequestMethod("GET");
-            con.setRequestProperty("Accept", "application/json"); // Indicate we expect JSON
+            con.setRequestProperty("Accept", "application/json"); // Indicate we expect
+            // JSON
 
             if (useCookies) {
                 con.setRequestProperty("User-Agent", USER_AGENT);
