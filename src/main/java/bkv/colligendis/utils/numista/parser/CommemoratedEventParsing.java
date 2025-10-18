@@ -3,7 +3,6 @@ package bkv.colligendis.utils.numista.parser;
 import java.util.UUID;
 
 import bkv.colligendis.database.entity.numista.CommemoratedEvent;
-import bkv.colligendis.utils.numista.NumistaPartParser;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
@@ -14,7 +13,7 @@ public class CommemoratedEventParsing extends PartParser {
         super((pageParser) -> {
             ParsingResult result = ParsingResult.NOT_CHANGED;
 
-            String evenement = NumistaPartParser.getAttribute(pageParser.getNumistaPage().selectFirst("#evenement"),
+            String evenement = PartParser.getAttribute(pageParser.getNumistaPage().selectFirst("#evenement"),
                     "value");
 
             if (evenement == null || evenement.isEmpty()) {

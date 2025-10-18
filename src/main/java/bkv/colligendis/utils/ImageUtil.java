@@ -6,7 +6,7 @@ import bkv.colligendis.database.entity.numista.CollectibleType;
 import bkv.colligendis.database.entity.numista.Issuer;
 import bkv.colligendis.database.entity.numista.NType;
 import bkv.colligendis.database.entity.numista.NTypePart;
-import bkv.colligendis.utils.numista.PART_TYPE;
+import bkv.colligendis.utils.numista.parser.PART_TYPE;
 import net.coobird.thumbnailator.Thumbnails;
 
 import org.apache.commons.io.FileUtils;

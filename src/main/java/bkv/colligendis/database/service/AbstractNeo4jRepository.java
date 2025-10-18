@@ -43,7 +43,7 @@ public interface AbstractNeo4jRepository<E extends AbstractEntity> extends Neo4j
      * @return {@code true} If a relationship was presented, or was created;
      *         {@code false} There was not a relationship, and it was not created
      */
-    @Query("MATCH (f {uuid:$fromNodeUuid})-[r]->(t {uuid:$toNodeUuid}) WITH count(r) > 0 AS cond CALL apoc.do.when(cond, 'RETURN true as res', 'MATCH (f {uuid:$fromNodeUuid}), (t {uuid:$toNodeUuid}) CALL apoc.create.relationship(f, $relationshipType, {}, t) YIELD rel RETURN count(rel) > 0 AS res', {fromNodeUuid:$fromNodeUuid, toNodeUuid:$toNodeUuid, relationshipType:$relationshipType}) YIELD value RETURN value.res")
+    @Query("MATCH (f {uuid:$fromNodeUuid})-[r]->(t {uuid:$toNodeUuid}) WHERE type(r) = $relationshipType WITH count(r) > 0 AS cond CALL apoc.do.when(cond, 'RETURN true as res', 'MATCH (f {uuid:$fromNodeUuid}), (t {uuid:$toNodeUuid}) CALL apoc.create.relationship(f, $relationshipType, {}, t) YIELD rel RETURN count(rel) > 0 AS res', {fromNodeUuid:$fromNodeUuid, toNodeUuid:$toNodeUuid, relationshipType:$relationshipType}) YIELD value RETURN value.res")
     boolean createSingleRelationshipToNode(String fromNodeUuid, String toNodeUuid, String relationshipType);
 
     @Query("MATCH (f {uuid:$fromNodeUuid})-[r]->(t {uuid:$toNodeUuid}) WHERE type(r)=$relationshipType return COALESCE(count(r), 0) > 0")
@@ -63,6 +63,9 @@ public interface AbstractNeo4jRepository<E extends AbstractEntity> extends Neo4j
      */
     @Query("MATCH (f {uuid:$fromNodeUuid})-[r]->(to) WHERE type(r)=$relationshipType AND $secondEntityLabel IN labels(to) return COALESCE(count(r), 0)>0")
     boolean hasAnyRelationshipWithType(String fromNodeUuid, String relationshipType, String secondEntityLabel);
+
+    @Query("MATCH (n {uuid:$uuid}) RETURN n[$propertyName] IS NOT NULL")
+    boolean isPropertyExists(String uuid, String propertyName);
 
     @Query("MATCH (n {uuid:$uuid}) RETURN n[$propertyName]")
     String getStringValue(String uuid, String propertyName);

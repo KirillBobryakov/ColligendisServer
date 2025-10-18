@@ -38,7 +38,7 @@ import bkv.colligendis.rest.exceptions.ForbiddenException;
 import bkv.colligendis.rest.exceptions.InvalidRefreshTokenException;
 import bkv.colligendis.rest.exceptions.InvalidTokenException;
 import bkv.colligendis.utils.N4JUtil;
-import bkv.colligendis.utils.numista.PART_TYPE;
+import bkv.colligendis.utils.numista.parser.PART_TYPE;
 import bkv.colligendis.utils.IMAGE_SIZE;
 import bkv.colligendis.utils.ImageUtil;
 

@@ -1,6 +1,7 @@
 package bkv.colligendis.utils.numista.parser;
 
 import bkv.colligendis.database.service.features.YearService;
+import bkv.colligendis.database.service.numista.ArtistService;
 import bkv.colligendis.database.service.numista.CalendarService;
 import bkv.colligendis.database.service.numista.CatalogueReferenceService;
 import bkv.colligendis.database.service.numista.CatalogueService;
@@ -10,10 +11,13 @@ import bkv.colligendis.database.service.numista.CurrencyService;
 import bkv.colligendis.database.service.numista.DenominationService;
 import bkv.colligendis.database.service.numista.IssuerService;
 import bkv.colligendis.database.service.numista.IssuingEntityService;
+import bkv.colligendis.database.service.numista.LetteringScriptService;
 import bkv.colligendis.database.service.numista.MarkService;
 import bkv.colligendis.database.service.numista.MintService;
 import bkv.colligendis.database.service.numista.MintmarkService;
+import bkv.colligendis.database.service.numista.NTypePartService;
 import bkv.colligendis.database.service.numista.NTypeService;
+import bkv.colligendis.database.service.numista.PrinterService;
 import bkv.colligendis.database.service.numista.RulerGroupService;
 import bkv.colligendis.database.service.numista.RulerService;
 import bkv.colligendis.database.service.numista.SeriesService;
@@ -44,6 +48,8 @@ import org.apache.logging.log4j.Logger;
 import org.jsoup.Jsoup;
 import org.jsoup.nodes.Document;
 import org.jsoup.nodes.Element;
+
+import com.fasterxml.jackson.databind.ObjectMapper;
 
 public abstract class PartParser {
 
@@ -76,9 +82,13 @@ public abstract class PartParser {
             .getInstance().numistaService.specifiedMintService;
     protected static final MintmarkService mintmarkService = N4JUtil.getInstance().numistaService.mintmarkService;
     protected static final MintService mintService = N4JUtil.getInstance().numistaService.mintService;
-
+    protected static final PrinterService printerService = N4JUtil.getInstance().numistaService.printerService;
+    protected static final ArtistService artistService = N4JUtil.getInstance().numistaService.artistService;
+    protected static final NTypePartService nTypePartService = N4JUtil.getInstance().numistaService.nTypePartService;
     protected static final YearService yearService = N4JUtil.getInstance().numistaService.yearService;
     protected static final CalendarService calendarService = N4JUtil.getInstance().numistaService.calendarService;
+    protected static final LetteringScriptService letteringScriptService = N4JUtil
+            .getInstance().numistaService.letteringScriptService;
 
     public String partName;
 
@@ -116,8 +126,6 @@ public abstract class PartParser {
             }
 
             int responseCode = con.getResponseCode();
-            // System.out.println("\nSending 'GET' request to URL : " + url);
-            // System.out.println("Response Code : " + responseCode);
 
             if (responseCode == 404)
                 return null;
@@ -318,5 +326,131 @@ public abstract class PartParser {
                     }).stream().collect(Collectors.toList());
         }
         return null;
+    }
+
+    public static List<String> getTextsSelectedOptions(Element element) {
+        if (element != null) {
+            return element.select("option").stream().filter(option -> option.attributes().hasKey("selected"))
+                    .map(Element::text).collect(Collectors.toList());
+        }
+        return null;
+    }
+
+    public static String getTagText(Element element) {
+        if (element != null && !element.text().isEmpty()) {
+            return element.text();
+        }
+        return null;
+    }
+
+    /**
+     * Fetches content from the given URL and parses it as a JSON object.
+     *
+     * @param urlString  The URL to fetch JSON data from.
+     * @param useCookies Whether to include the predefined COOKIE and USER_AGENT
+     *                   (useful for numista.com APIs).
+     * @return A JsonObject if parsing is successful, otherwise null.
+     */
+    public static <T> T fetchAndParseJson(String urlString, boolean useCookies, Class<T> clazz) {
+        try {
+            URL url = URI.create(urlString).toURL();
+            HttpURLConnection con = (HttpURLConnection) url.openConnection();
+
+            con.setRequestMethod("GET");
+            con.setRequestProperty("Accept", "application/json"); // Indicate we expect JSON
+
+            if (useCookies) {
+                con.setRequestProperty("User-Agent", USER_AGENT);
+                con.setRequestProperty("Cookie", COOKIE); // Use with caution if the JSON source is not numista
+            }
+
+            int responseCode = con.getResponseCode();
+            if (responseCode >= 200 && responseCode < 300) { // Check for successful response
+                BufferedReader in = new BufferedReader(new InputStreamReader(con.getInputStream()));
+                String inputLine;
+                StringBuilder responseContent = new StringBuilder();
+                while ((inputLine = in.readLine()) != null) {
+                    responseContent.append(inputLine);
+                }
+                in.close();
+
+                // Parse the JSON string
+                ObjectMapper objectMapper = new ObjectMapper();
+                return objectMapper.readValue(responseContent.toString(), clazz);
+
+            } else {
+                logger.error("HTTP GET request failed with response code: " + responseCode + " for URL: " + urlString);
+                // Log error response body if any
+                try (BufferedReader errorStream = new BufferedReader(new InputStreamReader(con.getErrorStream()))) {
+                    String errorLine;
+                    StringBuilder errorResponse = new StringBuilder();
+                    while ((errorLine = errorStream.readLine()) != null) {
+                        errorResponse.append(errorLine);
+                    }
+                    System.err.println("Error response: " + errorResponse.toString());
+                } catch (Exception e) {
+                    // Ignore if error stream cannot be read
+                }
+                return null;
+            }
+        } catch (IOException e) {
+            logger.error("IOException during fetching/parsing JSON from URL: " + urlString + " - " + e.getMessage());
+            e.printStackTrace();
+            return null;
+        }
+    }
+
+    /**
+     * Fetches content from the given URL and parses it as a JSON object.
+     *
+     * @param urlString  The URL to fetch JSON data from.
+     * @param useCookies Whether to include the predefined COOKIE and USER_AGENT
+     *                   (useful for numista.com APIs).
+     * @return A JsonObject if parsing is successful, otherwise null.
+     */
+    public static String fetchJson(String urlString, boolean useCookies) {
+        try {
+            URL url = URI.create(urlString).toURL();
+            HttpURLConnection con = (HttpURLConnection) url.openConnection();
+
+            con.setRequestMethod("GET");
+            con.setRequestProperty("Accept", "application/json"); // Indicate we expect JSON
+
+            if (useCookies) {
+                con.setRequestProperty("User-Agent", USER_AGENT);
+                con.setRequestProperty("Cookie", COOKIE); // Use with caution if the JSON source is not numista
+            }
+
+            int responseCode = con.getResponseCode();
+            if (responseCode >= 200 && responseCode < 300) { // Check for successful response
+                BufferedReader in = new BufferedReader(new InputStreamReader(con.getInputStream()));
+                String inputLine;
+                StringBuilder responseContent = new StringBuilder();
+                while ((inputLine = in.readLine()) != null) {
+                    responseContent.append(inputLine);
+                }
+                in.close();
+
+                return responseContent.toString();
+            } else {
+                logger.error("HTTP GET request failed with response code: " + responseCode + " for URL: " + urlString);
+                // Log error response body if any
+                try (BufferedReader errorStream = new BufferedReader(new InputStreamReader(con.getErrorStream()))) {
+                    String errorLine;
+                    StringBuilder errorResponse = new StringBuilder();
+                    while ((errorLine = errorStream.readLine()) != null) {
+                        errorResponse.append(errorLine);
+                    }
+                    System.err.println("Error response: " + errorResponse.toString());
+                } catch (Exception e) {
+                    // Ignore if error stream cannot be read
+                }
+                return null;
+            }
+        } catch (IOException e) {
+            logger.error("IOException during fetching/parsing JSON from URL: " + urlString + " - " + e.getMessage());
+            e.printStackTrace();
+            return null;
+        }
     }
 }

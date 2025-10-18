@@ -2,7 +2,7 @@ package bkv.colligendis.database.entity.numista;
 
 import bkv.colligendis.database.entity.AbstractEntity;
 import bkv.colligendis.database.entity.features.LocalImage;
-import bkv.colligendis.utils.numista.PART_TYPE;
+import bkv.colligendis.utils.numista.parser.PART_TYPE;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
 import org.springframework.data.neo4j.core.schema.Node;
@@ -18,8 +18,8 @@ public class NTypePart extends AbstractEntity {
     public static final String LABEL = "NTYPE_PART";
 
     public static final String WRITE_ON_SCRIPT = "WRITE_ON_SCRIPT";
-    public static final String ENGRAVING_WAS_DONE_BY = "ENGRAVER";
-    public static final String DESIGN_WAS_DONE_BY = "DESIGNER";
+    public static final String ENGRAVING_WAS_DONE_BY = "ENGRAVING_WAS_DONE_BY";
+    public static final String DESIGN_WAS_DONE_BY = "DESIGN_WAS_DONE_BY";
 
     private PART_TYPE partType;
 

@@ -11,7 +11,12 @@ import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.function.BiFunction;
 import java.util.stream.Collectors;
 
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
+import org.springframework.dao.IncorrectResultSizeDataAccessException;
+
 public abstract class AbstractService<E extends AbstractEntity, R extends AbstractNeo4jRepository<E>> {
+    private static final Logger logger = LogManager.getLogger(AbstractService.class);
 
     protected final R repository;
 
@@ -33,8 +38,16 @@ public abstract class AbstractService<E extends AbstractEntity, R extends Abstra
     }
 
     public UUID findUuidByPropertyStringValue(String entityLabel, String propertyName, String propertyValue) {
-        String uuid = repository.findUuidByPropertyStringValue(entityLabel, propertyName, propertyValue);
-        return uuid != null ? UUID.fromString(uuid) : null;
+        try {
+            String uuid = repository.findUuidByPropertyStringValue(entityLabel, propertyName, propertyValue);
+            return uuid != null ? UUID.fromString(uuid) : null;
+        } catch (IncorrectResultSizeDataAccessException e) {
+            logger.error(
+                    "There are more than one entity with the same property string value for entityLabel=" + entityLabel
+                            + ", propertyName=" + propertyName + ", propertyValue=" + propertyValue,
+                    e);
+            return null;
+        }
     }
 
     public void deleteEntityByUuidWithDetach(UUID uuid) {
@@ -60,6 +73,15 @@ public abstract class AbstractService<E extends AbstractEntity, R extends Abstra
                 relationshipType);
     }
 
+    protected boolean hasAnyRelationshipWithType(UUID fromEntityUuid, String relationshipType,
+            String secondEntityLabel) {
+        return repository.hasAnyRelationshipWithType(fromEntityUuid.toString(), relationshipType, secondEntityLabel);
+    }
+
+    protected boolean isPropertyExists(UUID uuid, String propertyName) {
+        return repository.isPropertyExists(uuid.toString(), propertyName);
+    }
+
     protected <T> boolean comparePropertyValue(UUID uuid, String propertyName, Object propertyValue, Class<T> type) {
         return switch (propertyValue) {
             case String s -> {
@@ -78,7 +100,11 @@ public abstract class AbstractService<E extends AbstractEntity, R extends Abstra
                 Double existingValue = repository.getFloatValue(uuid.toString(), propertyName);
                 yield existingValue != null && Math.abs(existingValue - f) < 0.0001;
             }
-            case null, default -> false;
+            case null -> {
+
+                yield true;
+            }
+            default -> false;
         };
     }
 

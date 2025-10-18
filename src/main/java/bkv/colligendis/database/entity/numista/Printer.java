@@ -6,6 +6,8 @@ import org.springframework.data.neo4j.core.schema.Node;
 @Node("PRINTER")
 public class Printer extends AbstractEntity {
 
+    public static final String LABEL = "PRINTER";
+
     private String nid;
     private String name;
 

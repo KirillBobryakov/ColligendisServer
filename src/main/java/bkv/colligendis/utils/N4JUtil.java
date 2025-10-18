@@ -35,16 +35,4 @@ public class N4JUtil {
         return instance;
     }
 
-    public void initN4JDB() {
-        initCategories();
-    }
-
-    // Numista type's categories = coin, banknote, exonumia and unknown
-    private void initCategories() {
-        numistaService.categoryService.findByName(Category.COIN);
-        numistaService.categoryService.findByName(Category.BANKNOTE);
-        numistaService.categoryService.findByName(Category.EXONUMIA);
-        numistaService.categoryService.findByName(Category.UNKNOWN);
-    }
-
 }

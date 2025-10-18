@@ -1,9 +1,8 @@
 package bkv.colligendis.utils.numista.parser.init_parsers;
 
 import bkv.colligendis.database.entity.numista.Artist;
-import bkv.colligendis.utils.DebugUtil;
 import bkv.colligendis.utils.N4JUtil;
-import bkv.colligendis.utils.numista.NumistaPartParser;
+import bkv.colligendis.utils.numista.parser.PartParser;
 
 import org.jsoup.nodes.Document;
 import org.jsoup.nodes.Element;
@@ -13,8 +12,12 @@ import org.springframework.stereotype.Service;
 import java.util.ArrayList;
 import java.util.List;
 
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
+
 @Service
 public class NumistaAllArtistsParser {
+    private static final Logger logger = LogManager.getLogger(NumistaAllArtistsParser.class);
 
     private static final String BASE_URL = "https://en.numista.com/catalogue/artists.php";
 
@@ -27,13 +30,14 @@ public class NumistaAllArtistsParser {
      * /catalogue/index.php?r=artist%2Fview&id=XXXX
      */
     public void parseAndSaveAllArtists() {
-        DebugUtil.showInfo(this, "Starting to parse artists from: " + BASE_URL);
+
+        logger.info("Starting to parse artists from: " + BASE_URL);
 
         // Load the artists page
-        Document page = NumistaPartParser.loadPageByURL(BASE_URL, true);
+        Document page = PartParser.loadPageByURL(BASE_URL, true);
 
         if (page == null) {
-            DebugUtil.showError(this, "Failed to load artists page from: " + BASE_URL);
+            logger.error("Failed to load artists page from: " + BASE_URL);
             return;
         }
 
@@ -42,7 +46,7 @@ public class NumistaAllArtistsParser {
         // Find all artist links - they are in the format: /catalogue/artist.php?id=XXX
         Elements artistLinks = page.select("a[href^=/catalogue/artist.php]");
 
-        DebugUtil.showInfo(this, "Found " + artistLinks.size() + " artist links");
+        logger.info("Found " + artistLinks.size() + " artist links");
 
         for (Element link : artistLinks) {
             String href = link.attr("href");
@@ -68,13 +72,14 @@ public class NumistaAllArtistsParser {
                     artist.setName(name);
                     artists.add(artist);
 
-                    DebugUtil.showInfo(this, "Found new artist: " + name + " (nid: " + nid + ")");
+                    logger.info("Found new artist: " + name + " (nid: " + nid + ")");
                 } else {
                     // Update existing artist name if different
                     if (!existingArtist.getName().equals(name)) {
                         existingArtist.setName(name);
                         N4JUtil.getInstance().numistaService.artistService.save(existingArtist);
-                        DebugUtil.showInfo(this, "Updated artist: " + name + " (nid: " + nid + ")");
+
+                        logger.info("Updated artist: " + name + " (nid: " + nid + ")");
                     }
                 }
             }
@@ -82,13 +87,13 @@ public class NumistaAllArtistsParser {
 
         // Save all new artists to database
         if (!artists.isEmpty()) {
-            DebugUtil.showInfo(this, "Saving " + artists.size() + " new artists to database");
+            logger.info("Saving " + artists.size() + " new artists to database");
             for (Artist artist : artists) {
                 N4JUtil.getInstance().numistaService.artistService.save(artist);
             }
-            DebugUtil.showInfo(this, "Successfully saved all artists");
+            logger.info("Successfully saved all artists");
         } else {
-            DebugUtil.showInfo(this, "No new artists to save");
+            logger.info("No new artists to save");
         }
     }
 

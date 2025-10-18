@@ -2,9 +2,9 @@ package bkv.colligendis.utils.numista.item;
 
 import bkv.colligendis.utils.ImageUtil;
 import bkv.colligendis.utils.N4JUtil;
-import bkv.colligendis.utils.numista.EditPageParser;
-import bkv.colligendis.utils.numista.NumistaPartParser;
-import bkv.colligendis.utils.numista.PART_TYPE;
+import bkv.colligendis.utils.numista.parser.PART_TYPE;
+import bkv.colligendis.utils.numista.parser.PageParser;
+import bkv.colligendis.utils.numista.parser.PartParser;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -35,7 +35,7 @@ public class NumistaAllItemsParser {
 
             System.err.println(url);
 
-            Document document = NumistaPartParser.loadPageByURL(url, false);
+            Document document = PartParser.loadPageByURL(url, false);
 
             List<Element> elements = document.select("div.description_piece");
 
@@ -79,37 +79,7 @@ public class NumistaAllItemsParser {
 
         System.out.println("Total items for parsing: " + typesForParsing.size());
 
-        typesForParsing.stream()
-                .map(t -> {
-                    System.out.println("Parsing " + t.number + " from page: " + t.page + " nid: " + t.nid);
-                    return EditPageParser.create
-                            .andThen(EditPageParser.loadNumistaPage)
-                            .apply(t.nid);
-                })
-                .filter(EditPageParser.isEditPageLoaded)
-                .map(editPageParser -> EditPageParser.loadNType
-                        .andThen(EditPageParser.showMetrics)
-                        .andThen(EditPageParser.titleParser)
-                        .andThen(EditPageParser.collectibleTypeParser)
-                        .andThen(EditPageParser.issuerParser)
-                        .andThen(EditPageParser.rulerParser)
-                        .andThen(EditPageParser.issuingEntityParser)
-                        .andThen(EditPageParser.currencyParser)
-                        .andThen(EditPageParser.denominationParser)
-                        .andThen(EditPageParser.commemoratedEventParser)
-                        .andThen(EditPageParser.seriesParser)
-                        .andThen(EditPageParser.demonetizedParser)
-                        .andThen(EditPageParser.referenceNumberParser)
-                        .andThen(EditPageParser.mintageParser)
-                        .andThen(EditPageParser.technicalDataParser)
-                        .andThen(EditPageParser.obverseParser)
-                        .andThen(EditPageParser.reverseParser)
-                        .andThen(EditPageParser.edgeParser)
-                        .andThen(EditPageParser.watermarkParser)
-                        .andThen(EditPageParser.mintsParser)
-                        .andThen(EditPageParser.saveNType)
-                        .apply(editPageParser))
-                .forEach(EditPageParser.finalyInfo);
+        PageParser.parse.accept(typesForParsing.stream().map(nType -> nType.nid));
 
         typesForParsing.forEach(nType -> {
             ImageUtil.saveNumistaImage(N4JUtil.getInstance().numistaService.nTypeService.findByNid(nType.nid),

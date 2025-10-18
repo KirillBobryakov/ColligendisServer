@@ -2,6 +2,8 @@ package bkv.colligendis.database.service.numista.init_services;
 
 import bkv.colligendis.database.entity.numista.Calendar;
 import bkv.colligendis.database.service.numista.CalendarService;
+import bkv.colligendis.utils.N4JUtil;
+
 import org.springframework.stereotype.Service;
 
 import java.util.ArrayList;
@@ -18,12 +20,6 @@ import org.apache.logging.log4j.Logger;
 @Service
 public class CalendarInitializationService {
     private static final Logger logger = LogManager.getLogger(CalendarInitializationService.class);
-
-    private final CalendarService calendarService;
-
-    public CalendarInitializationService(CalendarService calendarService) {
-        this.calendarService = calendarService;
-    }
 
     // Inner class for calendar data
     private static class CalendarData {
@@ -51,6 +47,7 @@ public class CalendarInitializationService {
     }
 
     public void initializeAllCalendars() {
+        CalendarService calendarService = N4JUtil.getInstance().numistaService.calendarService;
         logger.info("Initializing calendars...");
         List<CalendarData> calendars = getAllCalendarData();
         calendars.forEach(calendarData -> {

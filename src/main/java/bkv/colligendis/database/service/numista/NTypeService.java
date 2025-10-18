@@ -10,11 +10,14 @@ import bkv.colligendis.database.entity.numista.Issuer;
 import bkv.colligendis.database.entity.numista.IssuingEntity;
 import bkv.colligendis.database.entity.numista.NType;
 import bkv.colligendis.database.entity.numista.NTypePart;
+import bkv.colligendis.database.entity.numista.Printer;
 import bkv.colligendis.database.entity.numista.Ruler;
 import bkv.colligendis.database.entity.numista.Series;
 import bkv.colligendis.database.entity.numista.Shape;
+import bkv.colligendis.database.entity.numista.SpecifiedMint;
 import bkv.colligendis.database.entity.numista.Technique;
 import bkv.colligendis.services.AbstractService;
+import bkv.colligendis.utils.numista.parser.PART_TYPE;
 
 import org.springframework.stereotype.Service;
 
@@ -338,6 +341,43 @@ public class NTypeService extends AbstractService<NType, NTypeRepository> {
         return setPropertyStringValue(nTypeUuid, "alignment", alignment);
     }
 
+    // All NTypeParts
+    public UUID getNTypePartUuid(UUID nTypeUuid, PART_TYPE partType) {
+        switch (partType) {
+            case OBVERSE:
+                return getObverseUuid(nTypeUuid);
+            case REVERSE:
+                return getReverseUuid(nTypeUuid);
+            case EDGE:
+                return getEdgeUuid(nTypeUuid);
+            case WATERMARK:
+                return getWatermarkUuid(nTypeUuid);
+            default:
+                return null;
+        }
+    }
+
+    public void setNTypePart(UUID nTypeUuid, UUID nTypePartUuid, PART_TYPE partType) {
+        switch (partType) {
+            case OBVERSE:
+                setObverse(nTypeUuid, nTypePartUuid);
+                break;
+            case REVERSE:
+                setReverse(nTypeUuid, nTypePartUuid);
+                break;
+            case EDGE:
+                setEdge(nTypeUuid, nTypePartUuid);
+                break;
+            case WATERMARK:
+                setWatermark(nTypeUuid, nTypePartUuid);
+                break;
+            default:
+                throw new IllegalArgumentException("Invalid part type: " + partType);
+        }
+    }
+
+    // Obverse
+
     public UUID getObverseUuid(UUID nTypeUuid) {
         return getSingleRelatedNodeUUID(nTypeUuid, NType.HAS_OBVERSE, NTypePart.LABEL);
     }
@@ -345,6 +385,8 @@ public class NTypeService extends AbstractService<NType, NTypeRepository> {
     public void setObverse(UUID nTypeUuid, UUID obverseUuid) {
         setSingleOutgoingRelationshipToNode(nTypeUuid, obverseUuid, NType.HAS_OBVERSE, NTypePart.LABEL);
     }
+
+    // Reverse
 
     public UUID getReverseUuid(UUID nTypeUuid) {
         return getSingleRelatedNodeUUID(nTypeUuid, NType.HAS_REVERSE, NTypePart.LABEL);
@@ -354,6 +396,8 @@ public class NTypeService extends AbstractService<NType, NTypeRepository> {
         setSingleOutgoingRelationshipToNode(nTypeUuid, reverseUuid, NType.HAS_REVERSE, NTypePart.LABEL);
     }
 
+    // Edge
+
     public UUID getEdgeUuid(UUID nTypeUuid) {
         return getSingleRelatedNodeUUID(nTypeUuid, NType.HAS_EDGE, NTypePart.LABEL);
     }
@@ -362,12 +406,58 @@ public class NTypeService extends AbstractService<NType, NTypeRepository> {
         setSingleOutgoingRelationshipToNode(nTypeUuid, edgeUuid, NType.HAS_EDGE, NTypePart.LABEL);
     }
 
+    // Watermark
+
     public UUID getWatermarkUuid(UUID nTypeUuid) {
         return getSingleRelatedNodeUUID(nTypeUuid, NType.HAS_WATERMARK, NTypePart.LABEL);
     }
 
     public void setWatermark(UUID nTypeUuid, UUID watermarkUuid) {
         setSingleOutgoingRelationshipToNode(nTypeUuid, watermarkUuid, NType.HAS_WATERMARK, NTypePart.LABEL);
+    }
+
+    // SpecifiedMint
+    public List<UUID> getSpecifiedMints(UUID nTypeUuid) {
+        return getAllOutgoingRelatedNodesUUIDs(nTypeUuid, NType.HAS_SPECIFIED_MINT, SpecifiedMint.LABEL);
+    }
+
+    public boolean detachSpecifiedMint(UUID nTypeUuid, UUID specifiedMintUuid) {
+        detachEntityFromAnotherEntityWithRelationshipType(nTypeUuid, specifiedMintUuid, NType.HAS_SPECIFIED_MINT);
+        return true;
+    }
+
+    public boolean addSpecifiedMint(UUID nTypeUuid, UUID specifiedMintUuid) {
+        addSingleOutgoingRelationshipToNode(nTypeUuid, specifiedMintUuid, NType.HAS_SPECIFIED_MINT);
+        return true;
+    }
+
+    public boolean equateSpecifiedMints(UUID nTypeUuid, List<UUID> matchingSpecifiedMintsUUIDs) {
+        return equateFistListToSecondList(getSpecifiedMints(nTypeUuid), matchingSpecifiedMintsUUIDs,
+                this::detachSpecifiedMint, this::addSpecifiedMint, nTypeUuid);
+    }
+
+    // Printers
+    public List<UUID> getPrinters(UUID nTypeUuid) {
+        return getAllOutgoingRelatedNodesUUIDs(nTypeUuid, NType.PRINTED_BY, Printer.LABEL);
+    }
+
+    public boolean detachPrinter(UUID nTypeUuid, UUID printerUuid) {
+        detachEntityFromAnotherEntityWithRelationshipType(nTypeUuid, printerUuid, NType.PRINTED_BY);
+        return true;
+    }
+
+    public boolean addPrinter(UUID nTypeUuid, UUID printerUuid) {
+        addSingleOutgoingRelationshipToNode(nTypeUuid, printerUuid, NType.PRINTED_BY);
+        return true;
+    }
+
+    public boolean equatePrinters(UUID nTypeUuid, List<UUID> matchingPrintersUUIDs) {
+        return equateFistListToSecondList(getPrinters(nTypeUuid), matchingPrintersUUIDs, this::detachPrinter,
+                this::addPrinter, nTypeUuid);
+    }
+
+    public boolean hasRelationshipToPrinter(UUID nTypeUuid, UUID printerUuid) {
+        return hasSingleRelationshipToNode(nTypeUuid, printerUuid, NType.PRINTED_BY);
     }
 
     // End: Methods for Numista parsing

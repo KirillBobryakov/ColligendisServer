@@ -4,8 +4,6 @@ import java.util.Objects;
 
 import org.jsoup.nodes.Document;
 
-import bkv.colligendis.utils.numista.NumistaPartParser;
-
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
@@ -16,7 +14,7 @@ public class TitleParsing extends PartParser {
     public TitleParsing() {
         super((pageParser) -> {
             Document page = pageParser.getNumistaPage();
-            String designation = NumistaPartParser.getAttribute(page.selectFirst("#designation"), "value");
+            String designation = PartParser.getAttribute(page.selectFirst("#designation"), "value");
             if (designation == null) {
                 logger.error("The Title of NType with nid = {} can't be found. {}",
                         pageParser.getNTypeUuid(),

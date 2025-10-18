@@ -7,6 +7,7 @@ import bkv.colligendis.utils.DebugUtil;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
+import java.util.UUID;
 
 @Service
 public class MintService extends AbstractService<Mint, MintRepository> {
@@ -14,6 +15,36 @@ public class MintService extends AbstractService<Mint, MintRepository> {
     public MintService(MintRepository repository) {
         super(repository);
     }
+
+    // Start: Methods for Numista parsing
+    public UUID findUuidByNid(String nid) {
+        return findUuidByPropertyStringValue(Mint.LABEL, "nid", nid);
+    }
+
+    public boolean compareFullName(UUID mintUuid, String fullName) {
+        return comparePropertyValue(mintUuid, "fullName", fullName, String.class);
+    }
+
+    public void setFullName(UUID mintUuid, String fullName) {
+        setPropertyStringValue(mintUuid, "fullName", fullName);
+    }
+
+    public boolean compareLatitude(UUID mintUuid, String latitude) {
+        return comparePropertyValue(mintUuid, "latitude", latitude, String.class);
+    }
+
+    public void setLatitude(UUID mintUuid, String latitude) {
+        setPropertyStringValue(mintUuid, "latitude", latitude);
+    }
+
+    public boolean compareLongitude(UUID mintUuid, String longitude) {
+        return comparePropertyValue(mintUuid, "longitude", longitude, String.class);
+    }
+
+    public void setLongitude(UUID mintUuid, String longitude) {
+        setPropertyStringValue(mintUuid, "longitude", longitude);
+    }
+    // End: Methods for Numista parsing
 
     public Mint findByNid(String nid, String fullName) {
         Mint mint = repository.findByNid(nid);

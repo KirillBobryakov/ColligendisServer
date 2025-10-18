@@ -3,7 +3,6 @@ package bkv.colligendis.utils.numista.parser;
 import bkv.colligendis.database.entity.numista.NType;
 import bkv.colligendis.database.service.numista.NTypeService;
 import bkv.colligendis.utils.N4JUtil;
-import bkv.colligendis.utils.numista.NumistaPartParser;
 import lombok.Data;
 import org.jsoup.nodes.Document;
 import org.jsoup.nodes.Element;
@@ -22,6 +21,7 @@ import org.apache.logging.log4j.Logger;
 public class PageParser {
 
     private static final Logger logger = LogManager.getLogger(PageParser.class);
+    public static final String TYPE_PAGE_PREFIX = "https://en.numista.com/catalogue/contributions/modifier.php?id=";
 
     private ParsingResult currentParsingStatus = ParsingResult.NOT_CHANGED;
 
@@ -46,28 +46,28 @@ public class PageParser {
     public static Consumer<Stream<String>> parse = nids -> {
         nids.map(nid -> PageParser.create.andThen(PageParser.loadNumistaPage).apply(nid))
                 .filter(PageParser.isEditPageLoaded)
-                .map(PageParser -> PageParser.loadNType
-                        .andThen(PageParser.showMetrics)
-                        .andThen(PageParser.titleParser)
-                        .andThen(PageParser.collectibleTypeParser)
-                        .andThen(PageParser.issuerParser)
-                        .andThen(PageParser.rulerParser)
-                        .andThen(PageParser.issuingEntityParser)
-                        .andThen(PageParser.currencyParser)
-                        .andThen(PageParser.denominationParser)
-                        .andThen(PageParser.commemoratedEventParser)
-                        .andThen(PageParser.seriesParser)
-                        .andThen(PageParser.demonetizedAndIssueDateParser)
-                        .andThen(PageParser.referenceNumberParser)
-                        .andThen(PageParser.mintageParser)
-                        // .andThen(PageParser.technicalDataParser)
-                        // .andThen(PageParser.obverseParser)
-                        // .andThen(PageParser.reverseParser)
-                        // .andThen(PageParser.edgeParser)
-                        // .andThen(PageParser.watermarkParser)
-                        // .andThen(PageParser.mintsParser)
-                        // .andThen(PageParser.saveNType)
-                        .apply(PageParser))
+                .map(pageParser -> pageParser.loadNType
+                        .andThen(pageParser.showMetrics)
+                        .andThen(pageParser.titleParser)
+                        .andThen(pageParser.collectibleTypeParser)
+                        .andThen(pageParser.issuerParser)
+                        .andThen(pageParser.rulerParser)
+                        .andThen(pageParser.issuingEntityParser)
+                        .andThen(pageParser.currencyParser)
+                        .andThen(pageParser.denominationParser)
+                        .andThen(pageParser.commemoratedEventParser)
+                        .andThen(pageParser.seriesParser)
+                        .andThen(pageParser.demonetizedAndIssueDateParser)
+                        .andThen(pageParser.referenceNumberParser)
+                        .andThen(pageParser.mintageParser)
+                        .andThen(pageParser.technicalDataParser)
+                        .andThen(pageParser.obverseParser)
+                        .andThen(pageParser.reverseParser)
+                        .andThen(pageParser.edgeParser)
+                        .andThen(pageParser.watermarkParser)
+                        .andThen(pageParser.mintsParser)
+                        .andThen(pageParser.printerParser)
+                        .apply(pageParser))
                 .forEach(PageParser.finalyInfo);
     };
 
@@ -77,8 +77,8 @@ public class PageParser {
         logger.debug("Loading Numista page nid: {}", pageParser.nid);
 
         long time = System.currentTimeMillis();
-        pageParser.numistaPage = NumistaPartParser
-                .loadPageByURL(NumistaPartParser.TYPE_PAGE_PREFIX + pageParser.nid, true);
+        pageParser.numistaPage = PartParser
+                .loadPageByURL(TYPE_PAGE_PREFIX + pageParser.nid, true);
 
         if (pageParser.numistaPage == null) {
             logger.error("Loading Numista page nid: {} editPage is null", pageParser.nid);
@@ -107,7 +107,7 @@ public class PageParser {
             pageParser.setNTypeUuid(nTypeService.findNTypeUuidByNid(getNid()));
             logger.debug("Parsing existing Numista Type with nid: {} nTypeUuid: {}", nid, pageParser.getNTypeUuid());
         } else { // Create new NType with nid and title - unique fields
-            String title = NumistaPartParser.getAttribute(page.selectFirst("#designation"), "value");
+            String title = PartParser.getAttribute(page.selectFirst("#designation"), "value");
             pageParser.setNTypeUuid(nTypeService.save(new NType(nid, title)).getUuid());
             logger.warn("Parsing new Numista Type with nid: {} title: {}", nid, title);
         }
@@ -179,43 +179,23 @@ public class PageParser {
     public UnaryOperator<PageParser> technicalDataParser = PageParser -> PageParser
             .parse(PageParser, new TechnicalDataParsing());
 
-    // public UnaryOperator<PageParser> obverseParser = PageParser ->
-    // PageParser.parse(PageParser,
-    // new ObverseParser());
+    public UnaryOperator<PageParser> obverseParser = PageParser -> PageParser.parse(PageParser,
+            new NTypePartParsing(PART_TYPE.OBVERSE));
 
-    // public UnaryOperator<PageParser> reverseParser = PageParser ->
-    // PageParser.parse(PageParser,
-    // new ReverseParser());
+    public UnaryOperator<PageParser> reverseParser = PageParser -> PageParser.parse(PageParser,
+            new NTypePartParsing(PART_TYPE.REVERSE));
 
-    // public UnaryOperator<PageParser> edgeParser = PageParser ->
-    // PageParser.parse(PageParser,
-    // new EdgeParser());
+    public UnaryOperator<PageParser> edgeParser = PageParser -> PageParser.parse(PageParser,
+            new NTypePartParsing(PART_TYPE.EDGE));
 
-    // public UnaryOperator<PageParser> watermarkParser = PageParser ->
-    // PageParser.parse(PageParser,
-    // new WatermarkParser());
+    public UnaryOperator<PageParser> watermarkParser = PageParser -> PageParser.parse(PageParser,
+            new NTypePartParsing(PART_TYPE.WATERMARK));
 
-    // public UnaryOperator<PageParser> mintsParser = PageParser ->
-    // PageParser.parse(PageParser,
-    // new MintsParser());
+    public UnaryOperator<PageParser> mintsParser = PageParser -> PageParser.parse(PageParser,
+            new MintParsing());
 
-    public UnaryOperator<PageParser> saveNType = PageParser -> {
-        // if (PageParser.isChanged()) {
-        // long time = System.currentTimeMillis();
-        // final NTypeService nTypeService =
-        // N4JUtil.getInstance().numistaService.nTypeService;
-        // PageParser.setNType(nTypeService.save(PageParser.getNType()));
-        // if (PageParser.isShowMetrics) {
-        // DebugUtil.showInfo(PageParser.class, calcAndShowSpentTimeInfo(
-        // "nid: " + PageParser.getNType().getNid() + " Saving NType takes: ", time));
-        // }
-        // } else {
-        // DebugUtil.showInfo(PageParser.class,
-        // "nid: " + PageParser.getNType().getNid() + "NType without saving.");
-        // }
-
-        return PageParser;
-    };
+    public UnaryOperator<PageParser> printerParser = PageParser -> PageParser.parse(PageParser,
+            new PrinterParsing());
 
     public static Consumer<PageParser> finalyInfo = PageParser -> {
         if (PageParser.isShowMetrics) {

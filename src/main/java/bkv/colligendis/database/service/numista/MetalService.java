@@ -10,6 +10,7 @@ import org.springframework.stereotype.Service;
 
 @Service
 public class MetalService extends AbstractService<Metal, MetalRepository> {
+
     public MetalService(MetalRepository repository) {
         super(repository);
     }

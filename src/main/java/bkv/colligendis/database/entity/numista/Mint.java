@@ -14,6 +14,7 @@ import java.util.List;
 @Data
 @EqualsAndHashCode(callSuper = true)
 public class Mint extends AbstractEntity {
+    public static final String LABEL = "MINT";
 
     public static final String HAS_MINTMARK = "HAS_MINTMARK";
 
@@ -39,26 +40,10 @@ public class Mint extends AbstractEntity {
     public Mint() {
     }
 
-    public Mint(String name, String numistaURL) {
-        this.name = name;
-        this.numistaURL = numistaURL;
-    }
-
-    // Explicit getters/setters for latitude and longitude (Lombok may not generate
-    // them properly)
-    public String getLatitude() {
-        return latitude;
-    }
-
-    public void setLatitude(String latitude) {
+    public Mint(String nid, String fullName, String latitude, String longitude) {
+        this.nid = nid;
+        this.fullName = fullName;
         this.latitude = latitude;
-    }
-
-    public String getLongitude() {
-        return longitude;
-    }
-
-    public void setLongitude(String longitude) {
         this.longitude = longitude;
     }
 

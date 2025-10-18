@@ -14,7 +14,6 @@ import com.google.gson.Gson;
 
 import bkv.colligendis.database.entity.numista.Catalogue;
 import bkv.colligendis.database.entity.numista.CatalogueReference;
-import bkv.colligendis.utils.DebugUtil;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import org.apache.logging.log4j.LogManager;
@@ -51,8 +50,7 @@ public class ReferenceNumberParsing extends PartParser {
 
             List<UUID> foundReferencesUUIDs = references.stream()
                     .map(reference -> {
-                        DebugUtil.showInfo(ReferenceNumberParsing.class,
-                                "Parsing reference: " + reference.getNumber() + " " + reference.getCatalogueNid());
+                        logger.info("Parsing reference: " + reference.getNumber() + " " + reference.getCatalogueNid());
                         UUID uuid = catalogueReferenceService.findUuidByNumberAndCatalogueNid(reference.getNumber(),
                                 reference.getCatalogueNid());
 
@@ -135,7 +133,7 @@ public class ReferenceNumberParsing extends PartParser {
             Catalogue catalogue = catalogueService.create(referencedCatalogue.id,
                     referencedCatalogue.text, referencedCatalogue.bibliography);
             if (catalogue == null)
-                DebugUtil.showError(ReferenceNumberParsing.class, "New Catalogue with nid=" + referencedCatalogue.id
+                logger.error("New Catalogue with nid=" + referencedCatalogue.id
                         + " and code=" + referencedCatalogue.text + " can't be created.");
         }
 

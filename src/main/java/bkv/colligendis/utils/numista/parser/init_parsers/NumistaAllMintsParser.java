@@ -1,20 +1,25 @@
 package bkv.colligendis.utils.numista.parser.init_parsers;
 
 import bkv.colligendis.database.entity.numista.Mint;
-import bkv.colligendis.utils.DebugUtil;
 import bkv.colligendis.utils.N4JUtil;
-import bkv.colligendis.utils.numista.NumistaPartParser;
+import bkv.colligendis.utils.numista.parser.PartParser;
 
 import org.jsoup.nodes.Document;
 import org.jsoup.nodes.Element;
 import org.jsoup.select.Elements;
 import org.springframework.stereotype.Service;
 
+import java.util.UUID;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
+
 @Service
 public class NumistaAllMintsParser {
+
+    private static final Logger logger = LogManager.getLogger(NumistaAllMintsParser.class);
 
     private static final String BASE_URL = "https://en.numista.com/catalogue/mints.php";
 
@@ -29,28 +34,28 @@ public class NumistaAllMintsParser {
      * - coordinates in <a href="map_canvas"> with map.flyTo([lat, lon])
      */
     public void parseAndSaveAllMints() {
-        DebugUtil.showInfo(this, "Starting to parse mints from: " + BASE_URL);
+        logger.info("Starting to parse mints from: " + BASE_URL);
 
         // Load the mints page
-        Document page = NumistaPartParser.loadPageByURL(BASE_URL, true);
+        Document page = PartParser.loadPageByURL(BASE_URL, true);
 
         if (page == null) {
-            DebugUtil.showError(this, "Failed to load mints page from: " + BASE_URL);
+            logger.error("Failed to load mints page from: " + BASE_URL);
             return;
         }
 
         // Find all mint rows in the table
         // The structure is: <tr> contains <td> with <a> tag for mint link and <strong>
         // for name
-        Elements mintRows = page.select("tr");
+        Elements mintRows = page.select("li");
 
-        DebugUtil.showInfo(this, "Found " + mintRows.size() + " total rows");
+        logger.info("Found " + mintRows.size() + " total rows");
 
         int processedCount = 0;
         for (Element row : mintRows) {
             try {
                 // Find the link to the mint page (format: /catalogue/mint.php?id=XXX)
-                Element mintLink = row.selectFirst("a[href^=/catalogue/mint.php]");
+                Element mintLink = row.selectFirst("a[href*=/catalogue/mint.php]");
 
                 if (mintLink == null) {
                     continue;
@@ -61,7 +66,7 @@ public class NumistaAllMintsParser {
                 String nid = extractMintId(href);
 
                 if (nid == null || nid.isEmpty()) {
-                    DebugUtil.showWarning(this, "Skipping row - no valid mint ID found in href: " + href);
+                    logger.warn("Skipping row - no valid mint ID found in href: " + href);
                     continue;
                 }
 
@@ -73,7 +78,7 @@ public class NumistaAllMintsParser {
                 }
 
                 if (fullName == null || fullName.isEmpty()) {
-                    DebugUtil.showWarning(this, "Skipping mint with nid=" + nid + " - no fullName found");
+                    logger.warn("Skipping mint with nid=" + nid + " - no fullName found");
                     continue;
                 }
 
@@ -98,48 +103,38 @@ public class NumistaAllMintsParser {
                 }
 
                 // Check if mint already exists in database
-                Mint existingMint = N4JUtil.getInstance().numistaService.mintService.findByNid(nid, fullName);
 
-                boolean needsUpdate = false;
-
-                if (existingMint != null) {
-                    // Update coordinates if they were found and are different
-                    if (latitude != null && longitude != null) {
-                        if (!latitude.equals(existingMint.getLatitude()) ||
-                                !longitude.equals(existingMint.getLongitude())) {
-                            existingMint.setLatitude(latitude);
-                            existingMint.setLongitude(longitude);
-                            needsUpdate = true;
-                            DebugUtil.showInfo(this, "Updated coordinates for mint: " + fullName +
-                                    " (nid: " + nid + ") - lat: " + latitude + ", lon: " + longitude);
-                        }
-                    }
-
-                    if (needsUpdate) {
-                        N4JUtil.getInstance().numistaService.mintService.save(existingMint);
-                    }
+                UUID mintUuid = N4JUtil.getInstance().numistaService.mintService.findUuidByNid(nid);
+                if (mintUuid == null) {
+                    mintUuid = N4JUtil.getInstance().numistaService.mintService
+                            .save(new Mint(nid, fullName, latitude, longitude)).getUuid();
+                    logger.info("Created new mint: " + fullName + " (nid: " + nid + ")");
                 } else {
-                    // Create new mint (already created by findByNid)
-                    // Update with coordinates if available
-                    Mint mint = N4JUtil.getInstance().numistaService.mintService.findByNid(nid, fullName);
-                    if (mint != null && latitude != null && longitude != null) {
-                        mint.setLatitude(latitude);
-                        mint.setLongitude(longitude);
-                        N4JUtil.getInstance().numistaService.mintService.save(mint);
-                        DebugUtil.showInfo(this, "Created new mint: " + fullName +
-                                " (nid: " + nid + ") - lat: " + latitude + ", lon: " + longitude);
+                    if (!N4JUtil.getInstance().numistaService.mintService.compareFullName(mintUuid, fullName)) {
+                        N4JUtil.getInstance().numistaService.mintService.setFullName(mintUuid, fullName);
+                        logger.info("Updated mint: " + fullName + " (nid: " + nid + ")");
+                    }
+                    if (latitude != null && longitude != null) {
+                        if (!N4JUtil.getInstance().numistaService.mintService.compareLatitude(mintUuid, latitude)) {
+                            N4JUtil.getInstance().numistaService.mintService.setLatitude(mintUuid, latitude);
+                            logger.info("Updated latitude for mint: " + fullName + " (nid: " + nid + ")");
+                        }
+                        if (!N4JUtil.getInstance().numistaService.mintService.compareLongitude(mintUuid, longitude)) {
+                            N4JUtil.getInstance().numistaService.mintService.setLongitude(mintUuid, longitude);
+                            logger.info("Updated longitude for mint: " + fullName + " (nid: " + nid + ")");
+                        }
                     }
                 }
 
                 processedCount++;
 
             } catch (Exception e) {
-                DebugUtil.showError(this, "Error processing mint row: " + e.getMessage());
+                logger.error("Error processing mint row: " + e.getMessage());
                 e.printStackTrace();
             }
         }
 
-        DebugUtil.showInfo(this, "Successfully processed " + processedCount + " mints");
+        logger.info("Successfully processed " + processedCount + " mints");
     }
 
     /**

@@ -13,7 +13,6 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.stream.Collectors;
-import bkv.colligendis.utils.numista.NumistaPartParser;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
@@ -195,7 +194,7 @@ public class MintageParsing extends PartParser {
                                         pageParser.getNid());
                                 continue;
                             }
-                            String mintage_str = NumistaPartParser.getAttribute(input, "value");
+                            String mintage_str = PartParser.getAttribute(input, "value");
 
                             if (mintage_str == null) {
                                 logger.debug("Value of 'mintage' is empty input while parsing page with nid: {}",
@@ -279,7 +278,7 @@ public class MintageParsing extends PartParser {
 
                         case "yearline_comment" -> {
 
-                            String comment = NumistaPartParser.getAttribute(tdElement.selectFirst("input"), "value");
+                            String comment = PartParser.getAttribute(tdElement.selectFirst("input"), "value");
                             if (comment != null) {
                                 if (!variantService.compareComment(variantUuid, comment)) {
                                     variantService.setComment(variantUuid, comment);
