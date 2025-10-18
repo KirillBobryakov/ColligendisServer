@@ -2,14 +2,18 @@ package bkv.colligendis.database.service.numista;
 
 import bkv.colligendis.database.entity.numista.CollectibleType;
 import bkv.colligendis.services.AbstractService;
-import bkv.colligendis.utils.DebugUtil;
 
 import java.util.UUID;
 
 import org.springframework.stereotype.Service;
 
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
+
 @Service
 public class CollectibleTypeService extends AbstractService<CollectibleType, TypeRepository> {
+
+    private static final Logger logger = LogManager.getLogger(CollectibleTypeService.class);
 
     public CollectibleTypeService(TypeRepository repository) {
         super(repository);
@@ -55,8 +59,7 @@ public class CollectibleTypeService extends AbstractService<CollectibleType, Typ
         if (collectibleType != null) {
             if (name != null && !name.isEmpty()) {
                 if (!collectibleType.getName().equals(name)) {
-                    DebugUtil.showInfo(CollectibleTypeService.class,
-                            "CollectibleType name is changing from " + collectibleType.getName() + " to " + name);
+                    logger.info("CollectibleType.name was updated from " + collectibleType.getName() + " to " + name);
                 }
                 collectibleType.setName(name);
             }

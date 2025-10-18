@@ -7,10 +7,12 @@ import bkv.colligendis.rest.catalogue.CSIItem;
 import bkv.colligendis.rest.catalogue.csi_statistics.CSITreeNode;
 import bkv.colligendis.rest.dto.CountryDTO;
 import bkv.colligendis.services.AbstractService;
-import bkv.colligendis.utils.DebugUtil;
 
 import org.modelmapper.ModelMapper;
 import org.springframework.stereotype.Service;
+
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -19,6 +21,8 @@ import java.util.stream.Collectors;
 
 @Service
 public class CountryService extends AbstractService<Country, CountryRepository> {
+
+    private static final Logger logger = LogManager.getLogger(CountryService.class);
 
     private final ModelMapper modelMapper;
 
@@ -48,7 +52,7 @@ public class CountryService extends AbstractService<Country, CountryRepository> 
     public UUID findCountryUuidByNameOrCreate(String name) {
         UUID countryUuid = findCountryUuidByName(name);
         if (countryUuid == null) {
-            DebugUtil.showInfo(this, "New Country with name=" + name + " was created.");
+            logger.info("New Country with name=" + name + " was created.");
             return repository.save(new Country(name)).getUuid();
         }
         return countryUuid;

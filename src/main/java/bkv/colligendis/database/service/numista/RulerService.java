@@ -5,14 +5,17 @@ import bkv.colligendis.database.entity.numista.Issuer;
 import bkv.colligendis.database.entity.numista.Ruler;
 import bkv.colligendis.database.entity.numista.RulerGroup;
 import bkv.colligendis.services.AbstractService;
-import bkv.colligendis.utils.DebugUtil;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
 import java.util.UUID;
 
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
+
 @Service
 public class RulerService extends AbstractService<Ruler, RulerRepository> {
+    private static final Logger logger = LogManager.getLogger(RulerService.class);
 
     public RulerService(RulerRepository repository) {
         super(repository);
@@ -143,15 +146,15 @@ public class RulerService extends AbstractService<Ruler, RulerRepository> {
         }
         if (ruler != null) {
             if (!ruler.getName().equals(name)) {
-                DebugUtil.showServiceMessage(this, "Trying to find Ruller with nid=" + nid + " and name=" + name
+                logger.warn("Trying to find Ruller with nid=" + nid + " and name=" + name
                         + ". But there is a Ruller with the same nid and other name = " + ruler.getName()
-                        + " in DB already.", DebugUtil.MESSAGE_LEVEL.WARNING);
-                DebugUtil.showWarning(this, "Ruler.name was updated.");
+                        + " in DB already.");
+                logger.warn("Ruler.name was updated.");
                 ruler.setName(name);
                 return repository.save(ruler);
             }
         } else {
-            DebugUtil.showInfo(this, "New Ruler with nid=" + nid + " and name=" + name + " was created.");
+            logger.info("New Ruler with nid=" + nid + " and name=" + name + " was created.");
             return repository.save(new Ruler(nid, name));
         }
         return ruler;

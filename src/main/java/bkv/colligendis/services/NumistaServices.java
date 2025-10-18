@@ -1,13 +1,6 @@
 package bkv.colligendis.services;
 
 import bkv.colligendis.database.service.numista.*;
-import bkv.colligendis.database.service.numista.init_services.CalendarInitializationService;
-import bkv.colligendis.database.service.numista.init_services.LetteringScriptInitializationService;
-import bkv.colligendis.database.service.numista.init_services.MetalInitializationService;
-import bkv.colligendis.database.service.numista.init_services.ShapeInitializationService;
-import bkv.colligendis.utils.numista.parser.init_parsers.NumistaAllArtistsParser;
-import bkv.colligendis.utils.numista.parser.init_parsers.NumistaAllMintsParser;
-import bkv.colligendis.utils.numista.parser.init_parsers.NumistaAllPrintersParser;
 import bkv.colligendis.database.service.features.YearService;
 import org.springframework.stereotype.Service;
 

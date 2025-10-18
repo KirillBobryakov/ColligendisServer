@@ -10,7 +10,6 @@ import bkv.colligendis.database.service.UniqueEntityException;
 import bkv.colligendis.rest.catalogue.CSIItem;
 import bkv.colligendis.rest.catalogue.csi_statistics.CSITreeNode;
 import bkv.colligendis.services.AbstractService;
-import bkv.colligendis.utils.DebugUtil;
 
 import org.modelmapper.ModelMapper;
 import org.springframework.stereotype.Service;
@@ -22,8 +21,13 @@ import java.util.Map;
 import java.util.UUID;
 import java.util.stream.Collectors;
 
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
+
 @Service
 public class IssuerService extends AbstractService<Issuer, IssuerRepository> {
+
+    private static final Logger logger = LogManager.getLogger(IssuerService.class);
 
     private final ModelMapper modelMapper;
 
@@ -107,7 +111,7 @@ public class IssuerService extends AbstractService<Issuer, IssuerRepository> {
     public UUID findIssuerUuidByNameOrCreate(String name) {
         UUID issuerUuid = findIssuerUuidByName(name);
         if (issuerUuid == null) {
-            DebugUtil.showInfo(this, "New Issuer with name=" + name + " was created.");
+            logger.info("New Issuer with name=" + name + " was created.");
             return repository.save(new Issuer(name)).getUuid();
         }
         return issuerUuid;
@@ -136,7 +140,7 @@ public class IssuerService extends AbstractService<Issuer, IssuerRepository> {
         UUID issuerUuid = findUuidByCode(code);
         if (issuerUuid == null) {
             issuerUuid = findIssuerUuidByName(name);
-            DebugUtil.showInfo(this, "Find Issuer by name=" + name + ". Can't find by code: " + code);
+            logger.info("Find Issuer by name=" + name + ". Can't find by code: " + code);
         }
 
         return issuerUuid;
@@ -201,15 +205,15 @@ public class IssuerService extends AbstractService<Issuer, IssuerRepository> {
         }
         if (issuer != null) {
             if (!issuer.getName().equals(name)) {
-                DebugUtil.showWarning(this, "Trying to find Issuer with code=" + code + " and name=" + name
+                logger.warn("Trying to find Issuer with code=" + code + " and name=" + name
                         + ". But there is an Issuer with the same code and other name= " + issuer.getName()
                         + " in DB already.");
-                DebugUtil.showWarning(this, "Issuer.name was updated.");
+                logger.warn("Issuer.name was updated.");
                 issuer.setName(name);
                 return repository.save(issuer);
             }
         } else {
-            DebugUtil.showInfo(this, "New Issuer with code=" + code + " and name=" + name + " was created.");
+            logger.info("New Issuer with code=" + code + " and name=" + name + " was created.");
             return repository.save(new Issuer(code, name));
         }
         return issuer;

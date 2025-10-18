@@ -3,14 +3,18 @@ package bkv.colligendis.database.service.numista;
 import bkv.colligendis.database.entity.numista.Issuer;
 import bkv.colligendis.database.entity.numista.IssuingEntity;
 import bkv.colligendis.services.AbstractService;
-import bkv.colligendis.utils.DebugUtil;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
 import java.util.UUID;
 
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
+
 @Service
 public class IssuingEntityService extends AbstractService<IssuingEntity, IssuingEntityRepository> {
+    private static final Logger logger = LogManager.getLogger(IssuingEntityService.class);
+
     public IssuingEntityService(IssuingEntityRepository repository) {
         super(repository);
     }
@@ -52,7 +56,7 @@ public class IssuingEntityService extends AbstractService<IssuingEntity, Issuing
             issuingEntity = repository.findByName(name);
         }
         if (issuingEntity == null) {
-            DebugUtil.showInfo(this, "New IssuingEntity with name=" + name + " was created.");
+            logger.info("New IssuingEntity with name=" + name + " was created.");
             // return repository.save(new IssuingEntity(name));
         }
         return issuingEntity;

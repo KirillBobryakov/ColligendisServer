@@ -2,15 +2,18 @@ package bkv.colligendis.database.service.numista;
 
 import bkv.colligendis.database.entity.numista.Mint;
 import bkv.colligendis.services.AbstractService;
-import bkv.colligendis.utils.DebugUtil;
 
 import org.springframework.stereotype.Service;
 
 import java.util.List;
 import java.util.UUID;
 
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
+
 @Service
 public class MintService extends AbstractService<Mint, MintRepository> {
+    private static final Logger logger = LogManager.getLogger(MintService.class);
 
     public MintService(MintRepository repository) {
         super(repository);
@@ -50,15 +53,15 @@ public class MintService extends AbstractService<Mint, MintRepository> {
         Mint mint = repository.findByNid(nid);
         if (mint != null) {
             if (!mint.getFullName().equals(fullName)) {
-                DebugUtil.showServiceMessage(this, "Trying to find Mint with nid=" + nid + " and fullName=" + fullName
+                logger.warn("Trying to find Mint with nid=" + nid + " and fullName=" + fullName
                         + ". But there is a Mint with the same nid and other fullName = " + mint.getFullName()
-                        + " in DB already.", DebugUtil.MESSAGE_LEVEL.WARNING);
-                DebugUtil.showWarning(this, "Mint.fullName was updated.");
+                        + " in DB already.");
+                logger.warn("Mint.fullName was updated.");
                 mint.setFullName(fullName);
                 return repository.save(mint);
             }
         } else {
-            DebugUtil.showInfo(this, "New Mint with nid=" + nid + " and fullName=" + fullName + " was created.");
+            logger.info("New Mint with nid=" + nid + " and fullName=" + fullName + " was created.");
             Mint m = new Mint();
             m.setNid(nid);
             m.setFullName(fullName);

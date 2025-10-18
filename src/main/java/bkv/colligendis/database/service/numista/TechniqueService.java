@@ -2,14 +2,18 @@ package bkv.colligendis.database.service.numista;
 
 import bkv.colligendis.database.entity.numista.Technique;
 import bkv.colligendis.services.AbstractService;
-import bkv.colligendis.utils.DebugUtil;
 
 import java.util.UUID;
 
 import org.springframework.stereotype.Service;
 
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
+
 @Service
 public class TechniqueService extends AbstractService<Technique, TechniqueRepository> {
+    private static final Logger logger = LogManager.getLogger(TechniqueService.class);
+
     public TechniqueService(TechniqueRepository repository) {
         super(repository);
     }
@@ -34,14 +38,14 @@ public class TechniqueService extends AbstractService<Technique, TechniqueReposi
         Technique technique = repository.findByNid(nid);
         if (technique != null) {
             if (!technique.getName().equals(name)) {
-                DebugUtil.showServiceMessage(this, "Trying to find Technique with nid=" + nid + " and name=" + name
+                logger.warn("Trying to find Technique with nid=" + nid + " and name=" + name
                         + ". But there is a Technique with the same nid and other name = " + technique.getName()
-                        + " in DB already.", DebugUtil.MESSAGE_LEVEL.WARNING);
-                DebugUtil.showWarning(this, "Technique.name was updated.");
+                        + " in DB already.");
+                logger.warn("Technique.name was updated.");
                 technique.setName(name);
             }
         } else {
-            DebugUtil.showInfo(this, "New Technique with nid=" + nid + " and name=" + name + " was created.");
+            logger.info("New Technique with nid=" + nid + " and name=" + name + " was created.");
             return repository.save(new Technique(nid, name));
         }
         return technique;

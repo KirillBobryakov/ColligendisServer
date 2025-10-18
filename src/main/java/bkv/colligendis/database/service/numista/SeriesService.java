@@ -2,14 +2,17 @@ package bkv.colligendis.database.service.numista;
 
 import bkv.colligendis.database.entity.numista.Series;
 import bkv.colligendis.services.AbstractService;
-import bkv.colligendis.utils.DebugUtil;
 
 import java.util.UUID;
 
 import org.springframework.stereotype.Service;
 
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
+
 @Service
 public class SeriesService extends AbstractService<Series, SeriesRepository> {
+    private static final Logger logger = LogManager.getLogger(SeriesService.class);
 
     public SeriesService(SeriesRepository repository) {
         super(repository);
@@ -40,7 +43,7 @@ public class SeriesService extends AbstractService<Series, SeriesRepository> {
             series = repository.findByName(name);
         }
         if (series == null) {
-            DebugUtil.showInfo(this, String.format("New Series with name=%name was created."));
+            logger.info("New Series with name=" + name + " was created.");
             return repository.save(new Series(name));
         }
         return series;

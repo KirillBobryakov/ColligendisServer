@@ -2,14 +2,18 @@ package bkv.colligendis.database.service.numista;
 
 import bkv.colligendis.database.entity.numista.CommemoratedEvent;
 import bkv.colligendis.services.AbstractService;
-import bkv.colligendis.utils.DebugUtil;
 
 import java.util.UUID;
 
 import org.springframework.stereotype.Service;
 
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
+
 @Service
 public class CommemoratedEventService extends AbstractService<CommemoratedEvent, CommemoratedEventRepository> {
+
+    private static final Logger logger = LogManager.getLogger(CommemoratedEventService.class);
 
     public CommemoratedEventService(CommemoratedEventRepository repository) {
         super(repository);
@@ -35,7 +39,7 @@ public class CommemoratedEventService extends AbstractService<CommemoratedEvent,
             commemoratedEvent = repository.findByName(name);
         }
         if (commemoratedEvent == null) {
-            DebugUtil.showInfo(this, "New CommemoratedEvent with name=" + name + " was created.");
+            logger.info("New CommemoratedEvent with name=" + name + " was created.");
             return repository.save(new CommemoratedEvent(name));
         }
         return commemoratedEvent;

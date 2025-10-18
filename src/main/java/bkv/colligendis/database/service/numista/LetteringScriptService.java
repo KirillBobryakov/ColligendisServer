@@ -2,14 +2,18 @@ package bkv.colligendis.database.service.numista;
 
 import bkv.colligendis.database.entity.numista.LetteringScript;
 import bkv.colligendis.services.AbstractService;
-import bkv.colligendis.utils.DebugUtil;
 
 import java.util.UUID;
 
 import org.springframework.stereotype.Service;
 
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
+
 @Service
 public class LetteringScriptService extends AbstractService<LetteringScript, LetteringScriptRepository> {
+    private static final Logger logger = LogManager.getLogger(LetteringScriptService.class);
+
     public LetteringScriptService(LetteringScriptRepository repository) {
         super(repository);
     }
@@ -33,16 +37,14 @@ public class LetteringScriptService extends AbstractService<LetteringScript, Let
         LetteringScript letteringScript = repository.findByNid(nid);
         if (letteringScript != null) {
             if (!letteringScript.getName().equals(name)) {
-                DebugUtil.showServiceMessage(this,
-                        "Trying to find LetteringScript with nid=" + nid + " and name=" + name
-                                + ". But there is a LetteringScript with the same nid and other name = "
-                                + letteringScript.getName() + " in DB already.",
-                        DebugUtil.MESSAGE_LEVEL.WARNING);
-                DebugUtil.showWarning(this, "LetteringScript.name was updated.");
+                logger.warn("Trying to find LetteringScript with nid=" + nid + " and name=" + name
+                        + ". But there is a LetteringScript with the same nid and other name = "
+                        + letteringScript.getName() + " in DB already.");
+                logger.warn("LetteringScript.name was updated.");
                 letteringScript.setName(name);
             }
         } else {
-            DebugUtil.showInfo(this, "New LetteringScript with nid=" + nid + " and name=" + name + " was created.");
+            logger.info("New LetteringScript with nid=" + nid + " and name=" + name + " was created.");
             return repository.save(new LetteringScript(nid, name));
         }
         return letteringScript;

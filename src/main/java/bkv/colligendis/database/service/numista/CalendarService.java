@@ -4,14 +4,17 @@ import bkv.colligendis.database.entity.features.Year;
 import bkv.colligendis.database.entity.numista.Calendar;
 import bkv.colligendis.services.AbstractService;
 import bkv.colligendis.database.service.features.YearService;
-import bkv.colligendis.utils.DebugUtil;
 import org.springframework.context.annotation.Lazy;
 import org.springframework.stereotype.Service;
 
 import java.util.UUID;
 
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
+
 @Service
 public class CalendarService extends AbstractService<Calendar, CalendarRepository> {
+    private static final Logger logger = LogManager.getLogger(CalendarService.class);
 
     private final YearService yearService;
 
@@ -73,15 +76,15 @@ public class CalendarService extends AbstractService<Calendar, CalendarRepositor
         Calendar calendar = repository.findCalendarByCode(code);
         if (calendar != null) {
             if (!calendar.getName().equals(name)) {
-                DebugUtil.showServiceMessage(this, "Trying to find Calendar with code=" + code + " and name=" + name
+                logger.warn("Trying to find Calendar with code=" + code + " and name=" + name
                         + ". But there is an Calendar with the same code and other name= " + calendar.getName()
-                        + "in DB already.", DebugUtil.MESSAGE_LEVEL.WARNING);
-                DebugUtil.showWarning(this, "Calendar.name was updated.");
+                        + "in DB already.");
+                logger.warn("Calendar.name was updated.");
                 calendar.setName(name);
                 return repository.save(calendar);
             }
         } else {
-            DebugUtil.showInfo(this, "New Calendar with code=" + code + " and name=" + name + " was created.");
+            logger.info("New Calendar with code=" + code + " and name=" + name + " was created.");
             return repository.save(new Calendar(code, name));
         }
         return calendar;

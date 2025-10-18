@@ -2,14 +2,18 @@ package bkv.colligendis.database.service.numista;
 
 import bkv.colligendis.database.entity.numista.Mintmark;
 import bkv.colligendis.services.AbstractService;
-import bkv.colligendis.utils.DebugUtil;
 
 import java.util.UUID;
 
 import org.springframework.stereotype.Service;
 
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
+
 @Service
 public class MintmarkService extends AbstractService<Mintmark, MintmarkRepository> {
+    private static final Logger logger = LogManager.getLogger(MintmarkService.class);
+
     public MintmarkService(MintmarkRepository repository) {
         super(repository);
     }
@@ -23,7 +27,7 @@ public class MintmarkService extends AbstractService<Mintmark, MintmarkRepositor
     public Mintmark findByNid(String nid) {
         Mintmark mintmark = repository.findByNid(nid);
         if (mintmark == null) {
-            DebugUtil.showInfo(this, "New Mintmark with nid=" + nid + " was created.");
+            logger.info("New Mintmark with nid=" + nid + " was created.");
             Mintmark mm = new Mintmark(nid, null);
             return repository.save(mm);
         }

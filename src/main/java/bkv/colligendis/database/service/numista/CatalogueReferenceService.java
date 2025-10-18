@@ -3,14 +3,19 @@ package bkv.colligendis.database.service.numista;
 import bkv.colligendis.database.entity.numista.Catalogue;
 import bkv.colligendis.database.entity.numista.CatalogueReference;
 import bkv.colligendis.services.AbstractService;
-import bkv.colligendis.utils.DebugUtil;
 
 import java.util.UUID;
 
 import org.springframework.stereotype.Service;
 
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
+
 @Service
 public class CatalogueReferenceService extends AbstractService<CatalogueReference, CatalogueReferenceRepository> {
+
+    private static final Logger logger = LogManager.getLogger(CatalogueReferenceService.class);
+
     public CatalogueReferenceService(CatalogueReferenceRepository repository) {
         super(repository);
     }
@@ -35,7 +40,7 @@ public class CatalogueReferenceService extends AbstractService<CatalogueReferenc
     public CatalogueReference findByNumberAndCatalogueNid(String number, Catalogue catalogue) {
         CatalogueReference catalogueReference = repository.findByNumberAndCatalogue_Nid(number, catalogue.getNid());
         if (catalogueReference == null) {
-            DebugUtil.showInfo(this, "New CatalogueReference with number=" + number + " and references to catalogue="
+            logger.info("New CatalogueReference with number=" + number + " and references to catalogue="
                     + catalogue + " was created.");
             return repository.save(new CatalogueReference(catalogue, number));
         }

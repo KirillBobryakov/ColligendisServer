@@ -2,14 +2,19 @@ package bkv.colligendis.database.service.numista;
 
 import bkv.colligendis.database.entity.numista.Catalogue;
 import bkv.colligendis.services.AbstractService;
-import bkv.colligendis.utils.DebugUtil;
 
 import java.util.UUID;
 
 import org.springframework.stereotype.Service;
 
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
+
 @Service
 public class CatalogueService extends AbstractService<Catalogue, CatalogueRepository> {
+
+    private static final Logger logger = LogManager.getLogger(CatalogueService.class);
+
     public CatalogueService(CatalogueRepository repository) {
         super(repository);
     }
@@ -25,15 +30,15 @@ public class CatalogueService extends AbstractService<Catalogue, CatalogueReposi
         Catalogue catalogue = repository.findByNid(nid);
         if (catalogue != null) {
             if (!catalogue.getCode().equals(code)) {
-                DebugUtil.showServiceMessage(this, "Trying to find Catalogue with nid=" + nid + " and code=" + code
+                logger.warn("Trying to find Catalogue with nid=" + nid + " and code=" + code
                         + ". But there is a Catalogue with the same nid and other code = " + catalogue.getCode()
-                        + " in DB already.", DebugUtil.MESSAGE_LEVEL.WARNING);
+                        + " in DB already.");
 
-                DebugUtil.showWarning(this, "Catalogue.code was updated.");
+                logger.warn("Catalogue.code was updated.");
                 return repository.save(catalogue);
             }
         } else {
-            DebugUtil.showInfo(this, "New Catalogue with nid=" + nid + " and code=" + code + " was created.");
+            logger.info("New Catalogue with nid=" + nid + " and code=" + code + " was created.");
             return repository.save(new Catalogue(nid, code));
         }
         return catalogue;

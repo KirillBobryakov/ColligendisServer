@@ -6,7 +6,6 @@ import bkv.colligendis.database.entity.numista.Subject;
 import bkv.colligendis.rest.catalogue.CSIItem;
 import bkv.colligendis.rest.catalogue.csi_statistics.CSITreeNode;
 import bkv.colligendis.services.AbstractService;
-import bkv.colligendis.utils.DebugUtil;
 
 import org.modelmapper.ModelMapper;
 import org.springframework.stereotype.Service;
@@ -16,8 +15,13 @@ import java.util.List;
 import java.util.UUID;
 import java.util.stream.Collectors;
 
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
+
 @Service
 public class SubjectService extends AbstractService<Subject, SubjectRepository> {
+
+    private static final Logger logger = LogManager.getLogger(SubjectService.class);
 
     private final ModelMapper modelMapper;
 
@@ -83,7 +87,7 @@ public class SubjectService extends AbstractService<Subject, SubjectRepository> 
     public UUID findSubjectUuidByNameOrCreate(String name) {
         UUID subjectUuid = findSubjectUuidByName(name);
         if (subjectUuid == null) {
-            DebugUtil.showInfo(this, "New Subject with name=" + name + " was created.");
+            logger.info("New Subject with name=" + name + " was created.");
             return repository.save(new Subject(name)).getUuid();
         }
         return subjectUuid;
